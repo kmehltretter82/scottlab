@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeBottom,
   computeClosure,
+  enumerateStates,
   SemanticError,
   tryAddObservation,
   type InformationSystemDefinition,
@@ -129,6 +130,30 @@ describe("computeClosure", () => {
         witness: ["false", "true"],
       }),
     );
+  });
+});
+
+describe("enumerateStates", () => {
+  it("derives exactly the three flat-Boolean states", () => {
+    expect(enumerateStates(flatBoolean).states).toEqual([
+      ["delta"],
+      ["delta", "false"],
+      ["delta", "true"],
+    ]);
+  });
+
+  it("includes a fourth state when true and false are compatible", () => {
+    const compatibleBooleanTokens: InformationSystemDefinition = {
+      ...flatBoolean,
+      minimalInconsistentSets: [],
+    };
+
+    expect(enumerateStates(compatibleBooleanTokens).states).toEqual([
+      ["delta"],
+      ["delta", "false"],
+      ["delta", "true"],
+      ["delta", "false", "true"],
+    ]);
   });
 });
 

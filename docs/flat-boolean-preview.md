@@ -13,9 +13,10 @@ The preview implements the exact system in the
 
 The preview contains:
 
-1. one bottom-first guided lesson;
-2. one short branch-aware challenge; and
-3. the same system in a read-only sandbox.
+1. one short historical introduction;
+2. one bottom-first guided lesson;
+3. one short branch-aware challenge; and
+4. the same system in a read-only sandbox.
 
 It does not contain a general editor, import/export, arbitrary systems,
 continuous maps, fixed points, accounts, or server-side behavior.
@@ -24,11 +25,15 @@ continuous maps, fixed points, accounts, or server-side behavior.
 
 After the preview, a first-time learner should be able to say:
 
+- “Scott introduced information systems as a constructive, visible way to
+  present domains for computable functions.”
 - “`⊥` is the state with no specific information.”
 - “A token is one observation; a state is the whole collection.”
 - “`Δ` is the always-present token inside every state.”
 - “Adding `true` or `false` gives more information.”
 - “The `true` and `false` tokens cannot occur in one Boolean state.”
+- “A designer chooses what a system models, its tokens, and its compatibility
+  rules; states are derived from those choices.”
 
 The lesson does not compare Scott tokens with AI or language-model tokens.
 
@@ -75,26 +80,72 @@ The `true` and `false` paths are symmetric. Copy and animation must be generated
 from the selected token rather than maintained as two nearly duplicate lesson
 implementations.
 
+A compact “Designed model” card exposes the definition progressively rather
+than presenting the system as a black box:
+
+1. the opening identifies what the system was designed to model;
+2. inspecting bottom reveals the chosen token set;
+3. selecting a Boolean token reveals the declared compatibility rule; and
+4. testing that rule reveals the states derived from those choices.
+
+The card is explanatory presentation of the fixture, not a second mathematical
+model. Its values come from the same system consumed by the lesson.
+
 ## Storyboard
 
-### 1. Begin at bottom
+### 0. Why information systems?
+
+Before the bottom-first lesson, a short opening introduces Dana Scott and the
+problem that motivated the presentation. It explains in beginner-facing
+language that programs may reveal results gradually, that domains organize
+partial information for mathematical reasoning about computable functions,
+and that Scott's 1982 information systems presented domains through tokens,
+consistency, entailment, and states.
+
+The page paraphrases the aims Scott gave for the new presentation: simpler and
+constructive definitions, more visible domains, and easier construction for
+applications. It links both [Scott's homepage](https://www.cs.cmu.edu/~scott/)
+and his paper [“Domains for Denotational
+Semantics”](https://doi.org/10.1007/BFb0012801). The primary action is “Explore
+a first example.” No lesson state or token is shown before that action.
+
+### 1. Introduce the Boolean example
+
+A separate bridge prevents the lesson from jumping directly from Scott's
+general theory to an unexplained Boolean model. It begins:
+
+> Let's look at the simplest useful example: a question with only two possible
+> answers.
+
+The page asks “Is the light switched on?” and presents `true` as “yes” and
+`false` as “no.” It defines a Boolean as a value with exactly those two
+possibilities, then explains why this is the first model: it is small but
+already exhibits incomplete and conflicting information.
+
+The final explanation explicitly says that `⊥` is not a third Boolean value;
+it describes the information state in which the answer is not known yet. The
+primary action is “Begin the Boolean model at `⊥`.”
+
+### 2. Begin at bottom
 
 The first screen is a calm, spacious stage containing:
 
 - one large state labeled `⊥`;
 - the sentence “We do not know the Boolean value yet”; and
+- a compact “Designed model” card identifying one ordinary Boolean value; and
 - one primary action, “Look inside.”
 
-No token tray, formal definition, Hasse diagram, or four-panel layout is
-visible. The explanation establishes that the lesson describes one Boolean
-value, defines a state as the compatible information currently known about
-that value, and names `⊥` as the state with no specific answer yet. The
-accessible name is “Bottom state: no specific information yet.”
+No token tray, dense formal definition, Hasse diagram, or four-panel layout is
+visible. The explanation says that this information system was designed to
+describe one Boolean value, defines a state as the compatible information
+currently known about that value, and names `⊥` as the state with no specific
+answer yet. The accessible name is “Bottom state: no specific information
+yet.”
 
 Entering the stage records `bottomComputed` and `stateValidated` semantic
 events. The learner's action records `stateInspected`.
 
-### 2. Look inside the state
+### 3. Look inside the state
 
 The bottom state opens or expands into a containing tray. Inside it is one
 token-shaped object with:
@@ -114,7 +165,10 @@ mode the expanded view replaces the collapsed view without spatial movement.
 
 The primary action becomes “Add information.”
 
-### 3. Introduce informative tokens
+The model card now reveals that the designer chose the token set
+`{Δ, false, true}`.
+
+### 4. Introduce informative tokens
 
 A compact token tray appears with `true` and `false`. Each choice explains its
 meaning: `true` says that the Boolean value is true, and `false` says that the
@@ -137,7 +191,12 @@ says:
 
 The corresponding `false` copy is generated from the same template.
 
-### 4. Encounter inconsistency
+After the learner selects either Boolean token, the model card reveals the
+declared rule `{false, true} is incompatible`. The opposite-token prompt asks
+the learner to test this rule, not to guess a property inferred from the token
+names.
+
+### 5. Encounter inconsistency
 
 The opposite token remains available with the prompt “Can both observations
 belong to one Boolean state?” The learner may attempt to add it.
@@ -153,17 +212,18 @@ The current valid state does not change. The attempted token returns to the
 tray or remains outside the state boundary. The two-token witness receives a
 pattern, connector, icon, and textual explanation; red alone is insufficient.
 
-Canonical explanation:
+The model card reveals the three states derived from the chosen tokens and
+rule. Canonical explanation:
 
-> One Boolean value cannot be both true and false. This system declares those
-> tokens incompatible, and a state contains only compatible tokens. Because
-> `Δ` is always present, the only states are `{Δ}`, `{Δ, true}`, and
-> `{Δ, false}`.
+> One Boolean value cannot be both true and false. ScottLab did not infer this
+> from the token names; it checked the compatibility rule chosen for this
+> model. Another information system could allow both tokens and would model
+> something different.
 
 The learner can focus either token in the witness to hear the same relationship
 described from that token's perspective.
 
-### 5. Build the information order
+### 6. Build the information order
 
 The view pulls back to show the three states:
 

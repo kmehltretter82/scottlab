@@ -4,9 +4,75 @@ import { describe, expect, it } from "vitest";
 
 import { App } from "./App";
 
-describe("bottom-first lesson screen", () => {
-  it("begins with bottom before introducing tokens", () => {
+async function beginLesson(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await user.click(
+    screen.getByRole("button", { name: "Explore a first example" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Begin the Boolean model at ⊥" }),
+  );
+}
+
+describe("ScottLab introduction and bottom-first lesson", () => {
+  it("introduces Dana Scott and the purpose of information systems", () => {
     render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Why Dana Scott introduced information systems",
+      }),
+    ).toBeVisible();
+    expect(screen.getByText(/partial and recursive computation/)).toBeVisible();
+    expect(
+      screen.getByText(/simpler, constructive way to build and understand/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: /Dana Scott at CMU/ }),
+    ).toHaveAttribute("href", "https://www.cs.cmu.edu/~scott/");
+    expect(
+      screen.getByRole("link", {
+        name: /Domains for Denotational Semantics \(1982\)/,
+      }),
+    ).toHaveAttribute("href", "https://doi.org/10.1007/BFb0012801");
+    expect(
+      screen.getByRole("button", { name: "Explore a first example" }),
+    ).toBeVisible();
+    expect(screen.queryByRole("figure")).not.toBeInTheDocument();
+  });
+
+  it("bridges from Scott's general idea to a Boolean example", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Explore a first example" }),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Let’s make the idea concrete." }),
+    ).toHaveFocus();
+    expect(
+      screen.getByText(/Let’s look at the simplest useful example/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Is the light switched on?" }),
+    ).toBeVisible();
+    expect(screen.getByText(/is called a Boolean/)).toBeVisible();
+    expect(
+      screen.getByText(/It is not a third Boolean value/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Begin the Boolean model at ⊥" }),
+    ).toBeVisible();
+    expect(screen.queryByRole("figure")).not.toBeInTheDocument();
+  });
+
+  it("begins the lesson with bottom before introducing tokens", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await beginLesson(user);
 
     expect(
       screen.getByRole("heading", {
@@ -16,6 +82,11 @@ describe("bottom-first lesson screen", () => {
     expect(
       screen.getByText(/A state is all the compatible information/),
     ).toBeVisible();
+    const model = screen.getByRole("complementary", {
+      name: "Designed model",
+    });
+    expect(within(model).getByText("one ordinary Boolean value")).toBeVisible();
+    expect(within(model).queryByText("Tokens chosen")).not.toBeInTheDocument();
     expect(
       screen.getByRole("figure", {
         name: "Bottom state: no specific information yet",
@@ -34,6 +105,7 @@ describe("bottom-first lesson screen", () => {
   it("reveals Delta and keeps the token distinct from the bottom state", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await beginLesson(user);
 
     await user.click(screen.getByRole("button", { name: "Look inside" }));
 
@@ -51,16 +123,54 @@ describe("bottom-first lesson screen", () => {
       }),
     ).toBeVisible();
     expect(
-      screen.getByText(/A state collects the tokens that can fit together/),
+      screen.getByText(/A state collects the tokens that fit/),
     ).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Add information" }),
     ).toHaveAttribute("aria-expanded", "true");
+    const model = screen.getByRole("complementary", {
+      name: "Designed model",
+    });
+    expect(within(model).getByText("Tokens chosen")).toBeVisible();
+    expect(within(model).getByText("{Δ, false, true}")).toBeVisible();
+    expect(within(model).queryByText("Rule declared")).not.toBeInTheDocument();
+  });
+
+  it("reveals the model rule and its derived states progressively", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await beginLesson(user);
+
+    await user.click(screen.getByRole("button", { name: "Look inside" }));
+    await user.click(screen.getByRole("button", { name: "Add information" }));
+    await user.click(screen.getByRole("button", { name: "Add true token" }));
+
+    const model = screen.getByRole("complementary", {
+      name: "Designed model",
+    });
+    expect(within(model).getByText("Rule declared")).toBeVisible();
+    expect(
+      within(model).getByText("{false, true} is incompatible"),
+    ).toBeVisible();
+    expect(within(model).queryByText("States derived")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Try adding false token" }),
+    );
+
+    expect(within(model).getByText("States derived")).toBeVisible();
+    expect(
+      within(model).getByText(/\{Δ\}.*\{Δ, false\}.*\{Δ, true\}/),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/ScottLab did not infer this from the token names/),
+    ).toBeVisible();
   });
 
   it("explains the Boolean tokens before asking for a choice", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await beginLesson(user);
 
     await user.click(screen.getByRole("button", { name: "Look inside" }));
     await user.click(screen.getByRole("button", { name: "Add information" }));
@@ -94,13 +204,41 @@ describe("bottom-first lesson screen", () => {
     await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
 
     expect(document.documentElement).toHaveAttribute("lang", "de-DE");
-    expect(document.title).toBe("ScottLab · Beim Bottom beginnen");
+    expect(document.title).toBe("ScottLab · Warum Informationssysteme?");
     expect(window.localStorage.getItem("scottlab-language")).toBe("de-DE");
+    expect(
+      screen.getByRole("heading", {
+        name: "Warum Dana Scott Informationssysteme einführte",
+      }),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Ein erstes Beispiel ansehen" }),
+    );
+
+    expect(document.title).toBe("ScottLab · Ein erstes Boolean-Modell");
+    expect(
+      screen.getByRole("heading", { name: "Wie sieht das nun konkret aus?" }),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/Wir wollen uns dazu ein möglichst einfaches Beispiel/),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Das Boolean-Modell bei ⊥ beginnen",
+      }),
+    );
+
+    expect(document.title).toBe("ScottLab · Beim Bottom beginnen");
     expect(
       screen.getByRole("heading", {
         name: "Wir kennen den booleschen Wert noch nicht.",
       }),
     ).toBeVisible();
+    expect(
+      screen.getByRole("complementary", { name: "Entworfenes Modell" }),
+    ).toHaveTextContent("einen gewöhnlichen booleschen Wert");
 
     await user.click(screen.getByRole("button", { name: "Hineinschauen" }));
     expect(
@@ -120,7 +258,7 @@ describe("bottom-first lesson screen", () => {
     ).toHaveAttribute("aria-pressed", "true");
     expect(
       screen.getByRole("heading", {
-        name: "Wir kennen den booleschen Wert noch nicht.",
+        name: "Warum Dana Scott Informationssysteme einführte",
       }),
     ).toBeVisible();
   });
@@ -133,6 +271,26 @@ describe("bottom-first lesson screen", () => {
     expect(screen.getByRole("button", { name: "Choose English" })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "Choose Deutsch" })).toHaveFocus();
+    await user.tab();
+    expect(
+      screen.getByRole("button", { name: "Explore a first example" }),
+    ).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("heading", { name: "Let’s make the idea concrete." }),
+    ).toHaveFocus();
+    await user.tab();
+    expect(
+      screen.getByRole("button", { name: "Begin the Boolean model at ⊥" }),
+    ).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("heading", {
+        name: "We do not know the Boolean value yet.",
+      }),
+    ).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "Look inside" })).toHaveFocus();
     await user.keyboard("{Enter}");
@@ -178,6 +336,7 @@ describe("bottom-first lesson screen", () => {
     async (tokenLabel) => {
       const user = userEvent.setup();
       render(<App />);
+      await beginLesson(user);
 
       await user.click(screen.getByRole("button", { name: "Look inside" }));
       await user.click(screen.getByRole("button", { name: "Add information" }));
@@ -221,11 +380,15 @@ describe("bottom-first lesson screen", () => {
         }),
       ).toBeVisible();
       expect(
-        screen.getByText(/This system declares the .* tokens incompatible/),
+        screen.getByText(/ScottLab did not infer this from the token names/),
       ).toBeVisible();
-      expect(screen.getByText(/This system declares the/)).toHaveTextContent(
-        "the only states are {Δ}, {Δ, true}, and {Δ, false}.",
-      );
+      const model = screen.getByRole("complementary", {
+        name: "Designed model",
+      });
+      expect(within(model).getByText("States derived")).toBeVisible();
+      expect(
+        within(model).getByText(/\{Δ\}\s+\{Δ, false\}\s+\{Δ, true\}/),
+      ).toBeVisible();
       expect(
         screen.getByLabelText(`Rejected ${oppositeLabel} token`),
       ).toBeVisible();

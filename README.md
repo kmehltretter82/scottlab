@@ -65,8 +65,9 @@ in a read-only sandbox preview.
 ## Current status
 
 The mathematical convention, versioned data format, and first lesson flow are
-documented. The initial Vite and React application begins at `⊥` and lets the
-learner look inside to distinguish the state from its `Δ` token.
+documented. The Vite and React application gives a short historical
+introduction, explains why its first model is a Boolean, then begins at `⊥`
+and lets the learner distinguish the state from its `Δ` token.
 
 ## Run locally
 

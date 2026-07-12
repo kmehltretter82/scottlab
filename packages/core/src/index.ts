@@ -70,6 +70,10 @@ export interface ClosureComputation {
   readonly events: readonly ClosureSemanticEvent[];
 }
 
+export interface StateEnumeration {
+  readonly states: readonly (readonly TokenId[])[];
+}
+
 export interface InconsistencyEvent {
   readonly kind: "inconsistencyFound";
   readonly category: "minimalInconsistentSet";
@@ -344,6 +348,55 @@ export function computeClosure(
   );
 
   return { input: normalizedInput, state, events };
+}
+
+/** Enumerate every distinct state of a finite information system. */
+export function enumerateStates(
+  system: InformationSystemDefinition,
+): StateEnumeration {
+  validateReferences(system);
+  const observationIds = sortIds(
+    system.tokens
+      .map(({ id }) => id)
+      .filter((tokenId) => tokenId !== system.delta),
+  );
+  const statesByKey = new Map<string, readonly TokenId[]>();
+
+  function visit(index: number, observations: readonly TokenId[]): void {
+    if (index < observationIds.length) {
+      const tokenId = observationIds[index];
+      if (tokenId === undefined) {
+        throw new Error("State enumeration reached an unknown token index.");
+      }
+      visit(index + 1, observations);
+      visit(index + 1, [...observations, tokenId]);
+      return;
+    }
+
+    try {
+      const state = computeClosure(system, observations).state;
+      statesByKey.set(state.join("\0"), state);
+    } catch (error) {
+      if (
+        error instanceof SemanticError &&
+        error.category === "minimalInconsistentSet"
+      ) {
+        return;
+      }
+      throw error;
+    }
+  }
+
+  visit(0, []);
+
+  const states = [...statesByKey.values()].sort((left, right) => {
+    const sizeDifference = left.length - right.length;
+    return sizeDifference === 0
+      ? compareIds(left.join("\0"), right.join("\0"))
+      : sizeDifference;
+  });
+
+  return { states };
 }
 
 /** Attempt to refine a validated state without mutating it on rejection. */

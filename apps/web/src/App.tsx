@@ -1,6 +1,7 @@
 import {
   computeBottom,
   computeClosure,
+  enumerateStates,
   type ClosureComputation,
   type ObservationAttempt,
   type TokenDefinition,
@@ -21,6 +22,9 @@ import {
 } from "./i18n";
 
 const bottom = computeBottom(flatBooleanSystem);
+const enumeratedStates = enumerateStates(flatBooleanSystem).states;
+const scottHomepageUrl = "https://www.cs.cmu.edu/~scott/";
+const scottPaperUrl = "https://doi.org/10.1007/BFb0012801";
 const informativeTokens = flatBooleanSystem.tokens.filter(
   ({ id }) => id !== flatBooleanSystem.delta,
 );
@@ -33,6 +37,8 @@ interface InformedLessonState {
 type RejectedObservation = Extract<ObservationAttempt, { readonly ok: false }>;
 
 type LessonState =
+  | { readonly step: "intro" }
+  | { readonly step: "example" }
   | { readonly step: "bottom" }
   | { readonly step: "inside" }
   | { readonly step: "choose" }
@@ -89,6 +95,17 @@ function tokenText(copy: LessonMessages, token: TokenDefinition): TokenText {
   );
 }
 
+function formatTokenSet(
+  copy: LessonMessages,
+  tokenIds: readonly TokenId[],
+): string {
+  const labels = tokenIds.map((tokenId) => {
+    const token = requireToken(tokenId);
+    return token.symbol ?? tokenText(copy, token).label;
+  });
+  return `{${labels.join(", ")}}`;
+}
+
 function TokenCard({
   token,
   text,
@@ -114,13 +131,19 @@ function TokenCard({
 export function App() {
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [lessonState, setLessonState] = useState<LessonState>({
-    step: "bottom",
+    step: "intro",
   });
   const insideActionRef = useRef<HTMLButtonElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
+  const exampleHeadingRef = useRef<HTMLHeadingElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const copy = messages[language];
-  const isOpen = lessonState.step !== "bottom";
+  const isIntroduction = lessonState.step === "intro";
+  const isExampleIntroduction = lessonState.step === "example";
+  const isOpen =
+    lessonState.step !== "intro" &&
+    lessonState.step !== "example" &&
+    lessonState.step !== "bottom";
   const informedState = hasInformation(lessonState) ? lessonState : undefined;
   const conflictState =
     lessonState.step === "conflict" ? lessonState : undefined;
@@ -153,10 +176,24 @@ export function App() {
   const stateLabel = `{${stateTokens
     .map((token) => token.symbol ?? token.label)
     .join(", ")}}`;
+  const modelTokenSet = formatTokenSet(
+    copy,
+    flatBooleanSystem.tokens.map(({ id }) => id),
+  );
+  const modelRule = flatBooleanSystem.minimalInconsistentSets
+    .map((tokenIds) => formatTokenSet(copy, tokenIds))
+    .join("; ");
+  const modelStates = enumeratedStates
+    .map((tokenIds) => formatTokenSet(copy, tokenIds))
+    .join("  ");
 
   useEffect(() => {
     document.documentElement.lang = language;
-    document.title = copy.pageTitle;
+    document.title = isIntroduction
+      ? copy.introduction.pageTitle
+      : isExampleIntroduction
+        ? copy.exampleIntroduction.pageTitle
+        : copy.pageTitle;
     document
       .querySelector<HTMLMetaElement>('meta[name="description"]')
       ?.setAttribute("content", copy.pageDescription);
@@ -166,9 +203,15 @@ export function App() {
     } catch {
       // The selected language remains active for the current page.
     }
-  }, [copy, language]);
+  }, [copy, isExampleIntroduction, isIntroduction, language]);
 
   useEffect(() => {
+    if (lessonState.step === "example") {
+      exampleHeadingRef.current?.focus();
+    }
+    if (lessonState.step === "bottom") {
+      resultHeadingRef.current?.focus();
+    }
     if (lessonState.step === "inside") {
       insideActionRef.current?.focus();
     }
@@ -225,7 +268,9 @@ export function App() {
       : copy.stateDescriptions.informed(selectedTokenText?.label ?? "");
 
   const lessonHeading =
-    lessonState.step === "bottom"
+    lessonState.step === "intro" || lessonState.step === "example"
+      ? ""
+      : lessonState.step === "bottom"
       ? copy.headings.bottom
       : lessonState.step === "inside"
         ? copy.headings.inside
@@ -236,7 +281,9 @@ export function App() {
             : copy.headings.conflict;
 
   const lessonExplanation =
-    lessonState.step === "bottom"
+    lessonState.step === "intro" || lessonState.step === "example"
+      ? ""
+      : lessonState.step === "bottom"
       ? copy.explanations.bottom
       : lessonState.step === "inside"
         ? copy.explanations.inside
@@ -281,13 +328,150 @@ export function App() {
             ))}
           </fieldset>
 
-          <div className="lesson-marker" aria-label={copy.lessonMarkerLabel}>
-            <span className="lesson-number">01</span>
-            <span className="lesson-name">{copy.lessonName}</span>
+          <div
+            className="lesson-marker"
+            aria-label={
+              isIntroduction
+                ? copy.introduction.markerLabel
+                : isExampleIntroduction
+                  ? copy.exampleIntroduction.markerLabel
+                  : copy.lessonMarkerLabel
+            }
+          >
+            <span className="lesson-number">
+              {isIntroduction || isExampleIntroduction ? "00" : "01"}
+            </span>
+            <span className="lesson-name">
+              {isIntroduction
+                ? copy.introduction.markerName
+                : isExampleIntroduction
+                  ? copy.exampleIntroduction.markerName
+                  : copy.lessonName}
+            </span>
           </div>
         </div>
       </header>
 
+      {isIntroduction ? (
+        <main className="introduction-main">
+          <section
+            className="introduction-panel"
+            aria-labelledby="introduction-title"
+          >
+            <p className="eyebrow">
+              <span className="eyebrow-dot" aria-hidden="true" />
+              {copy.introduction.eyebrow}
+            </p>
+
+            <h1 id="introduction-title">{copy.introduction.title}</h1>
+            <p className="introduction-lead">{copy.introduction.lead}</p>
+            <p className="introduction-history">
+              {copy.introduction.history}
+            </p>
+            <p className="introduction-purpose">
+              {copy.introduction.purpose}
+            </p>
+
+            <button
+              className="primary-action introduction-action"
+              type="button"
+              onClick={() => setLessonState({ step: "example" })}
+            >
+              <span>{copy.introduction.startAction}</span>
+              <span className="button-arrow" aria-hidden="true">
+                ↗
+              </span>
+            </button>
+
+            <nav
+              className="introduction-sources"
+              aria-label={copy.introduction.sourcesLabel}
+            >
+              <a href={scottHomepageUrl} target="_blank" rel="noreferrer">
+                {copy.introduction.scottLink}
+                <span aria-hidden="true">↗</span>
+              </a>
+              <a href={scottPaperUrl} target="_blank" rel="noreferrer">
+                {copy.introduction.paperLink}
+                <span aria-hidden="true">↗</span>
+              </a>
+            </nav>
+          </section>
+        </main>
+      ) : isExampleIntroduction ? (
+        <main className="example-main">
+          <section
+            className="example-panel"
+            aria-labelledby="example-introduction-title"
+          >
+            <p className="eyebrow">
+              <span className="eyebrow-dot" aria-hidden="true" />
+              {copy.exampleIntroduction.eyebrow}
+            </p>
+
+            <h1
+              id="example-introduction-title"
+              ref={exampleHeadingRef}
+              tabIndex={-1}
+            >
+              {copy.exampleIntroduction.title}
+            </h1>
+            <p className="example-invitation">
+              {copy.exampleIntroduction.invitation}
+            </p>
+
+            <article
+              className="boolean-example"
+              aria-labelledby="boolean-example-question"
+            >
+              <p>{copy.exampleIntroduction.questionLabel}</p>
+              <h2 id="boolean-example-question">
+                {copy.exampleIntroduction.question}
+              </h2>
+              <div className="boolean-answers">
+                <div className="boolean-answer is-true">
+                  <code>true</code>
+                  <span>{copy.exampleIntroduction.trueMeaning}</span>
+                </div>
+                <div className="boolean-answer is-false">
+                  <code>false</code>
+                  <span>{copy.exampleIntroduction.falseMeaning}</span>
+                </div>
+              </div>
+            </article>
+
+            <p className="example-definition">
+              {copy.exampleIntroduction.definition}
+            </p>
+            <p className="example-rationale">
+              {copy.exampleIntroduction.rationale}
+            </p>
+            <p className="example-bottom-explanation">
+              {copy.exampleIntroduction.bottomExplanation}
+            </p>
+
+            <div className="example-actions">
+              <button
+                className="primary-action"
+                type="button"
+                onClick={() => setLessonState({ step: "bottom" })}
+              >
+                <span>{copy.exampleIntroduction.startAction}</span>
+                <span className="button-arrow" aria-hidden="true">
+                  ↗
+                </span>
+              </button>
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => setLessonState({ step: "intro" })}
+              >
+                {copy.exampleIntroduction.backAction}
+              </button>
+            </div>
+          </section>
+        </main>
+      ) : (
       <main className="lesson-main">
         <section className="lesson-panel" aria-labelledby="lesson-title">
           <p className="eyebrow">
@@ -369,12 +553,54 @@ export function App() {
             <h1
               id="lesson-title"
               ref={resultHeadingRef}
-              tabIndex={hasInformation(lessonState) ? -1 : undefined}
+              tabIndex={-1}
             >
               {lessonHeading}
             </h1>
             <p>{lessonExplanation}</p>
           </div>
+
+          <aside
+            className="model-definition"
+            aria-labelledby="model-definition-title"
+          >
+            <h2 id="model-definition-title">
+              {copy.modelDefinition.title}
+            </h2>
+            <dl>
+              <div className="model-fact">
+                <dt>{copy.modelDefinition.subjectLabel}</dt>
+                <dd>{copy.modelDefinition.subject}</dd>
+              </div>
+
+              {lessonState.step === "bottom" ? null : (
+                <div className="model-fact">
+                  <dt>{copy.modelDefinition.tokensLabel}</dt>
+                  <dd>
+                    <code>{modelTokenSet}</code>
+                  </dd>
+                </div>
+              )}
+
+              {hasInformation(lessonState) ? (
+                <div className="model-fact">
+                  <dt>{copy.modelDefinition.ruleLabel}</dt>
+                  <dd>
+                    <code>{copy.modelDefinition.rule(modelRule)}</code>
+                  </dd>
+                </div>
+              ) : null}
+
+              {lessonState.step === "conflict" ? (
+                <div className="model-fact">
+                  <dt>{copy.modelDefinition.statesLabel}</dt>
+                  <dd>
+                    <code>{modelStates}</code>
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+          </aside>
 
           {conflictState === undefined ? null : (
             <aside
@@ -535,12 +761,19 @@ export function App() {
           </div>
         </section>
       </main>
+      )}
 
       <footer className="lesson-footer">
         <div className="footer-context">
           <span>{copy.footerSystem}</span>
           <span className="footer-rule" aria-hidden="true" />
-          <span>{copy.footerStage}</span>
+          <span>
+            {isIntroduction
+              ? copy.introduction.footerStage
+              : isExampleIntroduction
+                ? copy.exampleIntroduction.footerStage
+                : copy.footerStage}
+          </span>
         </div>
         <a
           className="repository-link"

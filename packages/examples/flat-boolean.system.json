@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "1",
+  "kind": "information-system",
+  "convention": "scott-1982-distinguished-token",
+  "id": "flat-boolean",
+  "title": "Flat Booleans",
+  "description": "An exact finite Boolean system with bottom and two incompatible informative tokens.",
+  "approximation": {
+    "kind": "exact"
+  },
+  "tokens": [
+    {
+      "id": "delta",
+      "label": "Always-present token",
+      "symbol": "Δ",
+      "description": "The distinguished token present in every state."
+    },
+    {
+      "id": "false",
+      "label": "false",
+      "description": "The observation that the Boolean is false."
+    },
+    {
+      "id": "true",
+      "label": "true",
+      "description": "The observation that the Boolean is true."
+    }
+  ],
+  "delta": "delta",
+  "minimalInconsistentSets": [
+    [
+      "false",
+      "true"
+    ]
+  ],
+  "entailmentRules": []
+}

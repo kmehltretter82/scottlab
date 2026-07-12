@@ -15,6 +15,13 @@ experiments, then discover the definitions represented by them. Every visual
 action will have a precise mathematical meaning, and every computed result will
 come with an explanation.
 
+## The basic idea
+
+ScottLab begins at bottom (`⊥`): a state with no specific information yet.
+Learners then discover **tokens**, small pieces of information such as
+`true`. A token is one observation; a state is the whole picture formed from
+the observations known so far. Bottom is a state, not a token.
+
 ## Goals
 
 - Teach Scott information systems without requiring prior knowledge of domain
@@ -49,14 +56,15 @@ objects will always be presented as explicitly bounded finite approximations.
 The first implementation slice will be a polished flat-Boolean lesson. It will
 start at the least-defined state, let a learner reveal `true` or `false`, show
 why those observations are incompatible, and visualize the resulting
-three-state information order.
+three-state information order. Afterward, the learner can open the same example
+in a read-only sandbox preview.
 
 ## Current status
 
-Work is beginning with the mathematical and visual specification: selecting a
-precise information-system axiomatisation, defining the versioned data format
-and algorithms, and prototyping the initial lesson. The first public release is
-planned as a static website suitable for GitHub Pages.
+Work is beginning with the mathematical and visual specification: documenting
+the precise information-system axiomatisation, defining the versioned data
+format and algorithms, and prototyping the initial lesson. The first public
+release is planned as a static website suitable for GitHub Pages.
 
 ## References
 

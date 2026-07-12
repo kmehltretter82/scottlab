@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:scottlab:schema:information-system:1",
+  "title": "ScottLab Information System v1",
+  "description": "A finite Scott information system using an explicit distinguished token.",
+  "$comment": "Shape validation is necessary but not sufficient. ScottLab must also validate token references, minimal conflicts, and the information-system laws.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "convention",
+    "id",
+    "title",
+    "description",
+    "approximation",
+    "tokens",
+    "delta",
+    "minimalInconsistentSets",
+    "entailmentRules"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "kind": {
+      "const": "information-system"
+    },
+    "convention": {
+      "const": "scott-1982-distinguished-token"
+    },
+    "id": {
+      "$ref": "#/$defs/identifier"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approximation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/exactRepresentation"
+        },
+        {
+          "$ref": "#/$defs/boundedRepresentation"
+        }
+      ]
+    },
+    "tokens": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/token"
+      }
+    },
+    "delta": {
+      "$ref": "#/$defs/tokenId"
+    },
+    "minimalInconsistentSets": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/minimalInconsistentSet"
+      }
+    },
+    "entailmentRules": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/entailmentRule"
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "maxLength": 64
+    },
+    "tokenId": {
+      "$ref": "#/$defs/identifier"
+    },
+    "tokenSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/tokenId"
+      }
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/tokenId"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "minimalInconsistentSet": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/tokenId"
+      }
+    },
+    "entailmentRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "premises",
+        "conclusion"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "premises": {
+          "$ref": "#/$defs/tokenSet"
+        },
+        "conclusion": {
+          "$ref": "#/$defs/tokenId"
+        }
+      }
+    },
+    "exactRepresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "const": "exact"
+        }
+      }
+    },
+    "boundedRepresentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "bound"
+      ],
+      "properties": {
+        "kind": {
+          "const": "bounded"
+        },
+        "bound": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A visible, human-readable bound such as 'successor depth <= 3'."
+        }
+      }
+    }
+  }
+}

@@ -2,8 +2,10 @@ import {
   computeBottom,
   computeClosure,
   type ClosureComputation,
+  type ObservationAttempt,
   type TokenDefinition,
   type TokenId,
+  tryAddObservation,
 } from "@scottlab/core";
 import { flatBooleanSystem } from "@scottlab/examples";
 import { useEffect, useRef, useState } from "react";
@@ -13,15 +15,23 @@ const informativeTokens = flatBooleanSystem.tokens.filter(
   ({ id }) => id !== flatBooleanSystem.delta,
 );
 
+interface InformedLessonState {
+  readonly selectedTokenId: TokenId;
+  readonly closure: ClosureComputation;
+}
+
+type RejectedObservation = Extract<ObservationAttempt, { readonly ok: false }>;
+
 type LessonState =
   | { readonly step: "bottom" }
   | { readonly step: "inside" }
   | { readonly step: "choose" }
-  | {
-      readonly step: "informed";
-      readonly selectedTokenId: TokenId;
-      readonly closure: ClosureComputation;
-    };
+  | ({ readonly step: "informed" } & InformedLessonState)
+  | ({
+      readonly step: "conflict";
+      readonly attemptedTokenId: TokenId;
+      readonly rejection: RejectedObservation;
+    } & InformedLessonState);
 
 interface TokenCardProps {
   readonly token: TokenDefinition;
@@ -34,6 +44,12 @@ function requireToken(tokenId: TokenId): TokenDefinition {
     throw new Error(`Flat Booleans does not define token '${tokenId}'.`);
   }
   return token;
+}
+
+function hasInformation(
+  state: LessonState,
+): state is Extract<LessonState, { readonly step: "informed" | "conflict" }> {
+  return state.step === "informed" || state.step === "conflict";
 }
 
 function TokenCard({ token, informative = false }: TokenCardProps) {
@@ -65,16 +81,31 @@ export function App() {
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const deltaSymbol = bottom.deltaToken.symbol ?? bottom.deltaToken.id;
   const isOpen = lessonState.step !== "bottom";
+  const informedState = hasInformation(lessonState) ? lessonState : undefined;
+  const conflictState =
+    lessonState.step === "conflict" ? lessonState : undefined;
   const selectedToken =
-    lessonState.step === "informed"
-      ? requireToken(lessonState.selectedTokenId)
-      : undefined;
+    informedState === undefined
+      ? undefined
+      : requireToken(informedState.selectedTokenId);
+  const attemptedToken =
+    conflictState === undefined
+      ? undefined
+      : requireToken(conflictState.attemptedTokenId);
+  const oppositeToken =
+    selectedToken === undefined
+      ? undefined
+      : informativeTokens.find(({ id }) => id !== selectedToken.id);
   const stateTokens =
-    lessonState.step === "informed"
-      ? lessonState.closure.state.map(requireToken)
-      : isOpen
+    informedState === undefined
+      ? isOpen
         ? [bottom.deltaToken]
-        : [];
+        : []
+      : informedState.closure.state.map(requireToken);
+  const witnessTokens =
+    conflictState === undefined
+      ? []
+      : conflictState.rejection.event.witness.map(requireToken);
 
   useEffect(() => {
     if (lessonState.step === "inside") {
@@ -83,7 +114,7 @@ export function App() {
     if (lessonState.step === "choose") {
       firstChoiceRef.current?.focus();
     }
-    if (lessonState.step === "informed") {
+    if (lessonState.step === "informed" || lessonState.step === "conflict") {
       resultHeadingRef.current?.focus();
     }
   }, [lessonState.step]);
@@ -91,6 +122,38 @@ export function App() {
   function selectObservation(tokenId: TokenId): void {
     const closure = computeClosure(flatBooleanSystem, [tokenId]);
     setLessonState({ step: "informed", selectedTokenId: tokenId, closure });
+  }
+
+  function attemptOppositeObservation(): void {
+    if (
+      informedState === undefined ||
+      selectedToken === undefined ||
+      oppositeToken === undefined
+    ) {
+      throw new Error("An informative Boolean state must have an opposite token.");
+    }
+
+    const result = tryAddObservation(
+      flatBooleanSystem,
+      informedState.closure.state,
+      oppositeToken.id,
+    );
+    if (result.ok) {
+      setLessonState({
+        step: "informed",
+        selectedTokenId: oppositeToken.id,
+        closure: result.closure,
+      });
+      return;
+    }
+
+    setLessonState({
+      step: "conflict",
+      selectedTokenId: selectedToken.id,
+      attemptedTokenId: oppositeToken.id,
+      closure: informedState.closure,
+      rejection: result,
+    });
   }
 
   const stateDescription =
@@ -124,49 +187,71 @@ export function App() {
           </p>
 
           <div className="state-space">
-            <figure
-              id="current-state"
-              className={`state-vessel${isOpen ? " is-open" : ""}${
-                selectedToken === undefined ? "" : " has-information"
+            <div
+              className={`state-scene${
+                conflictState === undefined ? "" : " has-conflict"
               }`}
-              aria-label={stateDescription}
             >
-              <div className="bottom-identity" aria-hidden="true">
-                <span
-                  className={`bottom-symbol${
-                    selectedToken === undefined ? "" : " is-word"
-                  }`}
-                >
-                  {selectedToken === undefined ? "⊥" : "state"}
-                </span>
-                <span className="state-kind">
-                  {selectedToken === undefined
-                    ? "state"
-                    : `{${stateTokens
-                        .map((token) => token.symbol ?? token.label)
-                        .join(", ")}}`}
-                </span>
-              </div>
+              <figure
+                id="current-state"
+                className={`state-vessel${isOpen ? " is-open" : ""}${
+                  selectedToken === undefined ? "" : " has-information"
+                }`}
+                aria-label={stateDescription}
+              >
+                <div className="bottom-identity" aria-hidden="true">
+                  <span
+                    className={`bottom-symbol${
+                      selectedToken === undefined ? "" : " is-word"
+                    }`}
+                  >
+                    {selectedToken === undefined ? "⊥" : "state"}
+                  </span>
+                  <span className="state-kind">
+                    {selectedToken === undefined
+                      ? "state"
+                      : `{${stateTokens
+                          .map((token) => token.symbol ?? token.label)
+                          .join(", ")}}`}
+                  </span>
+                </div>
 
-              {isOpen ? (
-                <ul className="state-tokens" aria-label="Tokens in this state">
-                  {stateTokens.map((token) => (
-                    <TokenCard
-                      key={token.id}
-                      token={token}
-                      informative={token.id !== flatBooleanSystem.delta}
-                    />
-                  ))}
-                </ul>
-              ) : null}
-            </figure>
+                {isOpen ? (
+                  <ul className="state-tokens" aria-label="Tokens in this state">
+                    {stateTokens.map((token) => (
+                      <TokenCard
+                        key={token.id}
+                        token={token}
+                        informative={token.id !== flatBooleanSystem.delta}
+                      />
+                    ))}
+                  </ul>
+                ) : null}
+              </figure>
+
+              {attemptedToken === undefined ? null : (
+                <>
+                  <div className="conflict-connector" aria-hidden="true">
+                    <span>×</span>
+                  </div>
+                  <aside
+                    className="rejected-token"
+                    aria-label={`Rejected ${attemptedToken.label} token`}
+                  >
+                    <span className="rejected-role">not added</span>
+                    <strong>{attemptedToken.label}</strong>
+                    <span className="rejected-detail">outside the state</span>
+                  </aside>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="lesson-copy" aria-live="polite">
             <h1
               id="lesson-title"
               ref={resultHeadingRef}
-              tabIndex={lessonState.step === "informed" ? -1 : undefined}
+              tabIndex={hasInformation(lessonState) ? -1 : undefined}
             >
               {lessonState.step === "bottom"
                 ? "No specific information yet"
@@ -174,7 +259,9 @@ export function App() {
                   ? "There is always one token inside."
                   : lessonState.step === "choose"
                     ? "Add one observation."
-                    : `The state now contains the token ${selectedToken?.label}.`}
+                    : lessonState.step === "informed"
+                      ? `The state now contains the token ${selectedToken?.label}.`
+                      : `${selectedToken?.label} and ${attemptedToken?.label} cannot belong to the same Boolean state.`}
             </h1>
 
             {lessonState.step === "inside" ? (
@@ -203,7 +290,34 @@ export function App() {
                 <span className="visually-hidden"> bottom</span>.
               </p>
             ) : null}
+
+            {lessonState.step === "conflict" ? (
+              <p>The current state is unchanged.</p>
+            ) : null}
           </div>
+
+          {conflictState === undefined ? null : (
+            <aside
+              className="conflict-witness"
+              aria-label={`Conflict witness: ${witnessTokens
+                .map(({ label }) => label)
+                .join(" and ")}`}
+            >
+              <span className="witness-title">Conflict witness</span>
+              <span className="witness-tokens">
+                {witnessTokens.map((token, index) => (
+                  <span className="witness-item" key={token.id}>
+                    {index === 0 ? null : (
+                      <span className="witness-cross" aria-hidden="true">
+                        ×
+                      </span>
+                    )}
+                    <code>{token.label}</code>
+                  </span>
+                ))}
+              </span>
+            </aside>
+          )}
 
           {lessonState.step === "choose" ? (
             <fieldset className="token-choice-fieldset">
@@ -223,6 +337,23 @@ export function App() {
                   </button>
                 ))}
               </div>
+            </fieldset>
+          ) : null}
+
+          {lessonState.step === "informed" && oppositeToken !== undefined ? (
+            <fieldset className="opposite-question">
+              <legend>
+                Can both observations belong to one Boolean state?
+              </legend>
+              <button
+                className="token-choice opposite-choice"
+                type="button"
+                aria-label={`Try adding ${oppositeToken.label} token`}
+                onClick={attemptOppositeObservation}
+              >
+                <span className="choice-role">try this token</span>
+                <span className="choice-label">{oppositeToken.label}</span>
+              </button>
             </fieldset>
           ) : null}
 
@@ -278,13 +409,23 @@ export function App() {
             ) : null}
 
             {lessonState.step === "informed" ? (
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => setLessonState({ step: "choose" })}
+              >
+                Choose another first token
+              </button>
+            ) : null}
+
+            {lessonState.step === "conflict" ? (
               <>
                 <button
                   className="primary-action"
                   type="button"
                   onClick={() => setLessonState({ step: "choose" })}
                 >
-                  <span>Choose again</span>
+                  <span>Try the other path</span>
                   <span className="button-arrow" aria-hidden="true">
                     ↙
                   </span>

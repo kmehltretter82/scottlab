@@ -4,6 +4,7 @@ import {
   computeBottom,
   computeClosure,
   SemanticError,
+  tryAddObservation,
   type InformationSystemDefinition,
 } from "./index";
 
@@ -128,5 +129,52 @@ describe("computeClosure", () => {
         witness: ["false", "true"],
       }),
     );
+  });
+});
+
+describe("tryAddObservation", () => {
+  it("accepts a consistent refinement", () => {
+    const result = tryAddObservation(flatBoolean, ["delta"], "true");
+
+    expect(result).toMatchObject({
+      ok: true,
+      closure: { state: ["delta", "true"] },
+    });
+  });
+
+  it("rejects false after true and preserves the current state", () => {
+    const result = tryAddObservation(
+      flatBoolean,
+      ["delta", "true"],
+      "false",
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      state: ["delta", "true"],
+      event: {
+        kind: "inconsistencyFound",
+        category: "minimalInconsistentSet",
+        candidate: ["delta", "false", "true"],
+        witness: ["false", "true"],
+      },
+    });
+  });
+
+  it("rejects true after false with the same witness", () => {
+    const result = tryAddObservation(
+      flatBoolean,
+      ["delta", "false"],
+      "true",
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      state: ["delta", "false"],
+      event: {
+        candidate: ["delta", "false", "true"],
+        witness: ["false", "true"],
+      },
+    });
   });
 });

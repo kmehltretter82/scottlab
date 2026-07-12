@@ -153,7 +153,7 @@ button:focus-visible {
 
 .lesson-panel {
   display: flex;
-  width: min(100%, 780px);
+  width: min(100%, 920px);
   align-items: center;
   flex-direction: column;
   text-align: center;
@@ -185,6 +185,16 @@ button:focus-visible {
   min-height: 290px;
   place-items: center;
   margin-bottom: 25px;
+}
+
+.state-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.state-scene.has-conflict {
+  width: min(calc(100vw - 48px), 920px);
 }
 
 .state-vessel {
@@ -370,6 +380,93 @@ button:focus-visible {
   color: #27675f;
 }
 
+.conflict-connector {
+  position: relative;
+  width: 62px;
+  height: 4px;
+  flex: 0 0 auto;
+  margin: 0 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    #b16a39 0 7px,
+    transparent 7px 12px
+  );
+}
+
+.conflict-connector span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 2px solid #9c542c;
+  border-radius: 50%;
+  color: #713d26;
+  background: #f3efe4;
+  font-size: 1.15rem;
+  font-weight: 800;
+  transform: translate(-50%, -50%);
+}
+
+.rejected-token {
+  display: grid;
+  width: 176px;
+  min-height: 126px;
+  align-content: center;
+  justify-items: start;
+  padding: 21px 24px;
+  border: 2px dashed #a76034;
+  border-radius: 23px;
+  color: #653e2a;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgb(185 106 54 / 10%) 0 8px,
+      transparent 8px 16px
+    ),
+    #fbf1df;
+  box-shadow: 0 12px 28px rgb(115 63 36 / 10%);
+  animation: rejected-token-arrives 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.rejected-token strong {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 1.3rem;
+}
+
+.rejected-role,
+.rejected-detail {
+  color: #8a634d;
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rejected-role {
+  margin-bottom: 7px;
+}
+
+.rejected-detail {
+  margin-top: 8px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+@keyframes rejected-token-arrives {
+  from {
+    opacity: 0;
+    transform: translateX(-18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes token-arrives {
   from {
     opacity: 0;
@@ -433,6 +530,75 @@ button:focus-visible {
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+.opposite-question {
+  display: grid;
+  justify-items: center;
+  margin: 17px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.opposite-question legend {
+  max-width: 520px;
+  margin: 0 auto 15px;
+  padding: 0;
+  color: #48635f;
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.opposite-choice {
+  min-width: 180px;
+  border-style: dashed;
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgb(39 103 95 / 5%) 0 8px,
+      transparent 8px 16px
+    ),
+    rgb(255 253 246 / 78%);
+}
+
+.conflict-witness {
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+  padding: 10px 15px;
+  border: 1px solid rgb(156 84 44 / 24%);
+  border-radius: 999px;
+  color: #684734;
+  background: #faf0df;
+}
+
+.witness-title {
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.witness-tokens,
+.witness-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.witness-tokens code {
+  color: #593a29;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.witness-cross {
+  color: #9c542c;
+  font-weight: 850;
 }
 
 .token-choice {
@@ -592,6 +758,29 @@ button:focus-visible {
   background: rgb(23 60 58 / 25%);
 }
 
+@media (max-width: 900px) {
+  .state-scene.has-conflict {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .conflict-connector {
+    width: 4px;
+    height: 45px;
+    margin: 12px 0;
+    background: repeating-linear-gradient(
+      180deg,
+      #b16a39 0 7px,
+      transparent 7px 12px
+    );
+  }
+
+  .rejected-token {
+    width: 210px;
+    min-height: 112px;
+  }
+}
+
 @media (max-width: 720px) {
   .site-header,
   .lesson-footer {
@@ -689,6 +878,10 @@ button:focus-visible {
     padding: 16px 18px;
   }
 
+  .conflict-witness {
+    margin-top: 4px;
+  }
+
   .lesson-footer {
     align-items: center;
     flex-direction: column;
@@ -722,6 +915,13 @@ button:focus-visible {
   .token-label {
     max-width: 115px;
     font-size: 1rem;
+  }
+
+  .conflict-witness {
+    align-items: flex-start;
+    border-radius: 20px;
+    flex-direction: column;
+    gap: 7px;
   }
 }
 

@@ -70,6 +70,24 @@ export interface ClosureComputation {
   readonly events: readonly ClosureSemanticEvent[];
 }
 
+export interface InconsistencyEvent {
+  readonly kind: "inconsistencyFound";
+  readonly category: "minimalInconsistentSet";
+  readonly candidate: readonly TokenId[];
+  readonly witness: readonly TokenId[];
+}
+
+export type ObservationAttempt =
+  | {
+      readonly ok: true;
+      readonly closure: ClosureComputation;
+    }
+  | {
+      readonly ok: false;
+      readonly state: readonly TokenId[];
+      readonly event: InconsistencyEvent;
+    };
+
 export type SemanticErrorCategory =
   | "duplicateRuleId"
   | "duplicateTokenId"
@@ -326,4 +344,37 @@ export function computeClosure(
   );
 
   return { input: normalizedInput, state, events };
+}
+
+/** Attempt to refine a validated state without mutating it on rejection. */
+export function tryAddObservation(
+  system: InformationSystemDefinition,
+  currentState: readonly TokenId[],
+  tokenId: TokenId,
+): ObservationAttempt {
+  const currentInput = currentState.filter((id) => id !== system.delta);
+  const currentClosure = computeClosure(system, currentInput);
+  const candidate = sortIds(new Set([...currentClosure.state, tokenId]));
+  const candidateInput = candidate.filter((id) => id !== system.delta);
+
+  try {
+    return { ok: true, closure: computeClosure(system, candidateInput) };
+  } catch (error) {
+    if (
+      error instanceof SemanticError &&
+      error.category === "minimalInconsistentSet"
+    ) {
+      return {
+        ok: false,
+        state: currentClosure.state,
+        event: {
+          kind: "inconsistencyFound",
+          category: "minimalInconsistentSet",
+          candidate,
+          witness: error.witness,
+        },
+      };
+    }
+    throw error;
+  }
 }

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -50,7 +50,7 @@ describe("bottom-first lesson screen", () => {
     ).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("supports the complete observation flow from the keyboard", async () => {
+  it("supports the inconsistency attempt entirely from the keyboard", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -75,6 +75,22 @@ describe("bottom-first lesson screen", () => {
       screen.getByRole("figure", {
         name: "State containing the always-present Delta token and the false token",
       }),
+    ).toBeVisible();
+
+    await user.tab();
+    expect(
+      screen.getByRole("button", { name: "Try adding true token" }),
+    ).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("heading", {
+        name: "false and true cannot belong to the same Boolean state.",
+      }),
+    ).toHaveFocus();
+    expect(screen.getByLabelText("Rejected true token")).toBeVisible();
+    expect(
+      screen.getByLabelText("Conflict witness: false and true"),
     ).toBeVisible();
   });
 
@@ -102,6 +118,34 @@ describe("bottom-first lesson screen", () => {
         screen.getByRole("heading", {
           name: `The state now contains the token ${tokenLabel}.`,
         }),
+      ).toBeVisible();
+
+      const oppositeLabel = tokenLabel === "true" ? "false" : "true";
+      await user.click(
+        screen.getByRole("button", {
+          name: `Try adding ${oppositeLabel} token`,
+        }),
+      );
+
+      const unchangedState = screen.getByRole("figure", {
+        name: `State containing the always-present Delta token and the ${tokenLabel} token`,
+      });
+      expect(unchangedState).toBeVisible();
+      expect(
+        within(unchangedState).queryByLabelText(
+          `${oppositeLabel} token, ${oppositeLabel}`,
+        ),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", {
+          name: `${tokenLabel} and ${oppositeLabel} cannot belong to the same Boolean state.`,
+        }),
+      ).toBeVisible();
+      expect(
+        screen.getByText("The current state is unchanged."),
+      ).toBeVisible();
+      expect(
+        screen.getByLabelText(`Rejected ${oppositeLabel} token`),
       ).toBeVisible();
     },
   );

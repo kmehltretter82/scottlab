@@ -4,10 +4,13 @@
 > **ScottLab is under construction.** A small local preview now introduces the
 > bottom state; the complete lesson and sandbox are not implemented yet.
 
+**[Open the current interactive preview](https://kmehltretter82.github.io/scottlab/)**
+
 ScottLab is a planned browser-based playground for learning, constructing, and
-experimenting with [Scott information systems](https://doi.org/10.1007/BFb0012801).
-It aims to make partial information, consistency, entailment, domains,
-continuous maps, and least fixed points visible and executable.
+experimenting with [Scott information systems](https://doi.org/10.1007/BFb0012801),
+introduced by [Dana S. Scott](https://www.cs.cmu.edu/~scott/). It aims to make
+partial information, consistency, entailment, domains, continuous maps, and
+least fixed points visible and executable.
 
 The project is intended to feel like an interactive mathematical exhibit.
 Learners will begin with small pictures, direct manipulation, and guided

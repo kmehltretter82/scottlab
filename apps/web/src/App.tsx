@@ -303,9 +303,18 @@ export function App() {
       </main>
 
       <footer className="lesson-footer">
-        <span>Flat Booleans</span>
-        <span className="footer-rule" aria-hidden="true" />
-        <span>First observation</span>
+        <div className="footer-context">
+          <span>Flat Booleans</span>
+          <span className="footer-rule" aria-hidden="true" />
+          <span>First observation</span>
+        </div>
+        <a
+          className="repository-link"
+          href={import.meta.env.VITE_REPOSITORY_URL}
+        >
+          <span>View repository</span>
+          <span aria-hidden="true">↗</span>
+        </a>
       </footer>
     </div>
   );

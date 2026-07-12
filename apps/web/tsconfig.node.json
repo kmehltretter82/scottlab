@@ -23,6 +23,7 @@
     "erasableSyntaxOnly": true
   },
   "include": [
+    "site.config.ts",
     "vite.config.ts",
     "vitest.config.ts"
   ]

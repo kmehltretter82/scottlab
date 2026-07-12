@@ -553,7 +553,7 @@ button:focus-visible {
   display: flex;
   width: min(100% - 64px, 1120px);
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   margin: 0 auto;
   padding: 18px 0 28px;
   color: #778782;
@@ -561,6 +561,29 @@ button:focus-visible {
   font-weight: 650;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.footer-context,
+.repository-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.repository-link {
+  color: #536e69;
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.repository-link:hover {
+  color: #173c3a;
+}
+
+.repository-link:focus-visible {
+  border-radius: 4px;
+  outline: 3px solid #e08b42;
+  outline-offset: 5px;
 }
 
 .footer-rule {
@@ -667,7 +690,10 @@ button:focus-visible {
   }
 
   .lesson-footer {
+    align-items: center;
+    flex-direction: column;
     justify-content: center;
+    gap: 13px;
     padding-bottom: 20px;
   }
 }

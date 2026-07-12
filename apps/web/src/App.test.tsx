@@ -21,6 +21,9 @@ describe("bottom-first lesson screen", () => {
       "aria-expanded",
       "false",
     );
+    expect(
+      screen.getByRole("link", { name: "View repository" }),
+    ).toHaveAttribute("href", "https://github.com/kmehltretter82/scottlab");
   });
 
   it("reveals Delta and keeps the token distinct from the bottom state", async () => {

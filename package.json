@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kmehltretter82/scottlab.git"
+  },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },

@@ -23,15 +23,11 @@ describe("bottom-first lesson screen", () => {
     );
   });
 
-  it("reveals Delta with the keyboard and keeps token and state distinct", async () => {
+  it("reveals Delta and keeps the token distinct from the bottom state", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.tab();
-    const inspectButton = screen.getByRole("button", { name: "Look inside" });
-    expect(inspectButton).toHaveFocus();
-
-    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Look inside" }));
 
     expect(
       screen.getByRole("figure", {
@@ -47,7 +43,63 @@ describe("bottom-first lesson screen", () => {
       }),
     ).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Close the state" }),
+      screen.getByRole("button", { name: "Add information" }),
     ).toHaveAttribute("aria-expanded", "true");
   });
+
+  it("supports the complete observation flow from the keyboard", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Look inside" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("button", { name: "Add information" }),
+    ).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByRole("button", { name: "Add false token" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("heading", {
+        name: "The state now contains the token false.",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("figure", {
+        name: "State containing the always-present Delta token and the false token",
+      }),
+    ).toBeVisible();
+  });
+
+  it.each(["true", "false"])(
+    "builds the validated %s state",
+    async (tokenLabel) => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(screen.getByRole("button", { name: "Look inside" }));
+      await user.click(screen.getByRole("button", { name: "Add information" }));
+      await user.click(
+        screen.getByRole("button", { name: `Add ${tokenLabel} token` }),
+      );
+
+      expect(
+        screen.getByRole("figure", {
+          name: `State containing the always-present Delta token and the ${tokenLabel} token`,
+        }),
+      ).toBeVisible();
+      expect(
+        screen.getByLabelText(`${tokenLabel} token, ${tokenLabel}`),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", {
+          name: `The state now contains the token ${tokenLabel}.`,
+        }),
+      ).toBeVisible();
+    },
+  );
 });

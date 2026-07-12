@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   computeBottom,
+  computeClosure,
   SemanticError,
   type InformationSystemDefinition,
 } from "./index";
@@ -80,6 +81,51 @@ describe("computeBottom", () => {
       expect.objectContaining<Partial<SemanticError>>({
         category: "inconsistentBottom",
         witness: ["always", "delta"],
+      }),
+    );
+  });
+});
+
+describe("computeClosure", () => {
+  it("adds true to the flat-Boolean bottom with a deterministic trace", () => {
+    const result = computeClosure(flatBoolean, ["true"]);
+
+    expect(result.state).toEqual(["delta", "true"]);
+    expect(result.events).toEqual([
+      { kind: "closureStarted", input: ["true"] },
+      {
+        kind: "tokenEntailed",
+        premises: [],
+        conclusion: "delta",
+        reason: { kind: "distinguishedToken" },
+      },
+      {
+        kind: "tokenEntailed",
+        premises: ["true"],
+        conclusion: "true",
+        reason: { kind: "reflexivity" },
+      },
+      {
+        kind: "closureCompleted",
+        input: ["true"],
+        result: ["delta", "true"],
+      },
+      { kind: "stateValidated", state: ["delta", "true"] },
+    ]);
+  });
+
+  it("handles the false branch symmetrically", () => {
+    expect(computeClosure(flatBoolean, ["false"]).state).toEqual([
+      "delta",
+      "false",
+    ]);
+  });
+
+  it("rejects incompatible Boolean observations with their witness", () => {
+    expect(() => computeClosure(flatBoolean, ["true", "false"])).toThrowError(
+      expect.objectContaining<Partial<SemanticError>>({
+        category: "minimalInconsistentSet",
+        witness: ["false", "true"],
       }),
     );
   });

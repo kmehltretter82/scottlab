@@ -31,16 +31,51 @@ export type BottomSemanticEvent =
       readonly state: readonly TokenId[];
     };
 
+export type EntailmentReason =
+  | { readonly kind: "distinguishedToken" }
+  | { readonly kind: "reflexivity" }
+  | { readonly kind: "declaredRule"; readonly ruleId: string }
+  | { readonly kind: "cut"; readonly through: readonly TokenId[] };
+
+export type ClosureSemanticEvent =
+  | {
+      readonly kind: "closureStarted";
+      readonly input: readonly TokenId[];
+    }
+  | {
+      readonly kind: "tokenEntailed";
+      readonly premises: readonly TokenId[];
+      readonly conclusion: TokenId;
+      readonly reason: EntailmentReason;
+    }
+  | {
+      readonly kind: "closureCompleted";
+      readonly input: readonly TokenId[];
+      readonly result: readonly TokenId[];
+    }
+  | {
+      readonly kind: "stateValidated";
+      readonly state: readonly TokenId[];
+    };
+
 export interface BottomComputation {
   readonly state: readonly TokenId[];
   readonly deltaToken: TokenDefinition;
   readonly events: readonly BottomSemanticEvent[];
 }
 
+export interface ClosureComputation {
+  readonly input: readonly TokenId[];
+  readonly state: readonly TokenId[];
+  readonly events: readonly ClosureSemanticEvent[];
+}
+
 export type SemanticErrorCategory =
   | "duplicateRuleId"
   | "duplicateTokenId"
+  | "entailmentBreaksConsistency"
   | "inconsistentBottom"
+  | "minimalInconsistentSet"
   | "unknownDelta"
   | "unknownTokenReference";
 
@@ -86,7 +121,7 @@ function firstDuplicate(ids: readonly string[]): string | undefined {
 }
 
 function requireKnownToken(
-  tokenIds: ReadonlySet<TokenId>,
+  tokenIds: Pick<ReadonlySet<TokenId>, "has">,
   id: TokenId,
   context: string,
 ): void {
@@ -209,4 +244,86 @@ export function computeBottom(
       { kind: "stateValidated", state },
     ],
   };
+}
+
+/** Close a consistent finite observation under the system's entailment rules. */
+export function computeClosure(
+  system: InformationSystemDefinition,
+  input: readonly TokenId[],
+): ClosureComputation {
+  const tokenById = validateReferences(system);
+  const normalizedInput = sortIds(new Set(input));
+
+  for (const tokenId of normalizedInput) {
+    requireKnownToken(tokenById, tokenId, "The closure input");
+  }
+
+  const result = new Set<TokenId>([system.delta, ...normalizedInput]);
+  const inputWitness = findConflict(system, result);
+  if (inputWitness !== undefined) {
+    throw new SemanticError(
+      "minimalInconsistentSet",
+      inputWitness,
+      `These tokens cannot form one state: {${inputWitness.join(", ")}}.`,
+    );
+  }
+
+  const events: ClosureSemanticEvent[] = [
+    { kind: "closureStarted", input: normalizedInput },
+    {
+      kind: "tokenEntailed",
+      premises: [],
+      conclusion: system.delta,
+      reason: { kind: "distinguishedToken" },
+    },
+  ];
+
+  for (const tokenId of normalizedInput) {
+    if (tokenId !== system.delta) {
+      events.push({
+        kind: "tokenEntailed",
+        premises: [tokenId],
+        conclusion: tokenId,
+        reason: { kind: "reflexivity" },
+      });
+    }
+  }
+
+  const rules = [...system.entailmentRules].sort((left, right) =>
+    compareIds(left.id, right.id),
+  );
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const rule of rules) {
+      const applies = rule.premises.every((premise) => result.has(premise));
+      if (applies && !result.has(rule.conclusion)) {
+        result.add(rule.conclusion);
+        events.push({
+          kind: "tokenEntailed",
+          premises: sortIds(rule.premises),
+          conclusion: rule.conclusion,
+          reason: { kind: "declaredRule", ruleId: rule.id },
+        });
+        changed = true;
+      }
+    }
+  }
+
+  const derivedWitness = findConflict(system, result);
+  if (derivedWitness !== undefined) {
+    throw new SemanticError(
+      "entailmentBreaksConsistency",
+      derivedWitness,
+      `Entailment derives the inconsistent token set {${derivedWitness.join(", ")}}.`,
+    );
+  }
+
+  const state = sortIds(result);
+  events.push(
+    { kind: "closureCompleted", input: normalizedInput, result: state },
+    { kind: "stateValidated", state },
+  );
+
+  return { input: normalizedInput, state, events };
 }

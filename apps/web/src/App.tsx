@@ -10,6 +10,16 @@ import {
 import { flatBooleanSystem } from "@scottlab/examples";
 import { useEffect, useRef, useState } from "react";
 
+import {
+  isSupportedLanguage,
+  languageStorageKey,
+  messages,
+  supportedLanguages,
+  type Language,
+  type LessonMessages,
+  type TokenText,
+} from "./i18n";
+
 const bottom = computeBottom(flatBooleanSystem);
 const informativeTokens = flatBooleanSystem.tokens.filter(
   ({ id }) => id !== flatBooleanSystem.delta,
@@ -35,7 +45,24 @@ type LessonState =
 
 interface TokenCardProps {
   readonly token: TokenDefinition;
+  readonly text: TokenText;
+  readonly roleLabel: string;
   readonly informative?: boolean;
+}
+
+function initialLanguage(): Language {
+  try {
+    const storedLanguage = window.localStorage.getItem(languageStorageKey);
+    if (isSupportedLanguage(storedLanguage)) {
+      return storedLanguage;
+    }
+  } catch {
+    // Local storage may be unavailable; the language switcher still works.
+  }
+
+  return window.navigator.language.toLowerCase().startsWith("de")
+    ? "de-DE"
+    : "en-GB";
 }
 
 function requireToken(tokenId: TokenId): TokenDefinition {
@@ -52,19 +79,31 @@ function hasInformation(
   return state.step === "informed" || state.step === "conflict";
 }
 
-function TokenCard({ token, informative = false }: TokenCardProps) {
+function tokenText(copy: LessonMessages, token: TokenDefinition): TokenText {
+  return (
+    copy.tokens[token.id] ?? {
+      label: token.label,
+      accessibleName: token.label,
+      description: token.description,
+    }
+  );
+}
+
+function TokenCard({
+  token,
+  text,
+  roleLabel,
+  informative = false,
+}: TokenCardProps) {
   const symbol = token.symbol ?? token.label;
-  const accessibleName = token.label.toLowerCase().endsWith("token")
-    ? token.label
-    : `${token.label} token`;
 
   return (
     <li
       className={`token-card${informative ? " is-informative" : ""}`}
-      aria-label={`${accessibleName}, ${symbol}`}
+      aria-label={`${text.accessibleName}, ${symbol}`}
     >
-      <span className="token-role">one observation</span>
-      <span className="token-label">{token.label}</span>
+      <span className="token-role">{roleLabel}</span>
+      <span className="token-label">{text.label}</span>
       <span className="token-symbol" aria-hidden="true">
         {symbol}
       </span>
@@ -73,13 +112,14 @@ function TokenCard({ token, informative = false }: TokenCardProps) {
 }
 
 export function App() {
+  const [language, setLanguage] = useState<Language>(initialLanguage);
   const [lessonState, setLessonState] = useState<LessonState>({
     step: "bottom",
   });
   const insideActionRef = useRef<HTMLButtonElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
-  const deltaSymbol = bottom.deltaToken.symbol ?? bottom.deltaToken.id;
+  const copy = messages[language];
   const isOpen = lessonState.step !== "bottom";
   const informedState = hasInformation(lessonState) ? lessonState : undefined;
   const conflictState =
@@ -106,6 +146,27 @@ export function App() {
     conflictState === undefined
       ? []
       : conflictState.rejection.event.witness.map(requireToken);
+  const selectedTokenText =
+    selectedToken === undefined ? undefined : tokenText(copy, selectedToken);
+  const attemptedTokenText =
+    attemptedToken === undefined ? undefined : tokenText(copy, attemptedToken);
+  const stateLabel = `{${stateTokens
+    .map((token) => token.symbol ?? token.label)
+    .join(", ")}}`;
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.title = copy.pageTitle;
+    document
+      .querySelector<HTMLMetaElement>('meta[name="description"]')
+      ?.setAttribute("content", copy.pageDescription);
+
+    try {
+      window.localStorage.setItem(languageStorageKey, language);
+    } catch {
+      // The selected language remains active for the current page.
+    }
+  }, [copy, language]);
 
   useEffect(() => {
     if (lessonState.step === "inside") {
@@ -159,9 +220,34 @@ export function App() {
   const stateDescription =
     selectedToken === undefined
       ? isOpen
-        ? "Bottom state containing the always-present Delta token"
-        : "Bottom state: no specific information yet"
-      : `State containing the always-present Delta token and the ${selectedToken.label} token`;
+        ? copy.stateDescriptions.bottomOpen
+        : copy.stateDescriptions.bottomClosed
+      : copy.stateDescriptions.informed(selectedTokenText?.label ?? "");
+
+  const lessonHeading =
+    lessonState.step === "bottom"
+      ? copy.headings.bottom
+      : lessonState.step === "inside"
+        ? copy.headings.inside
+        : lessonState.step === "choose"
+          ? copy.headings.choose
+          : lessonState.step === "informed"
+            ? copy.headings.informed(selectedTokenText?.label ?? "")
+            : copy.headings.conflict;
+
+  const lessonExplanation =
+    lessonState.step === "bottom"
+      ? copy.explanations.bottom
+      : lessonState.step === "inside"
+        ? copy.explanations.inside
+        : lessonState.step === "choose"
+          ? copy.explanations.choose
+          : lessonState.step === "informed"
+            ? copy.explanations.informed(
+                selectedTokenText?.label ?? "",
+                stateLabel,
+              )
+            : copy.explanations.conflict;
 
   return (
     <div className="app-shell">
@@ -173,9 +259,32 @@ export function App() {
           <span>ScottLab</span>
         </div>
 
-        <div className="lesson-marker" aria-label="Lesson 1: Bottom">
-          <span className="lesson-number">01</span>
-          <span className="lesson-name">Bottom</span>
+        <div className="header-controls">
+          <fieldset className="language-switcher">
+            <legend className="visually-hidden">
+              {copy.languageSelectorLabel}
+            </legend>
+            {supportedLanguages.map((option) => (
+              <button
+                key={option.id}
+                className="language-option"
+                type="button"
+                aria-label={copy.selectLanguage(option.label)}
+                aria-pressed={language === option.id}
+                onClick={() => setLanguage(option.id)}
+              >
+                <span className="language-flag" aria-hidden="true">
+                  {option.flag}
+                </span>
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </fieldset>
+
+          <div className="lesson-marker" aria-label={copy.lessonMarkerLabel}>
+            <span className="lesson-number">01</span>
+            <span className="lesson-name">{copy.lessonName}</span>
+          </div>
         </div>
       </header>
 
@@ -183,7 +292,7 @@ export function App() {
         <section className="lesson-panel" aria-labelledby="lesson-title">
           <p className="eyebrow">
             <span className="eyebrow-dot" aria-hidden="true" />
-            Begin here
+            {copy.eyebrow}
           </p>
 
           <div className="state-space">
@@ -205,11 +314,11 @@ export function App() {
                       selectedToken === undefined ? "" : " is-word"
                     }`}
                   >
-                    {selectedToken === undefined ? "⊥" : "state"}
+                    {selectedToken === undefined ? "⊥" : copy.stateNoun}
                   </span>
                   <span className="state-kind">
                     {selectedToken === undefined
-                      ? "state"
+                      ? copy.stateNoun
                       : `{${stateTokens
                           .map((token) => token.symbol ?? token.label)
                           .join(", ")}}`}
@@ -217,11 +326,16 @@ export function App() {
                 </div>
 
                 {isOpen ? (
-                  <ul className="state-tokens" aria-label="Tokens in this state">
+                  <ul
+                    className="state-tokens"
+                    aria-label={copy.tokensInState}
+                  >
                     {stateTokens.map((token) => (
                       <TokenCard
                         key={token.id}
                         token={token}
+                        text={tokenText(copy, token)}
+                        roleLabel={copy.tokenRole}
                         informative={token.id !== flatBooleanSystem.delta}
                       />
                     ))}
@@ -236,11 +350,15 @@ export function App() {
                   </div>
                   <aside
                     className="rejected-token"
-                    aria-label={`Rejected ${attemptedToken.label} token`}
+                    aria-label={copy.rejectedToken(
+                      attemptedTokenText?.label ?? "",
+                    )}
                   >
-                    <span className="rejected-role">not added</span>
-                    <strong>{attemptedToken.label}</strong>
-                    <span className="rejected-detail">outside the state</span>
+                    <span className="rejected-role">{copy.rejectedRole}</span>
+                    <strong>{attemptedTokenText?.label}</strong>
+                    <span className="rejected-detail">
+                      {copy.rejectedDetail}
+                    </span>
                   </aside>
                 </>
               )}
@@ -253,57 +371,21 @@ export function App() {
               ref={resultHeadingRef}
               tabIndex={hasInformation(lessonState) ? -1 : undefined}
             >
-              {lessonState.step === "bottom"
-                ? "No specific information yet"
-                : lessonState.step === "inside"
-                  ? "There is always one token inside."
-                  : lessonState.step === "choose"
-                    ? "Add one observation."
-                    : lessonState.step === "informed"
-                      ? `The state now contains the token ${selectedToken?.label}.`
-                      : `${selectedToken?.label} and ${attemptedToken?.label} cannot belong to the same Boolean state.`}
+              {lessonHeading}
             </h1>
-
-            {lessonState.step === "inside" ? (
-              <p>
-                This whole shape is a state. The object inside is one token.
-                <span className="formal-note">
-                  {` ${deltaSymbol}`} is present in every state, but gives no
-                  specific Boolean information.
-                </span>
-              </p>
-            ) : null}
-
-            {lessonState.step === "choose" ? (
-              <p>
-                Choose <code>true</code> or <code>false</code>. Either token
-                gives the state more information than
-                <span aria-hidden="true"> ⊥</span>
-                <span className="visually-hidden"> bottom</span>.
-              </p>
-            ) : null}
-
-            {lessonState.step === "informed" ? (
-              <p>
-                It has more information than
-                <span aria-hidden="true"> ⊥</span>
-                <span className="visually-hidden"> bottom</span>.
-              </p>
-            ) : null}
-
-            {lessonState.step === "conflict" ? (
-              <p>The current state is unchanged.</p>
-            ) : null}
+            <p>{lessonExplanation}</p>
           </div>
 
           {conflictState === undefined ? null : (
             <aside
               className="conflict-witness"
-              aria-label={`Conflict witness: ${witnessTokens
-                .map(({ label }) => label)
-                .join(" and ")}`}
+              aria-label={copy.conflictWitness(
+                witnessTokens
+                  .map((token) => tokenText(copy, token).label)
+                  .join(copy.tokenSeparator),
+              )}
             >
-              <span className="witness-title">Conflict witness</span>
+              <span className="witness-title">{copy.conflictTitle}</span>
               <span className="witness-tokens">
                 {witnessTokens.map((token, index) => (
                   <span className="witness-item" key={token.id}>
@@ -312,7 +394,7 @@ export function App() {
                         ×
                       </span>
                     )}
-                    <code>{token.label}</code>
+                    <code>{tokenText(copy, token).label}</code>
                   </span>
                 ))}
               </span>
@@ -321,7 +403,9 @@ export function App() {
 
           {lessonState.step === "choose" ? (
             <fieldset className="token-choice-fieldset">
-              <legend className="visually-hidden">Choose one observation</legend>
+              <legend className="visually-hidden">
+                {copy.chooseObservation}
+              </legend>
               <div className="token-choices">
                 {informativeTokens.map((token, index) => (
                   <button
@@ -329,11 +413,16 @@ export function App() {
                     ref={index === 0 ? firstChoiceRef : undefined}
                     className="token-choice"
                     type="button"
-                    aria-label={`Add ${token.label} token`}
+                    aria-label={copy.addToken(tokenText(copy, token).label)}
                     onClick={() => selectObservation(token.id)}
                   >
-                    <span className="choice-role">token</span>
-                    <span className="choice-label">{token.label}</span>
+                    <span className="choice-role">{copy.tokenChoiceRole}</span>
+                    <span className="choice-label">
+                      {tokenText(copy, token).label}
+                    </span>
+                    <span className="choice-meaning">
+                      {tokenText(copy, token).description}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -343,16 +432,20 @@ export function App() {
           {lessonState.step === "informed" && oppositeToken !== undefined ? (
             <fieldset className="opposite-question">
               <legend>
-                Can both observations belong to one Boolean state?
+                {copy.oppositeQuestion}
               </legend>
               <button
                 className="token-choice opposite-choice"
                 type="button"
-                aria-label={`Try adding ${oppositeToken.label} token`}
+                aria-label={copy.tryAddingToken(
+                  tokenText(copy, oppositeToken).label,
+                )}
                 onClick={attemptOppositeObservation}
               >
-                <span className="choice-role">try this token</span>
-                <span className="choice-label">{oppositeToken.label}</span>
+                <span className="choice-role">{copy.tryTokenRole}</span>
+                <span className="choice-label">
+                  {tokenText(copy, oppositeToken).label}
+                </span>
               </button>
             </fieldset>
           ) : null}
@@ -366,7 +459,7 @@ export function App() {
                 aria-expanded="false"
                 onClick={() => setLessonState({ step: "inside" })}
               >
-                <span>Look inside</span>
+                <span>{copy.actions.lookInside}</span>
                 <span className="button-arrow" aria-hidden="true">
                   ↗
                 </span>
@@ -383,7 +476,7 @@ export function App() {
                   aria-expanded="true"
                   onClick={() => setLessonState({ step: "choose" })}
                 >
-                  <span>Add information</span>
+                  <span>{copy.actions.addInformation}</span>
                   <span className="button-arrow" aria-hidden="true">
                     ↗
                   </span>
@@ -393,7 +486,7 @@ export function App() {
                   type="button"
                   onClick={() => setLessonState({ step: "bottom" })}
                 >
-                  Close the state
+                  {copy.actions.closeState}
                 </button>
               </>
             ) : null}
@@ -404,7 +497,7 @@ export function App() {
                 type="button"
                 onClick={() => setLessonState({ step: "inside" })}
               >
-                Back
+                {copy.actions.back}
               </button>
             ) : null}
 
@@ -414,7 +507,7 @@ export function App() {
                 type="button"
                 onClick={() => setLessonState({ step: "choose" })}
               >
-                Choose another first token
+                {copy.actions.chooseAnother}
               </button>
             ) : null}
 
@@ -425,7 +518,7 @@ export function App() {
                   type="button"
                   onClick={() => setLessonState({ step: "choose" })}
                 >
-                  <span>Try the other path</span>
+                  <span>{copy.actions.tryOtherPath}</span>
                   <span className="button-arrow" aria-hidden="true">
                     ↙
                   </span>
@@ -435,7 +528,7 @@ export function App() {
                   type="button"
                   onClick={() => setLessonState({ step: "bottom" })}
                 >
-                  Start over
+                  {copy.actions.startOver}
                 </button>
               </>
             ) : null}
@@ -445,15 +538,15 @@ export function App() {
 
       <footer className="lesson-footer">
         <div className="footer-context">
-          <span>Flat Booleans</span>
+          <span>{copy.footerSystem}</span>
           <span className="footer-rule" aria-hidden="true" />
-          <span>First observation</span>
+          <span>{copy.footerStage}</span>
         </div>
         <a
           className="repository-link"
           href={import.meta.env.VITE_REPOSITORY_URL}
         >
-          <span>View repository</span>
+          <span>{copy.repositoryLink}</span>
           <span aria-hidden="true">↗</span>
         </a>
       </footer>

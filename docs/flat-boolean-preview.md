@@ -39,15 +39,27 @@ tests:
 
 | Concept | Primary copy | Avoid as the primary explanation |
 | --- | --- | --- |
-| `⊥` | “No specific information yet” | “Error,” “nothing exists,” “hidden value” |
+| `⊥` | “The state with no specific answer yet” | “Error,” “nothing exists,” “hidden value” |
 | `Δ` | “Always-present token” | “Bottom token,” “the bottom” |
-| Token | “One observation” | “A state,” “a node” |
-| State | “The whole collection of observations” | “A token” |
+| Token | “One piece of information” | “A state,” “a node” |
+| State | “All compatible information currently known” | “A token” |
 | Refinement | “Add information” | “Reveal the answer underneath” |
-| Conflict | “These tokens cannot belong to one Boolean state” | Color-only warning |
+| Conflict | “One Boolean value cannot be both true and false” | Color-only warning |
 
 Formal terminology appears after the learner has interacted with the pictured
 idea. The symbols remain visible, but plain language leads.
+
+## Languages
+
+The web lesson provides British English and German presentation layers. A
+header switcher shows 🇬🇧 English and 🇩🇪 Deutsch with text labels, accessible
+button names, and a pressed state. The learner's choice is stored locally, and
+the document language, title, description, visible copy, and accessible copy
+change together.
+
+Token IDs, mathematical symbols, semantic events, and core errors are not
+translated. Localization belongs to the web presentation layer so that every
+language describes the same core computation.
 
 ## Interaction model
 
@@ -70,11 +82,14 @@ implementations.
 The first screen is a calm, spacious stage containing:
 
 - one large state labeled `⊥`;
-- the sentence “No specific information yet”; and
+- the sentence “We do not know the Boolean value yet”; and
 - one primary action, “Look inside.”
 
 No token tray, formal definition, Hasse diagram, or four-panel layout is
-visible. The accessible name is “Bottom state: no specific information yet.”
+visible. The explanation establishes that the lesson describes one Boolean
+value, defines a state as the compatible information currently known about
+that value, and names `⊥` as the state with no specific answer yet. The
+accessible name is “Bottom state: no specific information yet.”
 
 Entering the stage records `bottomComputed` and `stateValidated` semantic
 events. The learner's action records `stateInspected`.
@@ -87,10 +102,11 @@ token-shaped object with:
 - primary label “Always-present token”; and
 - secondary mathematical symbol `Δ`.
 
-The explanation says:
+The explanation defines a token before naming `Δ`:
 
-> This whole tray is a state. The object inside it is one token. `Δ` is present
-> in every state, but it gives no specific Boolean information.
+> A token is one piece of information. A state collects the tokens that can fit
+> together—everything known so far. This state contains only `Δ`; it is always
+> present but does not say whether the value is `true` or `false`.
 
 The visual treatment must make containment unambiguous: `Δ` is a chip or card
 inside the state boundary; `⊥` labels the whole boundary. In reduced-motion
@@ -100,9 +116,10 @@ The primary action becomes “Add information.”
 
 ### 3. Introduce informative tokens
 
-A compact token tray appears with `true` and `false`. The learner is asked to
-choose one observation to add. Both choices are equally prominent and keyboard
-accessible.
+A compact token tray appears with `true` and `false`. Each choice explains its
+meaning: `true` says that the Boolean value is true, and `false` says that the
+Boolean value is false. The learner is asked to choose one piece of information
+to add. Both choices are equally prominent and keyboard accessible.
 
 Selecting a token:
 
@@ -115,7 +132,8 @@ Selecting a token:
 For example, after selecting `true`, the state contains `{Δ, true}`. The copy
 says:
 
-> The state now contains the token `true`. It has more information than `⊥`.
+> Now the Boolean value is known as `true`. The `true` token is one piece of
+> information. The state `{Δ, true}` collects everything known so far.
 
 The corresponding `false` copy is generated from the same template.
 
@@ -137,8 +155,10 @@ pattern, connector, icon, and textual explanation; red alone is insufficient.
 
 Canonical explanation:
 
-> `true` and `false` cannot belong to the same Boolean state. The current state
-> is unchanged.
+> One Boolean value cannot be both true and false. This system declares those
+> tokens incompatible, and a state contains only compatible tokens. Because
+> `Δ` is always present, the only states are `{Δ}`, `{Δ, true}`, and
+> `{Δ, false}`.
 
 The learner can focus either token in the witness to hear the same relationship
 described from that token's perspective.

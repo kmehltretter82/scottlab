@@ -122,6 +122,57 @@ button:focus-visible {
   box-shadow: 0 5px 15px rgb(23 60 58 / 16%);
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.language-switcher {
+  display: inline-flex;
+  gap: 3px;
+  margin: 0;
+  padding: 3px;
+  border: 1px solid rgb(23 60 58 / 13%);
+  border-radius: 999px;
+  background: rgb(255 253 246 / 58%);
+  box-shadow: 0 5px 16px rgb(23 60 58 / 5%);
+}
+
+.language-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  color: #667c77;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-weight: 700;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.language-option:hover {
+  color: #173c3a;
+  background: rgb(255 255 255 / 58%);
+}
+
+.language-option[aria-pressed="true"] {
+  color: #173c3a;
+  background: #fffdf6;
+  box-shadow: 0 3px 9px rgb(23 60 58 / 10%);
+}
+
+.language-flag {
+  font-size: 0.88rem;
+  line-height: 1;
+}
+
 .lesson-marker {
   display: grid;
   grid-template-columns: auto auto;
@@ -603,7 +654,7 @@ button:focus-visible {
 
 .token-choice {
   display: grid;
-  min-width: 150px;
+  min-width: 220px;
   justify-items: start;
   gap: 7px;
   padding: 18px 22px;
@@ -644,6 +695,14 @@ button:focus-visible {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 1.22rem;
   font-weight: 700;
+}
+
+.choice-meaning {
+  max-width: 180px;
+  color: #60746f;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .lesson-actions {
@@ -788,7 +847,14 @@ button:focus-visible {
   }
 
   .site-header {
+    align-items: flex-start;
     padding-top: 20px;
+  }
+
+  .header-controls {
+    align-items: flex-end;
+    flex-direction: column-reverse;
+    gap: 9px;
   }
 
   .brand-mark {

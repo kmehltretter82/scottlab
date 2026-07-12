@@ -1,0 +1,19 @@
+{
+  "name": "@scottlab/examples",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@scottlab/core": "0.0.0"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2"
+  }
+}

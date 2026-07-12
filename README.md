@@ -1,8 +1,8 @@
 # ScottLab
 
 > [!IMPORTANT]
-> **ScottLab is under construction.** The project is currently in its planning
-> and specification phase; there is no usable application yet.
+> **ScottLab is under construction.** A small local preview now introduces the
+> bottom state; the complete lesson and sandbox are not implemented yet.
 
 ScottLab is a planned browser-based playground for learning, constructing, and
 experimenting with [Scott information systems](https://doi.org/10.1007/BFb0012801).
@@ -61,10 +61,23 @@ in a read-only sandbox preview.
 
 ## Current status
 
-Work is beginning with the mathematical and visual specification: documenting
-the precise information-system axiomatisation, defining the versioned data
-format and algorithms, and prototyping the initial lesson. The first public
-release is planned as a static website suitable for GitHub Pages.
+The mathematical convention, versioned data format, and first lesson flow are
+documented. The initial Vite and React application begins at `⊥` and lets the
+learner look inside to distinguish the state from its `Δ` token.
+
+## Run locally
+
+ScottLab requires Node.js 20.19+ or 22.12+. Install dependencies and start the
+development server:
+
+```sh
+npm install
+npm run dev
+```
+
+Open the address printed by Vite, normally <http://localhost:5173>. Other
+root-level checks are `npm test`, `npm run lint`, `npm run typecheck`, and
+`npm run build`. Use `npm run preview` to inspect the static production build.
 
 ## References
 

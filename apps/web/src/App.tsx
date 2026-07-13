@@ -921,44 +921,48 @@ export function App() {
             className="introduction-panel"
             aria-labelledby="introduction-title"
           >
-            <p className="eyebrow">
-              <span className="eyebrow-dot" aria-hidden="true" />
-              {copy.introduction.eyebrow}
-            </p>
+            <div className="introduction-heading">
+              <p className="eyebrow">
+                <span className="eyebrow-dot" aria-hidden="true" />
+                {copy.introduction.eyebrow}
+              </p>
+              <h1 id="introduction-title">{copy.introduction.title}</h1>
+            </div>
 
-            <h1 id="introduction-title">{copy.introduction.title}</h1>
-            <p className="introduction-lead">{copy.introduction.lead}</p>
-            <p className="introduction-history">
-              {copy.introduction.history}
-            </p>
-            <p className="introduction-purpose">
-              {copy.introduction.purpose}
-            </p>
+            <div className="introduction-content">
+              <p className="introduction-lead">{copy.introduction.lead}</p>
+              <p className="introduction-history">
+                {copy.introduction.history}
+              </p>
+              <p className="introduction-purpose">
+                {copy.introduction.purpose}
+              </p>
 
-            <button
-              className="primary-action introduction-action"
-              type="button"
-              onClick={() => setLessonState({ step: "example" })}
-            >
-              <span>{copy.introduction.startAction}</span>
-              <span className="button-arrow" aria-hidden="true">
-                ↗
-              </span>
-            </button>
+              <button
+                className="primary-action introduction-action"
+                type="button"
+                onClick={() => setLessonState({ step: "example" })}
+              >
+                <span>{copy.introduction.startAction}</span>
+                <span className="button-arrow" aria-hidden="true">
+                  ↗
+                </span>
+              </button>
 
-            <nav
-              className="introduction-sources"
-              aria-label={copy.introduction.sourcesLabel}
-            >
-              <a href={scottHomepageUrl} target="_blank" rel="noreferrer">
-                {copy.introduction.scottLink}
-                <span aria-hidden="true">↗</span>
-              </a>
-              <a href={scottPaperUrl} target="_blank" rel="noreferrer">
-                {copy.introduction.paperLink}
-                <span aria-hidden="true">↗</span>
-              </a>
-            </nav>
+              <nav
+                className="introduction-sources"
+                aria-label={copy.introduction.sourcesLabel}
+              >
+                <a href={scottHomepageUrl} target="_blank" rel="noreferrer">
+                  {copy.introduction.scottLink}
+                  <span aria-hidden="true">↗</span>
+                </a>
+                <a href={scottPaperUrl} target="_blank" rel="noreferrer">
+                  {copy.introduction.paperLink}
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </nav>
+            </div>
           </section>
         </main>
       ) : isExampleIntroduction ? (
@@ -967,21 +971,18 @@ export function App() {
             className="example-panel"
             aria-labelledby="example-introduction-title"
           >
-            <p className="eyebrow">
-              <span className="eyebrow-dot" aria-hidden="true" />
-              {copy.exampleIntroduction.eyebrow}
-            </p>
-
-            <h1
-              id="example-introduction-title"
-              ref={exampleHeadingRef}
-              tabIndex={-1}
-            >
-              {copy.exampleIntroduction.title}
-            </h1>
-            <p className="example-invitation">
-              {copy.exampleIntroduction.invitation}
-            </p>
+            <div className="example-heading">
+              <h1
+                id="example-introduction-title"
+                ref={exampleHeadingRef}
+                tabIndex={-1}
+              >
+                {copy.exampleIntroduction.title}
+              </h1>
+              <p className="example-invitation">
+                {copy.exampleIntroduction.invitation}
+              </p>
+            </div>
 
             <article
               className="boolean-example"
@@ -1003,12 +1004,14 @@ export function App() {
               </div>
             </article>
 
-            <p className="example-definition">
-              {copy.exampleIntroduction.definition}
-            </p>
-            <p className="example-rationale">
-              {copy.exampleIntroduction.rationale}
-            </p>
+            <div className="example-details">
+              <p className="example-definition">
+                {copy.exampleIntroduction.definition}
+              </p>
+              <p className="example-rationale">
+                {copy.exampleIntroduction.rationale}
+              </p>
+            </div>
             <p className="example-bottom-explanation">
               {copy.exampleIntroduction.bottomExplanation}
             </p>

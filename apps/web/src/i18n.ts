@@ -37,7 +37,6 @@ export interface LessonMessages {
     readonly pageTitle: string;
     readonly markerLabel: string;
     readonly markerName: string;
-    readonly eyebrow: string;
     readonly title: string;
     readonly invitation: string;
     readonly questionLabel: string;
@@ -179,7 +178,6 @@ const english: LessonMessages = {
     pageTitle: "ScottLab · A first Boolean model",
     markerLabel: "Introduction: First example",
     markerName: "Example",
-    eyebrow: "Our first model",
     title: "Let’s make the idea concrete.",
     invitation:
       "Let’s look at the simplest useful example: a question with only two possible answers.",
@@ -351,7 +349,6 @@ const german: LessonMessages = {
     pageTitle: "ScottLab · Ein erstes Boolean-Modell",
     markerLabel: "Einführung: Erstes Beispiel",
     markerName: "Beispiel",
-    eyebrow: "Unser erstes Modell",
     title: "Wie sieht das nun konkret aus?",
     invitation:
       "Wir wollen uns dazu ein möglichst einfaches Beispiel ansehen: eine Frage mit nur zwei möglichen Antworten.",

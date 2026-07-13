@@ -517,6 +517,27 @@ button:focus-visible {
   list-style: none;
 }
 
+.empty-observations {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  color: #71837e;
+  font-size: 0.63rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: token-arrives 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.empty-set-symbol {
+  color: #3f625d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 4rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 0.9;
+}
+
 .bottom-identity {
   display: flex;
   align-items: center;

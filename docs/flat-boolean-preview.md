@@ -29,7 +29,7 @@ After the preview, a first-time learner should be able to say:
   present domains for computable functions.”
 - “`⊥` is the state with no specific information.”
 - “A token is one observation; a state is the whole collection.”
-- “`Δ` is the always-present token inside every state.”
+- “Looking inside `⊥` shows an empty collection of observations, `∅`.”
 - “Adding `true` or `false` gives more information.”
 - “The `true` and `false` tokens cannot occur in one Boolean state.”
 - “A designer chooses what a system models, its tokens, and its compatibility
@@ -45,14 +45,15 @@ tests:
 | Concept | Primary copy | Avoid as the primary explanation |
 | --- | --- | --- |
 | `⊥` | “The state with no specific answer yet” | “Error,” “nothing exists,” “hidden value” |
-| `Δ` | “Always-present token” | “Bottom token,” “the bottom” |
+| `∅` | “No observations in this state” | “No state exists,” “error” |
 | Token | “One piece of information” | “A state,” “a node” |
 | State | “All compatible information currently known” | “A token” |
 | Refinement | “Add information” | “Reveal the answer underneath” |
 | Conflict | “One Boolean value cannot be both true and false” | Color-only warning |
 
 Formal terminology appears after the learner has interacted with the pictured
-idea. The symbols remain visible, but plain language leads.
+idea. Symbols are introduced only when they help explain that idea, and plain
+language leads.
 
 ## Languages
 
@@ -65,6 +66,28 @@ change together.
 Token IDs, mathematical symbols, semantic events, and core errors are not
 translated. Localization belongs to the web presentation layer so that every
 language describes the same core computation.
+
+## Beginner projection of the formal convention
+
+The mathematical core and persisted fixture continue to use Scott's explicit
+distinguished-token convention, as documented in
+[Mathematical Conventions](mathematical-conventions.md). The beginner lesson
+uses implicit-`Δ` notation: it hides the formal `Δ` token and shows only the
+specific observations in a state.
+
+The presentation therefore removes `Δ` from each core state:
+
+| Explicit core state | Beginner view |
+| --- | --- |
+| `{Δ}` | `∅` (`⊥`, no observations) |
+| `{Δ, false}` | `{false}` |
+| `{Δ, true}` | `{true}` |
+
+This is a projection of the same computed states, not a second implementation
+of the semantics. A later formal lesson may reveal `Δ` when the
+distinguished-token convention helps explain entailment and closure. Until
+then, visible copy must not suggest that a learner needs `Δ` to understand
+bottom, tokens, or the Boolean example.
 
 ## Interaction model
 
@@ -84,9 +107,10 @@ A compact “Designed model” card exposes the definition progressively rather
 than presenting the system as a black box:
 
 1. the opening identifies what the system was designed to model;
-2. inspecting bottom reveals the chosen token set;
-3. selecting a Boolean token reveals the declared compatibility rule; and
-4. testing that rule reveals the states derived from those choices.
+2. inspecting bottom reveals its empty collection of observations;
+3. meeting the Boolean tokens reveals the chosen token set;
+4. selecting a Boolean token reveals the declared compatibility rule; and
+5. testing that rule reveals the states derived from those choices.
 
 The card is explanatory presentation of the fixture, not a second mathematical
 model. Its values come from the same system consumed by the lesson.
@@ -132,41 +156,39 @@ The first screen is a calm, spacious stage containing:
 
 - one large state labeled `⊥`;
 - the sentence “We do not know the Boolean value yet”; and
-- a compact “Designed model” card identifying one ordinary Boolean value; and
+- a compact “Designed model” card identifying one ordinary Boolean value;
 - one primary action, “Look inside.”
 
 No token tray, dense formal definition, Hasse diagram, or four-panel layout is
 visible. The explanation says that this information system was designed to
 describe one Boolean value, defines a state as the compatible information
 currently known about that value, and names `⊥` as the state with no specific
-answer yet. The accessible name is “Bottom state: no specific information
-yet.”
+answer yet. The accessible name is “Bottom state: no observations yet.”
 
 Entering the stage records `bottomComputed` and `stateValidated` semantic
 events. The learner's action records `stateInspected`.
 
 ### 3. Look inside the state
 
-The bottom state opens or expands into a containing tray. Inside it is one
-token-shaped object with:
+The bottom state opens or expands into a containing tray. The tray contains no
+observations. It displays the empty-set symbol `∅` and the plain-language label
+“no observations.”
 
-- primary label “Always-present token”; and
-- secondary mathematical symbol `Δ`.
+The explanation establishes what the open state boundary contains before
+introducing tokens:
 
-The explanation defines a token before naming `Δ`:
+> A state collects the observations that fit together—everything known so far.
+> Here that collection is empty: `∅`. We have not made an observation about the
+> light yet.
 
-> A token is one piece of information. A state collects the tokens that can fit
-> together—everything known so far. This state contains only `Δ`; it is always
-> present but does not say whether the value is `true` or `false`.
-
-The visual treatment must make containment unambiguous: `Δ` is a chip or card
-inside the state boundary; `⊥` labels the whole boundary. In reduced-motion
+The visual treatment must make containment unambiguous: `∅` describes the
+collection inside the state, while `⊥` labels the whole state. In reduced-motion
 mode the expanded view replaces the collapsed view without spatial movement.
 
-The primary action becomes “Add information.”
+The primary action becomes “Meet the tokens.”
 
-The model card now reveals that the designer chose the token set
-`{Δ, false, true}`.
+The model card still shows only what the system models. The chosen token set is
+revealed in the next step, when tokens have a concrete role.
 
 ### 4. Introduce informative tokens
 
@@ -174,6 +196,9 @@ A compact token tray appears with `true` and `false`. Each choice explains its
 meaning: `true` says that the Boolean value is true, and `false` says that the
 Boolean value is false. The learner is asked to choose one piece of information
 to add. Both choices are equally prominent and keyboard accessible.
+
+The model card now reveals that the designer chose the visible token set
+`{false, true}`.
 
 Selecting a token:
 
@@ -183,11 +208,12 @@ Selecting a token:
 4. records `closureCompleted` and `stateValidated`; and
 5. updates the explanation and structured text view.
 
-For example, after selecting `true`, the state contains `{Δ, true}`. The copy
-says:
+For example, after selecting `true`, the beginner view contains `{true}`. The
+core has computed the explicit state `{Δ, true}`, but the presentation keeps
+the formal token implicit. The copy says:
 
 > Now the Boolean value is known as `true`. The `true` token is one piece of
-> information. The state `{Δ, true}` collects everything known so far.
+> information. The state `{true}` collects everything known so far.
 
 The corresponding `false` copy is generated from the same template.
 
@@ -212,8 +238,8 @@ The current valid state does not change. The attempted token returns to the
 tray or remains outside the state boundary. The two-token witness receives a
 pattern, connector, icon, and textual explanation; red alone is insufficient.
 
-The model card reveals the three states derived from the chosen tokens and
-rule. Canonical explanation:
+The model card reveals the three beginner-visible states `∅`, `{false}`, and
+`{true}` derived from the chosen tokens and rule. Canonical explanation:
 
 > One Boolean value cannot be both true and false. ScottLab did not infer this
 > from the token names; it checked the compatibility rule chosen for this
@@ -228,14 +254,14 @@ described from that token's perspective.
 The view pulls back to show the three states:
 
 ```text
-{Δ, true}    {Δ, false}
-      \        /
-          {Δ}
+{true}    {false}
+    \      /
+      ∅ (⊥)
 ```
 
 The displayed node labels are `true`, `false`, and `⊥`; inspecting any node
-reveals its full token set. Edges are produced by `coverRelation`, not drawn
-from a UI-specific hard-coded model.
+reveals its beginner-visible observations. Edges are produced by
+`coverRelation`, not drawn from a UI-specific hard-coded model.
 
 Canonical explanation:
 
@@ -244,7 +270,7 @@ Canonical explanation:
 
 The interface explicitly says that `⊥` is not Boolean `false`.
 
-### 6. Complete the challenge
+### 7. Complete the challenge
 
 The lesson resets to `⊥` and asks the learner to build the informative state
 they did not choose first. If the learner first selected `true`, the target is
@@ -261,14 +287,15 @@ Success copy:
 The completion event records the target, final state, and branch taken. It does
 not record personal data or send network requests.
 
-### 7. Open the read-only sandbox
+### 8. Open the read-only sandbox
 
 The final action opens the same flat-Boolean system in a read-only sandbox. It
 introduces the four synchronized areas without exposing editing controls:
 
 1. the three-state information-order diagram;
 2. the current state's token tray;
-3. a locked definition view showing the three tokens and one conflict; and
+3. a locked definition view showing the two visible tokens and one conflict;
+   and
 4. the plain-language and formal explanation view.
 
 Selecting a state in any view updates all four areas. The definition view says
@@ -355,6 +382,10 @@ record that the learner attempted to add `false`, but only
 
 ## Expected semantic traces
 
+These are formal core traces and therefore retain explicit `delta`. The
+beginner UI projects `delta` out of state and token displays as described
+above; it does not alter or reconstruct the traces.
+
 At minimum, tests assert these ordered event summaries:
 
 ### Initial state
@@ -415,7 +446,8 @@ coverRelationComputed(
 
 - A learner reaches the read-only sandbox without external documentation.
 - The learner encounters `⊥` before tokens or formal definitions.
-- Looking inside visually distinguishes the state boundary from the `Δ` token.
+- Looking inside shows `∅`, an empty collection of observations, without
+  introducing `Δ`.
 - Adding either Boolean token produces the expected state and trace.
 - Attempting both tokens preserves the current state and shows the concrete
   witness `{true, false}`.

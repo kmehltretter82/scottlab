@@ -79,6 +79,12 @@ function requireToken(tokenId: TokenId): TokenDefinition {
   return token;
 }
 
+function beginnerVisibleTokenIds(
+  tokenIds: readonly TokenId[],
+): TokenId[] {
+  return tokenIds.filter((tokenId) => tokenId !== flatBooleanSystem.delta);
+}
+
 function hasInformation(
   state: LessonState,
 ): state is Extract<LessonState, { readonly step: "informed" | "conflict" }> {
@@ -103,7 +109,7 @@ function formatTokenSet(
     const token = requireToken(tokenId);
     return token.symbol ?? tokenText(copy, token).label;
   });
-  return `{${labels.join(", ")}}`;
+  return labels.length === 0 ? "∅" : `{${labels.join(", ")}}`;
 }
 
 function TokenCard({
@@ -161,10 +167,8 @@ export function App() {
       : informativeTokens.find(({ id }) => id !== selectedToken.id);
   const stateTokens =
     informedState === undefined
-      ? isOpen
-        ? [bottom.deltaToken]
-        : []
-      : informedState.closure.state.map(requireToken);
+      ? beginnerVisibleTokenIds(isOpen ? bottom.state : []).map(requireToken)
+      : beginnerVisibleTokenIds(informedState.closure.state).map(requireToken);
   const witnessTokens =
     conflictState === undefined
       ? []
@@ -173,18 +177,21 @@ export function App() {
     selectedToken === undefined ? undefined : tokenText(copy, selectedToken);
   const attemptedTokenText =
     attemptedToken === undefined ? undefined : tokenText(copy, attemptedToken);
-  const stateLabel = `{${stateTokens
-    .map((token) => token.symbol ?? token.label)
-    .join(", ")}}`;
+  const stateLabel = formatTokenSet(
+    copy,
+    stateTokens.map(({ id }) => id),
+  );
   const modelTokenSet = formatTokenSet(
     copy,
-    flatBooleanSystem.tokens.map(({ id }) => id),
+    beginnerVisibleTokenIds(flatBooleanSystem.tokens.map(({ id }) => id)),
   );
   const modelRule = flatBooleanSystem.minimalInconsistentSets
     .map((tokenIds) => formatTokenSet(copy, tokenIds))
     .join("; ");
   const modelStates = enumeratedStates
-    .map((tokenIds) => formatTokenSet(copy, tokenIds))
+    .map((tokenIds) =>
+      formatTokenSet(copy, beginnerVisibleTokenIds(tokenIds)),
+    )
     .join("  ");
 
   useEffect(() => {
@@ -503,13 +510,23 @@ export function App() {
                   <span className="state-kind">
                     {selectedToken === undefined
                       ? copy.stateNoun
-                      : `{${stateTokens
-                          .map((token) => token.symbol ?? token.label)
-                          .join(", ")}}`}
+                      : stateLabel}
                   </span>
                 </div>
 
-                {isOpen ? (
+                {isOpen && stateTokens.length === 0 ? (
+                  <div
+                    className="empty-observations"
+                    aria-label={copy.emptyStateLabel}
+                  >
+                    <span className="empty-set-symbol" aria-hidden="true">
+                      ∅
+                    </span>
+                    <span>{copy.noObservations}</span>
+                  </div>
+                ) : null}
+
+                {isOpen && stateTokens.length > 0 ? (
                   <ul
                     className="state-tokens"
                     aria-label={copy.tokensInState}
@@ -520,7 +537,7 @@ export function App() {
                         token={token}
                         text={tokenText(copy, token)}
                         roleLabel={copy.tokenRole}
-                        informative={token.id !== flatBooleanSystem.delta}
+                        informative
                       />
                     ))}
                   </ul>
@@ -573,7 +590,8 @@ export function App() {
                 <dd>{copy.modelDefinition.subject}</dd>
               </div>
 
-              {lessonState.step === "bottom" ? null : (
+              {lessonState.step === "bottom" ||
+              lessonState.step === "inside" ? null : (
                 <div className="model-fact">
                   <dt>{copy.modelDefinition.tokensLabel}</dt>
                   <dd>

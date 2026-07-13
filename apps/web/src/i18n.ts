@@ -63,6 +63,8 @@ export interface LessonMessages {
   readonly tokens: Readonly<Record<string, TokenText>>;
   readonly tokenRole: string;
   readonly tokensInState: string;
+  readonly emptyStateLabel: string;
+  readonly noObservations: string;
   readonly tokenSeparator: string;
   readonly modelDefinition: {
     readonly title: string;
@@ -163,17 +165,11 @@ const english: LessonMessages = {
   eyebrow: "Begin here",
   stateNoun: "state",
   stateDescriptions: {
-    bottomClosed: "Bottom state: no specific information yet",
-    bottomOpen: "Bottom state containing the always-present Delta token",
-    informed: (token) =>
-      `State containing the always-present Delta token and the ${token} token`,
+    bottomClosed: "Bottom state: no observations yet",
+    bottomOpen: "Bottom state containing no observations",
+    informed: (token) => `State containing the ${token} token`,
   },
   tokens: {
-    delta: {
-      label: "Always-present token",
-      accessibleName: "Always-present token",
-      description: "The distinguished token present in every state.",
-    },
     false: {
       label: "false",
       accessibleName: "false token",
@@ -187,6 +183,8 @@ const english: LessonMessages = {
   },
   tokenRole: "one piece of information",
   tokensInState: "Tokens in this state",
+  emptyStateLabel: "Empty collection: no observations in this state",
+  noObservations: "no observations",
   tokenSeparator: " and ",
   modelDefinition: {
     title: "Designed model",
@@ -199,8 +197,8 @@ const english: LessonMessages = {
   },
   headings: {
     bottom: "We do not know the Boolean value yet.",
-    inside: "A token is one piece of information.",
-    choose: "Choose one token.",
+    inside: "This state contains no observations.",
+    choose: "A token is one piece of information.",
     informed: (token) => `Now the Boolean value is known as ${token}.`,
     conflict: "One Boolean value cannot be both true and false.",
   },
@@ -208,9 +206,9 @@ const english: LessonMessages = {
     bottom:
       "We designed this information system to describe one Boolean value: it can be true or false. A state is all the compatible information currently known about that value. The symbol ⊥ names the state with no specific answer yet.",
     inside:
-      "Designing an information system means choosing tokens and rules for how they fit together. A state collects the tokens that fit—everything known so far. This state contains only Δ, which does not say whether the value is true or false.",
+      "A state collects the observations that fit together—everything known so far. Here that collection is empty: ∅. We have not made an observation about the light yet.",
     choose:
-      "For this model, we chose true to mean “the Boolean value is true” and false to mean “the Boolean value is false.” Choose one piece of information to add to the state.",
+      "When designing this system, we chose tokens for its possible observations. The true token means “the Boolean value is true”; false means “the Boolean value is false.” Choose one to add to the state.",
     informed: (token, state) =>
       `The ${token} token is one piece of information. The state ${state} collects everything known so far.`,
     conflict:
@@ -230,7 +228,7 @@ const english: LessonMessages = {
   tryTokenRole: "try this token",
   actions: {
     lookInside: "Look inside",
-    addInformation: "Add information",
+    addInformation: "Meet the tokens",
     closeState: "Close the state",
     back: "Back",
     chooseAnother: "Choose another first token",
@@ -293,17 +291,11 @@ const german: LessonMessages = {
   eyebrow: "Hier beginnen",
   stateNoun: "Zustand",
   stateDescriptions: {
-    bottomClosed: "Bottom-Zustand: noch keine konkrete Information",
-    bottomOpen: "Bottom-Zustand mit dem immer vorhandenen Delta-Token",
-    informed: (token) =>
-      `Zustand mit dem immer vorhandenen Delta-Token und dem ${token}-Token`,
+    bottomClosed: "Bottom-Zustand: noch keine Beobachtungen",
+    bottomOpen: "Bottom-Zustand ohne Beobachtungen",
+    informed: (token) => `Zustand mit dem ${token}-Token`,
   },
   tokens: {
-    delta: {
-      label: "Immer vorhandenes Token",
-      accessibleName: "Immer vorhandenes Token",
-      description: "Das ausgezeichnete Token, das in jedem Zustand vorkommt.",
-    },
     false: {
       label: "false",
       accessibleName: "false-Token",
@@ -317,6 +309,8 @@ const german: LessonMessages = {
   },
   tokenRole: "ein Stück Information",
   tokensInState: "Token in diesem Zustand",
+  emptyStateLabel: "Leere Menge: keine Beobachtungen in diesem Zustand",
+  noObservations: "keine Beobachtungen",
   tokenSeparator: " und ",
   modelDefinition: {
     title: "Entworfenes Modell",
@@ -329,8 +323,8 @@ const german: LessonMessages = {
   },
   headings: {
     bottom: "Wir kennen den booleschen Wert noch nicht.",
-    inside: "Ein Token ist ein Stück Information.",
-    choose: "Wähle ein Token.",
+    inside: "Dieser Zustand enthält keine Beobachtungen.",
+    choose: "Ein Token ist ein Stück Information.",
     informed: (token) => `Der boolesche Wert ist nun als ${token} bekannt.`,
     conflict: "Ein boolescher Wert kann nicht zugleich true und false sein.",
   },
@@ -338,9 +332,9 @@ const german: LessonMessages = {
     bottom:
       "Wir haben dieses Informationssystem entworfen, um einen booleschen Wert zu beschreiben: Er kann true oder false sein. Ein Zustand ist die gesamte miteinander verträgliche Information, die derzeit über diesen Wert bekannt ist. Das Symbol ⊥ bezeichnet den Zustand, in dem noch keine konkrete Antwort bekannt ist.",
     inside:
-      "Ein Informationssystem zu entwerfen bedeutet, Token und Regeln für ihr Zusammenspiel zu wählen. Ein Zustand sammelt die passenden Token – alles, was bisher bekannt ist. Dieser Zustand enthält nur Δ; es sagt nicht, ob der Wert true oder false ist.",
+      "Ein Zustand sammelt die Beobachtungen, die zusammenpassen – alles, was bisher bekannt ist. Hier ist diese Menge leer: ∅. Wir haben noch keine Beobachtung über das Licht gemacht.",
     choose:
-      "Für dieses Modell haben wir true mit der Bedeutung „Der boolesche Wert ist true“ und false mit der Bedeutung „Der boolesche Wert ist false“ gewählt. Wähle ein Stück Information aus, das zum Zustand hinzugefügt werden soll.",
+      "Beim Entwerfen dieses Systems haben wir Token für seine möglichen Beobachtungen gewählt. Das true-Token bedeutet „Der boolesche Wert ist true“; false bedeutet „Der boolesche Wert ist false“. Wähle eines für den Zustand aus.",
     informed: (token, state) =>
       `Das ${token}-Token ist ein Stück Information. Der Zustand ${state} sammelt alles, was bisher bekannt ist.`,
     conflict:
@@ -360,7 +354,7 @@ const german: LessonMessages = {
   tryTokenRole: "dieses Token testen",
   actions: {
     lookInside: "Hineinschauen",
-    addInformation: "Information hinzufügen",
+    addInformation: "Die Token kennenlernen",
     closeState: "Zustand schließen",
     back: "Zurück",
     chooseAnother: "Anderes erstes Token wählen",

@@ -89,7 +89,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(within(model).queryByText("Tokens chosen")).not.toBeInTheDocument();
     expect(
       screen.getByRole("figure", {
-        name: "Bottom state: no specific information yet",
+        name: "Bottom state: no observations yet",
       }),
     ).toBeVisible();
     expect(screen.queryByText("Always-present token")).not.toBeInTheDocument();
@@ -102,7 +102,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     ).toHaveAttribute("href", "https://github.com/kmehltretter82/scottlab");
   });
 
-  it("reveals Delta and keeps the token distinct from the bottom state", async () => {
+  it("opens bottom as an empty collection of observations", async () => {
     const user = userEvent.setup();
     render(<App />);
     await beginLesson(user);
@@ -111,28 +111,29 @@ describe("ScottLab introduction and bottom-first lesson", () => {
 
     expect(
       screen.getByRole("figure", {
-        name: "Bottom state containing the always-present Delta token",
+        name: "Bottom state containing no observations",
       }),
     ).toBeVisible();
     expect(
-      screen.getByLabelText("Always-present token, Δ"),
-    ).toBeInTheDocument();
+      screen.getByLabelText("Empty collection: no observations in this state"),
+    ).toBeVisible();
+    expect(screen.getByText("∅")).toBeVisible();
+    expect(screen.queryByText("Δ")).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
-        name: "A token is one piece of information.",
+        name: "This state contains no observations.",
       }),
     ).toBeVisible();
     expect(
-      screen.getByText(/A state collects the tokens that fit/),
+      screen.getByText(/Here that collection is empty/),
     ).toBeVisible();
     expect(
-      screen.getByRole("button", { name: "Add information" }),
+      screen.getByRole("button", { name: "Meet the tokens" }),
     ).toHaveAttribute("aria-expanded", "true");
     const model = screen.getByRole("complementary", {
       name: "Designed model",
     });
-    expect(within(model).getByText("Tokens chosen")).toBeVisible();
-    expect(within(model).getByText("{Δ, false, true}")).toBeVisible();
+    expect(within(model).queryByText("Tokens chosen")).not.toBeInTheDocument();
     expect(within(model).queryByText("Rule declared")).not.toBeInTheDocument();
   });
 
@@ -142,12 +143,14 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     await beginLesson(user);
 
     await user.click(screen.getByRole("button", { name: "Look inside" }));
-    await user.click(screen.getByRole("button", { name: "Add information" }));
+    await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
     await user.click(screen.getByRole("button", { name: "Add true token" }));
 
     const model = screen.getByRole("complementary", {
       name: "Designed model",
     });
+    expect(within(model).getByText("Tokens chosen")).toBeVisible();
+    expect(within(model).getByText("{false, true}")).toBeVisible();
     expect(within(model).getByText("Rule declared")).toBeVisible();
     expect(
       within(model).getByText("{false, true} is incompatible"),
@@ -160,7 +163,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
 
     expect(within(model).getByText("States derived")).toBeVisible();
     expect(
-      within(model).getByText(/\{Δ\}.*\{Δ, false\}.*\{Δ, true\}/),
+      within(model).getByText(/∅.*\{false\}.*\{true\}/),
     ).toBeVisible();
     expect(
       screen.getByText(/ScottLab did not infer this from the token names/),
@@ -173,10 +176,12 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     await beginLesson(user);
 
     await user.click(screen.getByRole("button", { name: "Look inside" }));
-    await user.click(screen.getByRole("button", { name: "Add information" }));
+    await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
 
     expect(
-      screen.getByRole("heading", { name: "Choose one token." }),
+      screen.getByRole("heading", {
+        name: "A token is one piece of information.",
+      }),
     ).toBeVisible();
     expect(
       within(screen.getByRole("button", { name: "Add true token" })).getByText(
@@ -243,8 +248,13 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     await user.click(screen.getByRole("button", { name: "Hineinschauen" }));
     expect(
       screen.getByRole("heading", {
-        name: "Ein Token ist ein Stück Information.",
+        name: "Dieser Zustand enthält keine Beobachtungen.",
       }),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText(
+        "Leere Menge: keine Beobachtungen in diesem Zustand",
+      ),
     ).toBeVisible();
     expect(
       screen.getByRole("link", { name: "Repository ansehen" }),
@@ -296,7 +306,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     await user.keyboard("{Enter}");
 
     expect(
-      screen.getByRole("button", { name: "Add information" }),
+      screen.getByRole("button", { name: "Meet the tokens" }),
     ).toHaveFocus();
     await user.keyboard("{Enter}");
 
@@ -310,7 +320,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     ).toHaveFocus();
     expect(
       screen.getByRole("figure", {
-        name: "State containing the always-present Delta token and the false token",
+        name: "State containing the false token",
       }),
     ).toBeVisible();
 
@@ -339,14 +349,14 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       await beginLesson(user);
 
       await user.click(screen.getByRole("button", { name: "Look inside" }));
-      await user.click(screen.getByRole("button", { name: "Add information" }));
+      await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
       await user.click(
         screen.getByRole("button", { name: `Add ${tokenLabel} token` }),
       );
 
       expect(
         screen.getByRole("figure", {
-          name: `State containing the always-present Delta token and the ${tokenLabel} token`,
+          name: `State containing the ${tokenLabel} token`,
         }),
       ).toBeVisible();
       expect(
@@ -366,7 +376,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       );
 
       const unchangedState = screen.getByRole("figure", {
-        name: `State containing the always-present Delta token and the ${tokenLabel} token`,
+        name: `State containing the ${tokenLabel} token`,
       });
       expect(unchangedState).toBeVisible();
       expect(
@@ -387,7 +397,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       });
       expect(within(model).getByText("States derived")).toBeVisible();
       expect(
-        within(model).getByText(/\{Δ\}\s+\{Δ, false\}\s+\{Δ, true\}/),
+        within(model).getByText(/∅\s+\{false\}\s+\{true\}/),
       ).toBeVisible();
       expect(
         screen.getByLabelText(`Rejected ${oppositeLabel} token`),

@@ -67,7 +67,8 @@ in a read-only sandbox preview.
 The mathematical convention, versioned data format, and first lesson flow are
 documented. The Vite and React application gives a short historical
 introduction, explains why its first model is a Boolean, then begins at `⊥`
-and lets the learner distinguish the state from its `Δ` token.
+and opens it as an empty collection before introducing the `true` and `false`
+tokens.
 
 ## Run locally
 

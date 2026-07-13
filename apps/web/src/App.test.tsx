@@ -187,6 +187,12 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       within(model).getByText("{false, true} is incompatible"),
     ).toBeVisible();
     expect(within(model).queryByText("States derived")).not.toBeInTheDocument();
+    const oppositeQuestion =
+      "Test the model's declared rule: can both observations belong to one Boolean state?";
+    const ruleTest = screen.getByRole("group", { name: oppositeQuestion });
+    expect(
+      within(ruleTest).getByText(oppositeQuestion, { selector: "p" }),
+    ).toBeVisible();
 
     await user.click(
       screen.getByRole("button", { name: "Try adding false token" }),
@@ -316,6 +322,11 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       }),
     ).toBeVisible();
     expect(
+      screen.getByText(
+        "Zuvor hast du {true} gebaut. Diese Aufgabe knüpft an diese Wahl an: Beginne wieder bei ⊥ und baue den anderen möglichen Zustand {false}.",
+      ),
+    ).toBeVisible();
+    expect(
       screen.getByRole("complementary", {
         name: "Formales Ziel: {false}",
       }),
@@ -342,6 +353,11 @@ describe("ScottLab introduction and bottom-first lesson", () => {
         }),
       ).toHaveFocus();
       expect(
+        screen.getByText(
+          `Earlier, you built {${firstToken}}. This challenge uses that choice: start again at ⊥ and build the other possible state, {${targetToken}}.`,
+        ),
+      ).toBeVisible();
+      expect(
         screen.getByRole("figure", {
           name: "Bottom state containing no observations",
         }),
@@ -363,7 +379,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
 
       expect(
         screen.getByRole("heading", {
-          name: "You built both possible Boolean answers.",
+          name: "Good — that was correct.",
         }),
       ).toHaveFocus();
       const order = screen.getByRole("region", {
@@ -429,7 +445,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "You built both possible Boolean answers.",
+        name: "Good — that was correct.",
       }),
     ).toHaveFocus();
   });

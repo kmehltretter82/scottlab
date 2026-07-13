@@ -107,7 +107,10 @@ export interface LessonMessages {
   readonly challenge: {
     readonly tokenMeaning: Readonly<Record<string, string>>;
     readonly heading: (meaning: string) => string;
-    readonly explanation: string;
+    readonly explanation: (
+      previousState: string,
+      targetState: string,
+    ) => string;
     readonly targetLabel: string;
     readonly choiceLegend: string;
     readonly incorrectHeading: (state: string) => string;
@@ -277,16 +280,16 @@ const english: LessonMessages = {
     },
     heading: (meaning) =>
       `Your turn: make the light definitely ${meaning}.`,
-    explanation:
-      "Start again at ⊥, where no answer is known. Choose the token that builds the requested state.",
+    explanation: (previousState, targetState) =>
+      `Earlier, you built ${previousState}. This challenge uses that choice: start again at ⊥ and build the other possible state, ${targetState}.`,
     targetLabel: "Formal target",
     choiceLegend: "Choose a token for the challenge",
     incorrectHeading: (state) => `That builds ${state}.`,
     incorrectExplanation: (chosenMeaning, targetMeaning) =>
       `The light would now be definitely ${chosenMeaning}, but the challenge asks for ${targetMeaning}. Return to ⊥ and try the other observation.`,
-    successHeading: "You built both possible Boolean answers.",
+    successHeading: "Good — that was correct.",
     successExplanation: (token, state) =>
-      `Starting again at ⊥, you added the ${token} token and built ${state}. The diagram now highlights the other branch.`,
+      `Starting at ⊥, you added the ${token} token and built ${state}. The diagram now highlights the state you just built.`,
     footerStage: "Boolean challenge",
     completeFooterStage: "Challenge complete",
   },
@@ -448,16 +451,16 @@ const german: LessonMessages = {
     },
     heading: (meaning) =>
       `Deine Aufgabe: Sorge dafür, dass das Licht sicher ${meaning} ist.`,
-    explanation:
-      "Beginne wieder bei ⊥, wo noch keine Antwort bekannt ist. Wähle das Token, das den gesuchten Zustand erzeugt.",
+    explanation: (previousState, targetState) =>
+      `Zuvor hast du ${previousState} gebaut. Diese Aufgabe knüpft an diese Wahl an: Beginne wieder bei ⊥ und baue den anderen möglichen Zustand ${targetState}.`,
     targetLabel: "Formales Ziel",
     choiceLegend: "Ein Token für die Aufgabe wählen",
     incorrectHeading: (state) => `Damit entsteht ${state}.`,
     incorrectExplanation: (chosenMeaning, targetMeaning) =>
       `Das Licht wäre nun sicher ${chosenMeaning}, die Aufgabe verlangt aber ${targetMeaning}. Kehre zu ⊥ zurück und probiere die andere Beobachtung.`,
-    successHeading: "Du hast beide möglichen booleschen Antworten gebaut.",
+    successHeading: "Gut – das war richtig.",
     successExplanation: (token, state) =>
-      `Von ⊥ aus hast du das ${token}-Token hinzugefügt und ${state} gebaut. Das Diagramm hebt nun den anderen Zweig hervor.`,
+      `Von ⊥ aus hast du das ${token}-Token hinzugefügt und ${state} gebaut. Das Diagramm hebt nun den Zustand hervor, den du gerade gebaut hast.`,
     footerStage: "Boolean-Aufgabe",
     completeFooterStage: "Aufgabe gelöst",
   },

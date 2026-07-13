@@ -496,6 +496,10 @@ export function App() {
   );
   const targetStateLabel =
     targetToken === undefined ? "" : formatTokenSet(copy, [targetToken.id]);
+  const previousChallengeStateLabel =
+    challengeContext === undefined
+      ? ""
+      : formatTokenSet(copy, [challengeContext.selectedTokenId]);
   const targetMeaning =
     targetToken === undefined
       ? ""
@@ -780,7 +784,10 @@ export function App() {
               completedChallengeStateLabel,
             );
       case "challenge":
-        return copy.challenge.explanation;
+        return copy.challenge.explanation(
+          previousChallengeStateLabel,
+          targetStateLabel,
+        );
       case "challengeAttempt":
         return copy.challenge.incorrectExplanation(
           challengeTokenMeaning,
@@ -1238,9 +1245,8 @@ export function App() {
 
           {lessonState.step === "informed" && oppositeToken !== undefined ? (
             <fieldset className="opposite-question">
-              <legend>
-                {copy.oppositeQuestion}
-              </legend>
+              <legend className="visually-hidden">{copy.oppositeQuestion}</legend>
+              <p className="opposite-prompt">{copy.oppositeQuestion}</p>
               <button
                 className="token-choice opposite-choice"
                 type="button"

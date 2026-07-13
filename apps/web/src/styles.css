@@ -32,6 +32,11 @@ button:focus-visible {
   outline-offset: 5px;
 }
 
+.example-heading h1:focus,
+.lesson-copy h1:focus {
+  outline: none;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -464,7 +469,7 @@ button:focus-visible {
   margin-bottom: 0;
 }
 
-.lesson-visual .state-scene.has-conflict {
+.lesson-visual .state-scene {
   width: 100%;
 }
 
@@ -472,10 +477,17 @@ button:focus-visible {
   width: min(100%, 500px);
 }
 
+.lesson-visual .state-scene.has-conflict {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px 130px;
+  align-items: center;
+}
+
 .lesson-visual
   .state-scene.has-conflict
   .state-vessel.is-open.has-information {
-  width: clamp(340px, 38vw, 450px);
+  width: min(100%, 390px);
+  justify-self: end;
 }
 
 .lesson-visual .state-scene.has-conflict .conflict-connector {
@@ -1157,7 +1169,7 @@ button:focus-visible {
   grid-row: 2;
   gap: 7px;
   margin: 0;
-  padding: 8px;
+  padding: 9px;
   border: 1px solid rgb(23 60 58 / 13%);
   border-radius: 18px;
   color: #294b47;
@@ -1170,9 +1182,9 @@ button:focus-visible {
   display: flex;
   align-items: center;
   margin: 0;
-  padding: 3px 8px 6px;
+  padding: 4px 9px 7px;
   border-bottom: 1px solid rgb(23 60 58 / 12%);
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   line-height: 1.35;
@@ -1188,7 +1200,7 @@ button:focus-visible {
 
 .model-fact {
   min-width: 0;
-  padding: 7px 8px;
+  padding: 8px 9px;
   border-radius: 11px;
   background: rgb(255 255 255 / 48%);
   animation: model-fact-arrives 300ms ease-out both;
@@ -1197,7 +1209,7 @@ button:focus-visible {
 .model-fact dt {
   margin-bottom: 4px;
   color: #738681;
-  font-size: 0.52rem;
+  font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1205,7 +1217,7 @@ button:focus-visible {
 
 .model-fact dd {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   font-weight: 650;
   line-height: 1.4;
 }
@@ -1213,7 +1225,7 @@ button:focus-visible {
 .model-fact code {
   color: #315c56;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.68rem;
+  font-size: 0.76rem;
   white-space: pre-wrap;
 }
 
@@ -1301,15 +1313,34 @@ button:focus-visible {
   border: 0;
 }
 
-.opposite-question legend {
+.opposite-prompt {
   max-width: 520px;
   margin: 0 auto 15px;
-  padding: 0;
   color: #48635f;
   font-size: 0.86rem;
   font-weight: 650;
   line-height: 1.45;
   text-align: center;
+}
+
+.lesson-guidance .opposite-question {
+  min-width: 0;
+  align-self: stretch;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 180px);
+  align-items: center;
+  justify-items: stretch;
+  gap: 18px;
+}
+
+.lesson-guidance .opposite-prompt {
+  max-width: none;
+  margin: 0;
+  text-align: left;
+}
+
+.lesson-guidance .opposite-choice {
+  width: 100%;
+  align-self: center;
 }
 
 .opposite-choice {
@@ -1558,6 +1589,10 @@ button:focus-visible {
   .state-scene.has-conflict {
     width: 100%;
     flex-direction: column;
+  }
+
+  .lesson-visual .state-scene.has-conflict {
+    display: flex;
   }
 
   .lesson-visual .state-vessel.is-open.has-information,
@@ -1919,6 +1954,10 @@ button:focus-visible {
   }
 
   .lesson-guidance .token-choices {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-guidance .opposite-question {
     grid-template-columns: 1fr;
   }
 

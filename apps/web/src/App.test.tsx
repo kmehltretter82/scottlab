@@ -91,6 +91,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByText(/It is not a third Boolean value/),
     ).toBeVisible();
+    expect(screen.getByText(/symbol is read “bottom”/)).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Begin the Boolean model at ⊥" }),
     ).toBeVisible();
@@ -110,6 +111,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByText(/A state is all the compatible information/),
     ).toBeVisible();
+    expect(screen.getByText(/least informative state/)).toBeVisible();
     const model = screen.getByRole("complementary", {
       name: "Designed model",
     });
@@ -497,6 +499,9 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       screen.getByRole("heading", {
         name: "Wir kennen den booleschen Wert noch nicht.",
       }),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/Das Symbol ⊥ spricht man hier „Bottom“ aus/),
     ).toBeVisible();
     expect(
       screen.getByRole("complementary", { name: "Entworfenes Modell" }),

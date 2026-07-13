@@ -196,7 +196,7 @@ const english: LessonMessages = {
     rationale:
       "We start here because this small model already shows incomplete and conflicting information without being complicated.",
     bottomExplanation:
-      "As long as we do not know the answer, our information state is ⊥. It is not a third Boolean value; it means “not known yet”.",
+      "As long as we do not know the answer, our information state is ⊥. The symbol is read “bottom”. It is not a third Boolean value; it means “not known yet”.",
     startAction: "Begin the Boolean model at ⊥",
     backAction: "Back to Dana Scott",
     footerStage: "First example",
@@ -246,7 +246,7 @@ const english: LessonMessages = {
   },
   explanations: {
     bottom:
-      "We designed this information system to describe one Boolean value: it can be true or false. A state is all the compatible information currently known about that value. The symbol ⊥ names the state with no specific answer yet.",
+      "We designed this information system to describe one Boolean value: it can be true or false. A state is all the compatible information currently known about that value. The symbol ⊥ is read “bottom”. It names the least informative state: no specific answer is known yet.",
     inside:
       "A state collects the observations that fit together—everything known so far. Here that collection is empty: ∅. We have not made an observation about the light yet.",
     choose:
@@ -372,7 +372,7 @@ const german: LessonMessages = {
     rationale:
       "Wir beginnen mit diesem kleinen Modell, weil es bereits unvollständige und widersprüchliche Information zeigt, ohne kompliziert zu sein.",
     bottomExplanation:
-      "Solange wir die Antwort nicht kennen, ist unser Informationszustand ⊥. Das ist kein dritter Boolean-Wert, sondern bedeutet: „noch nicht bekannt“.",
+      "Solange wir die Antwort nicht kennen, ist unser Informationszustand ⊥. Das Symbol spricht man hier „Bottom“ aus. Das ist kein dritter Boolean-Wert, sondern bedeutet: „noch nicht bekannt“.",
     startAction: "Das Boolean-Modell bei ⊥ beginnen",
     backAction: "Zurück zu Dana Scott",
     footerStage: "Erstes Beispiel",
@@ -422,7 +422,7 @@ const german: LessonMessages = {
   },
   explanations: {
     bottom:
-      "Wir haben dieses Informationssystem entworfen, um einen booleschen Wert zu beschreiben: Er kann true oder false sein. Ein Zustand ist die gesamte miteinander verträgliche Information, die derzeit über diesen Wert bekannt ist. Das Symbol ⊥ bezeichnet den Zustand, in dem noch keine konkrete Antwort bekannt ist.",
+      "Wir haben dieses Informationssystem entworfen, um einen booleschen Wert zu beschreiben: Er kann true oder false sein. Ein Zustand ist die gesamte miteinander verträgliche Information, die derzeit über diesen Wert bekannt ist. Das Symbol ⊥ spricht man hier „Bottom“ aus. Es bezeichnet den am wenigsten informativen Zustand: Noch ist keine konkrete Antwort bekannt.",
     inside:
       "Ein Zustand sammelt die Beobachtungen, die zusammenpassen – alles, was bisher bekannt ist. Hier ist diese Menge leer: ∅. Wir haben noch keine Beobachtung über das Licht gemacht.",
     choose:

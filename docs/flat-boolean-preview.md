@@ -147,8 +147,9 @@ possibilities, then explains why this is the first model: it is small but
 already exhibits incomplete and conflicting information.
 
 The final explanation explicitly says that `⊥` is not a third Boolean value;
-it describes the information state in which the answer is not known yet. The
-primary action is “Begin the Boolean model at `⊥`.”
+it describes the information state in which the answer is not known yet and
+says that the symbol is read “bottom.” The primary action is “Begin the Boolean
+model at `⊥`.”
 
 ### 2. Begin at bottom
 
@@ -162,8 +163,9 @@ The first screen is a calm, spacious stage containing:
 No token tray, dense formal definition, Hasse diagram, or four-panel layout is
 visible. The explanation says that this information system was designed to
 describe one Boolean value, defines a state as the compatible information
-currently known about that value, and names `⊥` as the state with no specific
-answer yet. The accessible name is “Bottom state: no observations yet.”
+currently known about that value, and calls `⊥` “bottom,” the least informative
+state with no specific answer yet. The accessible name is “Bottom state: no
+observations yet.”
 
 Entering the stage records `bottomComputed` and `stateValidated` semantic
 events. The learner's action records `stateInspected`.

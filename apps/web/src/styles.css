@@ -1114,6 +1114,37 @@ button:focus-visible {
   white-space: pre-wrap;
 }
 
+.challenge-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 8px 13px;
+  border: 1px solid rgb(23 60 58 / 14%);
+  border-radius: 999px;
+  color: #5e746f;
+  background: rgb(255 253 246 / 70%);
+  box-shadow: 0 7px 18px rgb(23 60 58 / 6%);
+}
+
+.challenge-target span {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.challenge-target code {
+  color: #2e615a;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
+.challenge-choices {
+  margin-top: 2px;
+}
+
 @keyframes model-fact-arrives {
   from {
     opacity: 0;

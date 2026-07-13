@@ -35,8 +35,9 @@ async function reachConflict(
 
 async function reachInformationOrder(
   user: ReturnType<typeof userEvent.setup>,
+  firstToken = "true",
 ): Promise<void> {
-  await reachConflict(user);
+  await reachConflict(user, firstToken);
   await user.click(
     screen.getByRole("button", { name: "Show all possible states" }),
   );
@@ -302,6 +303,128 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       }),
     ).toHaveAttribute("aria-pressed", "true");
     expect(within(order).getByText("Ausgewählter Zustand")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Eine kurze Aufgabe lösen" }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "Deine Aufgabe: Sorge dafür, dass das Licht sicher ausgeschaltet ist.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("complementary", {
+        name: "Formales Ziel: {false}",
+      }),
+    ).toBeVisible();
+  });
+
+  it.each([
+    { firstToken: "true", targetToken: "false", targetMeaning: "off" },
+    { firstToken: "false", targetToken: "true", targetMeaning: "on" },
+  ])(
+    "challenges the learner to build $targetToken after $firstToken",
+    async ({ firstToken, targetToken, targetMeaning }) => {
+      const user = userEvent.setup();
+      render(<App />);
+      await reachInformationOrder(user, firstToken);
+
+      await user.click(
+        screen.getByRole("button", { name: "Try a short challenge" }),
+      );
+
+      expect(
+        screen.getByRole("heading", {
+          name: `Your turn: make the light definitely ${targetMeaning}.`,
+        }),
+      ).toHaveFocus();
+      expect(
+        screen.getByRole("figure", {
+          name: "Bottom state containing no observations",
+        }),
+      ).toBeVisible();
+      expect(
+        screen.getByRole("complementary", {
+          name: `Formal target: {${targetToken}}`,
+        }),
+      ).toBeVisible();
+      expect(screen.queryByText("Δ")).not.toBeInTheDocument();
+
+      await user.click(
+        screen.getByRole("button", { name: `Add ${targetToken} token` }),
+      );
+
+      expect(
+        screen.getByRole("heading", {
+          name: "You built both possible Boolean answers.",
+        }),
+      ).toHaveFocus();
+      const order = screen.getByRole("region", {
+        name: "Information order of the three Boolean states",
+      });
+      expect(
+        within(order).getByRole("button", {
+          name: `Inspect state {${targetToken}}: the Boolean answer is ${targetToken}`,
+        }),
+      ).toHaveAttribute("aria-pressed", "true");
+      expect(
+        screen.getByText(
+          new RegExp(
+            `added the ${targetToken} token and built \\{${targetToken}\\}`,
+          ),
+        ),
+      ).toBeVisible();
+      expect(
+        screen.queryByRole("button", { name: "Try a short challenge" }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("shows an incorrect branch honestly and supports a keyboard retry", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachInformationOrder(user);
+
+    const startChallenge = screen.getByRole("button", {
+      name: "Try a short challenge",
+    });
+    startChallenge.focus();
+    await user.keyboard("{Enter}");
+
+    const wrongToken = screen.getByRole("button", { name: "Add true token" });
+    wrongToken.focus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("heading", { name: "That builds {true}." }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("figure", { name: "State containing the true token" }),
+    ).toBeVisible();
+    expect(screen.getByText(/challenge asks for off/)).toBeVisible();
+
+    const retry = screen.getByRole("button", {
+      name: "Return to ⊥ and try again",
+    });
+    retry.focus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("figure", {
+        name: "Bottom state containing no observations",
+      }),
+    ).toBeVisible();
+    const correctToken = screen.getByRole("button", {
+      name: "Add false token",
+    });
+    correctToken.focus();
+    await user.keyboard("{Enter}");
+
+    expect(
+      screen.getByRole("heading", {
+        name: "You built both possible Boolean answers.",
+      }),
+    ).toHaveFocus();
   });
 
   it("explains the Boolean tokens before asking for a choice", async () => {

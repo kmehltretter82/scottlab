@@ -107,6 +107,24 @@ export interface LessonMessages {
     readonly edgeDescription: (lower: string, upper: string) => string;
     readonly footerStage: string;
   };
+  readonly challenge: {
+    readonly eyebrow: string;
+    readonly completeEyebrow: string;
+    readonly tokenMeaning: Readonly<Record<string, string>>;
+    readonly heading: (meaning: string) => string;
+    readonly explanation: string;
+    readonly targetLabel: string;
+    readonly choiceLegend: string;
+    readonly incorrectHeading: (state: string) => string;
+    readonly incorrectExplanation: (
+      chosenMeaning: string,
+      targetMeaning: string,
+    ) => string;
+    readonly successHeading: string;
+    readonly successExplanation: (token: string, state: string) => string;
+    readonly footerStage: string;
+    readonly completeFooterStage: string;
+  };
   readonly rejectedToken: (token: string) => string;
   readonly rejectedRole: string;
   readonly rejectedDetail: string;
@@ -127,6 +145,9 @@ export interface LessonMessages {
     readonly tryOtherPath: string;
     readonly showOrder: string;
     readonly backToConflict: string;
+    readonly startChallenge: string;
+    readonly retryChallenge: string;
+    readonly backToOrder: string;
     readonly startOver: string;
   };
   readonly footerSystem: string;
@@ -257,6 +278,28 @@ const english: LessonMessages = {
       `${lower} is directly below ${upper}.`,
     footerStage: "Information order",
   },
+  challenge: {
+    eyebrow: "A short challenge",
+    completeEyebrow: "Challenge complete",
+    tokenMeaning: {
+      false: "off",
+      true: "on",
+    },
+    heading: (meaning) =>
+      `Your turn: make the light definitely ${meaning}.`,
+    explanation:
+      "Start again at ⊥, where no answer is known. Choose the token that builds the requested state.",
+    targetLabel: "Formal target",
+    choiceLegend: "Choose a token for the challenge",
+    incorrectHeading: (state) => `That builds ${state}.`,
+    incorrectExplanation: (chosenMeaning, targetMeaning) =>
+      `The light would now be definitely ${chosenMeaning}, but the challenge asks for ${targetMeaning}. Return to ⊥ and try the other observation.`,
+    successHeading: "You built both possible Boolean answers.",
+    successExplanation: (token, state) =>
+      `Starting again at ⊥, you added the ${token} token and built ${state}. The diagram now highlights the other branch.`,
+    footerStage: "Boolean challenge",
+    completeFooterStage: "Challenge complete",
+  },
   rejectedToken: (token) => `Rejected ${token} token`,
   rejectedRole: "not added",
   rejectedDetail: "outside the state",
@@ -278,6 +321,9 @@ const english: LessonMessages = {
     tryOtherPath: "Try the other path",
     showOrder: "Show all possible states",
     backToConflict: "Back to the conflict",
+    startChallenge: "Try a short challenge",
+    retryChallenge: "Return to ⊥ and try again",
+    backToOrder: "Back to the information order",
     startOver: "Start over",
   },
   footerSystem: "Flat Booleans",
@@ -408,6 +454,28 @@ const german: LessonMessages = {
       `${lower} liegt direkt unter ${upper}.`,
     footerStage: "Informationsordnung",
   },
+  challenge: {
+    eyebrow: "Eine kurze Aufgabe",
+    completeEyebrow: "Aufgabe gelöst",
+    tokenMeaning: {
+      false: "ausgeschaltet",
+      true: "eingeschaltet",
+    },
+    heading: (meaning) =>
+      `Deine Aufgabe: Sorge dafür, dass das Licht sicher ${meaning} ist.`,
+    explanation:
+      "Beginne wieder bei ⊥, wo noch keine Antwort bekannt ist. Wähle das Token, das den gesuchten Zustand erzeugt.",
+    targetLabel: "Formales Ziel",
+    choiceLegend: "Ein Token für die Aufgabe wählen",
+    incorrectHeading: (state) => `Damit entsteht ${state}.`,
+    incorrectExplanation: (chosenMeaning, targetMeaning) =>
+      `Das Licht wäre nun sicher ${chosenMeaning}, die Aufgabe verlangt aber ${targetMeaning}. Kehre zu ⊥ zurück und probiere die andere Beobachtung.`,
+    successHeading: "Du hast beide möglichen booleschen Antworten gebaut.",
+    successExplanation: (token, state) =>
+      `Von ⊥ aus hast du das ${token}-Token hinzugefügt und ${state} gebaut. Das Diagramm hebt nun den anderen Zweig hervor.`,
+    footerStage: "Boolean-Aufgabe",
+    completeFooterStage: "Aufgabe gelöst",
+  },
   rejectedToken: (token) => `Abgelehntes ${token}-Token`,
   rejectedRole: "nicht hinzugefügt",
   rejectedDetail: "außerhalb des Zustands",
@@ -429,6 +497,9 @@ const german: LessonMessages = {
     tryOtherPath: "Den anderen Weg ausprobieren",
     showOrder: "Alle möglichen Zustände zeigen",
     backToConflict: "Zurück zum Konflikt",
+    startChallenge: "Eine kurze Aufgabe lösen",
+    retryChallenge: "Zu ⊥ zurückkehren und erneut versuchen",
+    backToOrder: "Zurück zur Informationsordnung",
     startOver: "Neu beginnen",
   },
   footerSystem: "Flache boolesche Werte",

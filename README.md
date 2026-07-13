@@ -1,9 +1,8 @@
 # ScottLab
 
 > [!IMPORTANT]
-> **ScottLab is under construction.** The interactive preview now reaches the
-> three-state Boolean information order; the challenge and sandbox are not
-> implemented yet.
+> **ScottLab is under construction.** The guided Boolean preview now reaches
+> its branch-aware challenge; the separate sandbox is not implemented yet.
 
 **[Open the current interactive preview](https://kmehltretter82.github.io/scottlab/)**
 
@@ -70,7 +69,8 @@ documented. The Vite and React application gives a short historical
 introduction, explains why its first model is a Boolean, then begins at `⊥`
 and opens it as an empty collection before introducing the `true` and `false`
 tokens. It rejects their incompatible combination with a concrete witness and
-turns the result into an interactive three-state information order.
+turns the result into an interactive three-state information order. A final
+challenge asks the learner to build the Boolean branch not chosen first.
 
 ## Run locally
 

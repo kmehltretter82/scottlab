@@ -281,15 +281,23 @@ The lesson resets to `⊥` and asks the learner to build the informative state
 they did not choose first. If the learner first selected `true`, the target is
 `false`, and conversely.
 
-Completion requires adding the target token and arriving at the corresponding
-validated state. The challenge does not require recalling a definition or
-performing drag-and-drop.
+The prompt leads with the light's meaning: “make the light definitely off” or
+“make the light definitely on.” The formal target `{false}` or `{true}` appears
+second in a smaller target badge. Completion requires adding the target token
+and arriving at the corresponding validated state; it does not require
+recalling a definition or performing drag-and-drop.
+
+If the learner chooses the other token, the core computes and displays that
+valid but unintended state. The explanation contrasts its light-switch meaning
+with the target, then offers “Return to `⊥` and try again.” It does not pretend
+that the observation had no effect.
 
 Success copy:
 
-> You added one observation to `⊥` and built another Boolean state.
+> You built both possible Boolean answers.
 
-The completion event records the target, final state, and branch taken. It does
+Success returns to the computed information order with the newly built state
+selected. The completion state retains the target and branch locally; it does
 not record personal data or send network requests.
 
 ### 8. Open the read-only sandbox

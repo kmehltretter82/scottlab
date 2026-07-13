@@ -47,6 +47,10 @@ interface RejectedLessonState extends InformedLessonState {
   readonly rejection: RejectedObservation;
 }
 
+interface ChallengeContext extends RejectedLessonState {
+  readonly targetTokenId: TokenId;
+}
+
 type LessonState =
   | { readonly step: "intro" }
   | { readonly step: "example" }
@@ -58,7 +62,14 @@ type LessonState =
   | ({
       readonly step: "order";
       readonly inspectedState: readonly TokenId[];
-    } & RejectedLessonState);
+      readonly completedChallengeTokenId?: TokenId;
+    } & RejectedLessonState)
+  | ({ readonly step: "challenge" } & ChallengeContext)
+  | ({
+      readonly step: "challengeAttempt";
+      readonly challengeTokenId: TokenId;
+      readonly challengeClosure: ClosureComputation;
+    } & ChallengeContext);
 
 interface TokenCardProps {
   readonly token: TokenDefinition;
@@ -421,10 +432,28 @@ export function App() {
   const conflictState =
     lessonState.step === "conflict" ? lessonState : undefined;
   const orderState = lessonState.step === "order" ? lessonState : undefined;
+  const challengeState =
+    lessonState.step === "challenge" ? lessonState : undefined;
+  const challengeAttemptState =
+    lessonState.step === "challengeAttempt" ? lessonState : undefined;
+  const challengeContext = challengeState ?? challengeAttemptState;
   const selectedToken =
     informedState === undefined
       ? undefined
       : requireToken(informedState.selectedTokenId);
+  const challengeToken =
+    challengeAttemptState === undefined
+      ? undefined
+      : requireToken(challengeAttemptState.challengeTokenId);
+  const displayedToken = challengeToken ?? selectedToken;
+  const targetToken =
+    challengeContext === undefined
+      ? undefined
+      : requireToken(challengeContext.targetTokenId);
+  const completedChallengeToken =
+    orderState?.completedChallengeTokenId === undefined
+      ? undefined
+      : requireToken(orderState.completedChallengeTokenId);
   const attemptedToken =
     conflictState === undefined
       ? undefined
@@ -433,22 +462,50 @@ export function App() {
     selectedToken === undefined
       ? undefined
       : informativeTokens.find(({ id }) => id !== selectedToken.id);
+  const displayedClosure =
+    challengeAttemptState?.challengeClosure ?? informedState?.closure;
   const stateTokens =
-    informedState === undefined
+    displayedClosure === undefined
       ? beginnerVisibleTokenIds(isOpen ? bottom.state : []).map(requireToken)
-      : beginnerVisibleTokenIds(informedState.closure.state).map(requireToken);
+      : beginnerVisibleTokenIds(displayedClosure.state).map(requireToken);
   const witnessTokens =
     conflictState === undefined
       ? []
       : conflictState.rejection.event.witness.map(requireToken);
   const selectedTokenText =
     selectedToken === undefined ? undefined : tokenText(copy, selectedToken);
+  const displayedTokenText =
+    displayedToken === undefined ? undefined : tokenText(copy, displayedToken);
+  const targetTokenText =
+    targetToken === undefined ? undefined : tokenText(copy, targetToken);
+  const completedChallengeTokenText =
+    completedChallengeToken === undefined
+      ? undefined
+      : tokenText(copy, completedChallengeToken);
   const attemptedTokenText =
     attemptedToken === undefined ? undefined : tokenText(copy, attemptedToken);
   const stateLabel = formatTokenSet(
     copy,
     stateTokens.map(({ id }) => id),
   );
+  const targetStateLabel =
+    targetToken === undefined ? "" : formatTokenSet(copy, [targetToken.id]);
+  const targetMeaning =
+    targetToken === undefined
+      ? ""
+      : copy.challenge.tokenMeaning[targetToken.id] ??
+        targetTokenText?.label ??
+        "";
+  const challengeTokenMeaning =
+    challengeToken === undefined
+      ? ""
+      : copy.challenge.tokenMeaning[challengeToken.id] ??
+        displayedTokenText?.label ??
+        "";
+  const completedChallengeStateLabel =
+    completedChallengeToken === undefined
+      ? ""
+      : formatTokenSet(copy, [completedChallengeToken.id]);
   const modelTokenSet = formatTokenSet(
     copy,
     beginnerVisibleTokenIds(flatBooleanSystem.tokens.map(({ id }) => id)),
@@ -496,7 +553,9 @@ export function App() {
     if (
       lessonState.step === "informed" ||
       lessonState.step === "conflict" ||
-      lessonState.step === "order"
+      lessonState.step === "order" ||
+      lessonState.step === "challenge" ||
+      lessonState.step === "challengeAttempt"
     ) {
       resultHeadingRef.current?.focus();
     }
@@ -574,45 +633,174 @@ export function App() {
     });
   }
 
+  function startChallenge(): void {
+    if (orderState === undefined) {
+      throw new Error("The challenge follows the information order.");
+    }
+    const target = informativeTokens.find(
+      ({ id }) => id !== orderState.selectedTokenId,
+    );
+    if (target === undefined) {
+      throw new Error("The Boolean challenge requires an opposite token.");
+    }
+
+    setLessonState({
+      step: "challenge",
+      selectedTokenId: orderState.selectedTokenId,
+      attemptedTokenId: orderState.attemptedTokenId,
+      closure: orderState.closure,
+      rejection: orderState.rejection,
+      targetTokenId: target.id,
+    });
+  }
+
+  function attemptChallenge(tokenId: TokenId): void {
+    if (challengeState === undefined) {
+      throw new Error(
+        "A challenge token can be chosen only during the challenge.",
+      );
+    }
+    const closure = computeClosure(flatBooleanSystem, [tokenId]);
+
+    if (tokenId === challengeState.targetTokenId) {
+      setLessonState({
+        step: "order",
+        selectedTokenId: challengeState.selectedTokenId,
+        attemptedTokenId: challengeState.attemptedTokenId,
+        closure: challengeState.closure,
+        rejection: challengeState.rejection,
+        inspectedState: closure.state,
+        completedChallengeTokenId: tokenId,
+      });
+      return;
+    }
+
+    setLessonState({
+      step: "challengeAttempt",
+      selectedTokenId: challengeState.selectedTokenId,
+      attemptedTokenId: challengeState.attemptedTokenId,
+      closure: challengeState.closure,
+      rejection: challengeState.rejection,
+      targetTokenId: challengeState.targetTokenId,
+      challengeTokenId: tokenId,
+      challengeClosure: closure,
+    });
+  }
+
+  function retryChallenge(): void {
+    if (challengeAttemptState === undefined) {
+      throw new Error("Only an incorrect challenge attempt can be retried.");
+    }
+    setLessonState({
+      step: "challenge",
+      selectedTokenId: challengeAttemptState.selectedTokenId,
+      attemptedTokenId: challengeAttemptState.attemptedTokenId,
+      closure: challengeAttemptState.closure,
+      rejection: challengeAttemptState.rejection,
+      targetTokenId: challengeAttemptState.targetTokenId,
+    });
+  }
+
+  function returnToInformationOrder(): void {
+    if (challengeContext === undefined) {
+      throw new Error("The challenge must begin from the information order.");
+    }
+    setLessonState({
+      step: "order",
+      selectedTokenId: challengeContext.selectedTokenId,
+      attemptedTokenId: challengeContext.attemptedTokenId,
+      closure: challengeContext.closure,
+      rejection: challengeContext.rejection,
+      inspectedState: challengeContext.closure.state,
+    });
+  }
+
   const stateDescription =
-    selectedToken === undefined
+    displayedToken === undefined
       ? isOpen
         ? copy.stateDescriptions.bottomOpen
         : copy.stateDescriptions.bottomClosed
-      : copy.stateDescriptions.informed(selectedTokenText?.label ?? "");
+      : copy.stateDescriptions.informed(displayedTokenText?.label ?? "");
 
-  const lessonHeading =
-    lessonState.step === "intro" || lessonState.step === "example"
-      ? ""
-      : lessonState.step === "bottom"
-      ? copy.headings.bottom
-      : lessonState.step === "inside"
-        ? copy.headings.inside
-        : lessonState.step === "choose"
-          ? copy.headings.choose
-          : lessonState.step === "informed"
-            ? copy.headings.informed(selectedTokenText?.label ?? "")
-            : lessonState.step === "conflict"
-              ? copy.headings.conflict
-              : copy.headings.order;
+  function currentLessonHeading(): string {
+    switch (lessonState.step) {
+      case "intro":
+      case "example":
+        return "";
+      case "bottom":
+        return copy.headings.bottom;
+      case "inside":
+        return copy.headings.inside;
+      case "choose":
+        return copy.headings.choose;
+      case "informed":
+        return copy.headings.informed(selectedTokenText?.label ?? "");
+      case "conflict":
+        return copy.headings.conflict;
+      case "order":
+        return completedChallengeToken === undefined
+          ? copy.headings.order
+          : copy.challenge.successHeading;
+      case "challenge":
+        return copy.challenge.heading(targetMeaning);
+      case "challengeAttempt":
+        return copy.challenge.incorrectHeading(stateLabel);
+    }
+  }
 
-  const lessonExplanation =
-    lessonState.step === "intro" || lessonState.step === "example"
-      ? ""
-      : lessonState.step === "bottom"
-      ? copy.explanations.bottom
-      : lessonState.step === "inside"
-        ? copy.explanations.inside
-        : lessonState.step === "choose"
-          ? copy.explanations.choose
-          : lessonState.step === "informed"
-            ? copy.explanations.informed(
-                selectedTokenText?.label ?? "",
-                stateLabel,
-              )
-            : lessonState.step === "conflict"
-              ? copy.explanations.conflict
-              : copy.explanations.order;
+  function currentLessonExplanation(): string {
+    switch (lessonState.step) {
+      case "intro":
+      case "example":
+        return "";
+      case "bottom":
+        return copy.explanations.bottom;
+      case "inside":
+        return copy.explanations.inside;
+      case "choose":
+        return copy.explanations.choose;
+      case "informed":
+        return copy.explanations.informed(
+          selectedTokenText?.label ?? "",
+          stateLabel,
+        );
+      case "conflict":
+        return copy.explanations.conflict;
+      case "order":
+        return completedChallengeToken === undefined
+          ? copy.explanations.order
+          : copy.challenge.successExplanation(
+              completedChallengeTokenText?.label ?? "",
+              completedChallengeStateLabel,
+            );
+      case "challenge":
+        return copy.challenge.explanation;
+      case "challengeAttempt":
+        return copy.challenge.incorrectExplanation(
+          challengeTokenMeaning,
+          targetMeaning,
+        );
+    }
+  }
+
+  const lessonHeading = currentLessonHeading();
+  const lessonExplanation = currentLessonExplanation();
+  const lessonEyebrow =
+    challengeContext !== undefined
+      ? copy.challenge.eyebrow
+      : orderState?.completedChallengeTokenId !== undefined
+        ? copy.challenge.completeEyebrow
+        : orderState !== undefined
+          ? copy.informationOrder.eyebrow
+          : copy.eyebrow;
+  const lessonFooterStage =
+    challengeContext !== undefined
+      ? copy.challenge.footerStage
+      : orderState?.completedChallengeTokenId !== undefined
+        ? copy.challenge.completeFooterStage
+        : orderState !== undefined
+          ? copy.informationOrder.footerStage
+          : copy.footerStage;
 
   const lessonCopy = (
     <div className="lesson-copy" aria-live="polite">
@@ -803,9 +991,7 @@ export function App() {
         <section className="lesson-panel" aria-labelledby="lesson-title">
           <p className="eyebrow">
             <span className="eyebrow-dot" aria-hidden="true" />
-            {orderState === undefined
-              ? copy.eyebrow
-              : copy.informationOrder.eyebrow}
+            {lessonEyebrow}
           </p>
 
           {orderState === undefined ? null : lessonCopy}
@@ -820,20 +1006,20 @@ export function App() {
                 <figure
                   id="current-state"
                   className={`state-vessel${isOpen ? " is-open" : ""}${
-                    selectedToken === undefined ? "" : " has-information"
+                    displayedToken === undefined ? "" : " has-information"
                   }`}
                   aria-label={stateDescription}
                 >
                   <div className="bottom-identity" aria-hidden="true">
                     <span
                       className={`bottom-symbol${
-                        selectedToken === undefined ? "" : " is-word"
+                        displayedToken === undefined ? "" : " is-word"
                       }`}
                     >
-                      {selectedToken === undefined ? "⊥" : copy.stateNoun}
+                      {displayedToken === undefined ? "⊥" : copy.stateNoun}
                     </span>
                     <span className="state-kind">
-                      {selectedToken === undefined
+                      {displayedToken === undefined
                         ? copy.stateNoun
                         : stateLabel}
                     </span>
@@ -902,49 +1088,51 @@ export function App() {
 
           {orderState === undefined ? lessonCopy : null}
 
-          <aside
-            className="model-definition"
-            aria-labelledby="model-definition-title"
-          >
-            <h2 id="model-definition-title">
-              {copy.modelDefinition.title}
-            </h2>
-            <dl>
-              <div className="model-fact">
-                <dt>{copy.modelDefinition.subjectLabel}</dt>
-                <dd>{copy.modelDefinition.subject}</dd>
-              </div>
-
-              {lessonState.step === "bottom" ||
-              lessonState.step === "inside" ? null : (
+          {challengeContext === undefined ? (
+            <aside
+              className="model-definition"
+              aria-labelledby="model-definition-title"
+            >
+              <h2 id="model-definition-title">
+                {copy.modelDefinition.title}
+              </h2>
+              <dl>
                 <div className="model-fact">
-                  <dt>{copy.modelDefinition.tokensLabel}</dt>
-                  <dd>
-                    <code>{modelTokenSet}</code>
-                  </dd>
+                  <dt>{copy.modelDefinition.subjectLabel}</dt>
+                  <dd>{copy.modelDefinition.subject}</dd>
                 </div>
-              )}
 
-              {hasInformation(lessonState) ? (
-                <div className="model-fact">
-                  <dt>{copy.modelDefinition.ruleLabel}</dt>
-                  <dd>
-                    <code>{copy.modelDefinition.rule(modelRule)}</code>
-                  </dd>
-                </div>
-              ) : null}
+                {lessonState.step === "bottom" ||
+                lessonState.step === "inside" ? null : (
+                  <div className="model-fact">
+                    <dt>{copy.modelDefinition.tokensLabel}</dt>
+                    <dd>
+                      <code>{modelTokenSet}</code>
+                    </dd>
+                  </div>
+                )}
 
-              {lessonState.step === "conflict" ||
-              lessonState.step === "order" ? (
-                <div className="model-fact">
-                  <dt>{copy.modelDefinition.statesLabel}</dt>
-                  <dd>
-                    <code>{modelStates}</code>
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-          </aside>
+                {hasInformation(lessonState) ? (
+                  <div className="model-fact">
+                    <dt>{copy.modelDefinition.ruleLabel}</dt>
+                    <dd>
+                      <code>{copy.modelDefinition.rule(modelRule)}</code>
+                    </dd>
+                  </div>
+                ) : null}
+
+                {lessonState.step === "conflict" ||
+                lessonState.step === "order" ? (
+                  <div className="model-fact">
+                    <dt>{copy.modelDefinition.statesLabel}</dt>
+                    <dd>
+                      <code>{modelStates}</code>
+                    </dd>
+                  </div>
+                ) : null}
+              </dl>
+            </aside>
+          ) : null}
 
           {conflictState === undefined ? null : (
             <aside
@@ -969,6 +1157,43 @@ export function App() {
                 ))}
               </span>
             </aside>
+          )}
+
+          {challengeContext === undefined ? null : (
+            <aside
+              className="challenge-target"
+              aria-label={`${copy.challenge.targetLabel}: ${targetStateLabel}`}
+            >
+              <span>{copy.challenge.targetLabel}</span>
+              <code>{targetStateLabel}</code>
+            </aside>
+          )}
+
+          {challengeState === undefined ? null : (
+            <fieldset className="token-choice-fieldset challenge-choices">
+              <legend className="visually-hidden">
+                {copy.challenge.choiceLegend}
+              </legend>
+              <div className="token-choices">
+                {informativeTokens.map((token) => (
+                  <button
+                    key={token.id}
+                    className="token-choice"
+                    type="button"
+                    aria-label={copy.addToken(tokenText(copy, token).label)}
+                    onClick={() => attemptChallenge(token.id)}
+                  >
+                    <span className="choice-role">{copy.tokenChoiceRole}</span>
+                    <span className="choice-label">
+                      {tokenText(copy, token).label}
+                    </span>
+                    <span className="choice-meaning">
+                      {tokenText(copy, token).description}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
           )}
 
           {lessonState.step === "choose" ? (
@@ -1112,19 +1337,65 @@ export function App() {
 
             {lessonState.step === "order" ? (
               <>
-                <button
-                  className="secondary-action"
-                  type="button"
-                  onClick={returnToConflict}
-                >
-                  {copy.actions.backToConflict}
-                </button>
+                {lessonState.completedChallengeTokenId === undefined ? (
+                  <>
+                    <button
+                      className="primary-action"
+                      type="button"
+                      onClick={startChallenge}
+                    >
+                      <span>{copy.actions.startChallenge}</span>
+                      <span className="button-arrow" aria-hidden="true">
+                        ↗
+                      </span>
+                    </button>
+                    <button
+                      className="secondary-action"
+                      type="button"
+                      onClick={returnToConflict}
+                    >
+                      {copy.actions.backToConflict}
+                    </button>
+                  </>
+                ) : null}
                 <button
                   className="secondary-action"
                   type="button"
                   onClick={() => setLessonState({ step: "bottom" })}
                 >
                   {copy.actions.startOver}
+                </button>
+              </>
+            ) : null}
+
+            {lessonState.step === "challenge" ? (
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={returnToInformationOrder}
+              >
+                {copy.actions.backToOrder}
+              </button>
+            ) : null}
+
+            {lessonState.step === "challengeAttempt" ? (
+              <>
+                <button
+                  className="primary-action"
+                  type="button"
+                  onClick={retryChallenge}
+                >
+                  <span>{copy.actions.retryChallenge}</span>
+                  <span className="button-arrow" aria-hidden="true">
+                    ↙
+                  </span>
+                </button>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={returnToInformationOrder}
+                >
+                  {copy.actions.backToOrder}
                 </button>
               </>
             ) : null}
@@ -1142,9 +1413,7 @@ export function App() {
               ? copy.introduction.footerStage
               : isExampleIntroduction
                 ? copy.exampleIntroduction.footerStage
-                : orderState === undefined
-                  ? copy.footerStage
-                  : copy.informationOrder.footerStage}
+                : lessonFooterStage}
           </span>
         </div>
         <a

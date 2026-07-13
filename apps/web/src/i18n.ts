@@ -53,7 +53,6 @@ export interface LessonMessages {
   };
   readonly lessonMarkerLabel: string;
   readonly lessonName: string;
-  readonly eyebrow: string;
   readonly stateNoun: string;
   readonly stateDescriptions: {
     readonly bottomClosed: string;
@@ -92,7 +91,6 @@ export interface LessonMessages {
     readonly order: string;
   };
   readonly informationOrder: {
-    readonly eyebrow: string;
     readonly diagramLabel: string;
     readonly moreInformation: string;
     readonly selectedState: string;
@@ -108,8 +106,6 @@ export interface LessonMessages {
     readonly footerStage: string;
   };
   readonly challenge: {
-    readonly eyebrow: string;
-    readonly completeEyebrow: string;
     readonly tokenMeaning: Readonly<Record<string, string>>;
     readonly heading: (meaning: string) => string;
     readonly explanation: string;
@@ -203,7 +199,6 @@ const english: LessonMessages = {
   },
   lessonMarkerLabel: "Lesson 1: Bottom",
   lessonName: "Bottom",
-  eyebrow: "Begin here",
   stateNoun: "state",
   stateDescriptions: {
     bottomClosed: "Bottom state: no observations yet",
@@ -259,7 +254,6 @@ const english: LessonMessages = {
       "Moving upward means gaining information. At ⊥ we know no answer. Adding true or false reaches one of two more informative states. Neither answer is above the other because they contain different information.",
   },
   informationOrder: {
-    eyebrow: "The whole model",
     diagramLabel: "Information order of the three Boolean states",
     moreInformation: "more information",
     selectedState: "Selected state",
@@ -279,8 +273,6 @@ const english: LessonMessages = {
     footerStage: "Information order",
   },
   challenge: {
-    eyebrow: "A short challenge",
-    completeEyebrow: "Challenge complete",
     tokenMeaning: {
       false: "off",
       true: "on",
@@ -379,7 +371,6 @@ const german: LessonMessages = {
   },
   lessonMarkerLabel: "Lektion 1: Bottom",
   lessonName: "Bottom",
-  eyebrow: "Hier beginnen",
   stateNoun: "Zustand",
   stateDescriptions: {
     bottomClosed: "Bottom-Zustand: noch keine Beobachtungen",
@@ -435,7 +426,6 @@ const german: LessonMessages = {
       "Nach oben zu gehen bedeutet, Information hinzuzugewinnen. Bei ⊥ kennen wir keine Antwort. Mit true oder false erreichen wir einen von zwei informativeren Zuständen. Keiner der beiden liegt über dem anderen, denn sie enthalten unterschiedliche Information.",
   },
   informationOrder: {
-    eyebrow: "Das ganze Modell",
     diagramLabel: "Informationsordnung der drei booleschen Zustände",
     moreInformation: "mehr Information",
     selectedState: "Ausgewählter Zustand",
@@ -455,8 +445,6 @@ const german: LessonMessages = {
     footerStage: "Informationsordnung",
   },
   challenge: {
-    eyebrow: "Eine kurze Aufgabe",
-    completeEyebrow: "Aufgabe gelöst",
     tokenMeaning: {
       false: "ausgeschaltet",
       true: "eingeschaltet",

@@ -416,11 +416,61 @@ button:focus-visible {
 }
 
 .lesson-panel {
+  width: min(100%, 1120px);
+}
+
+.lesson-workspace {
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.9fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+  gap: 14px 28px;
+}
+
+.lesson-visual {
+  min-width: 0;
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.lesson-visual .state-space,
+.lesson-visual .information-order {
+  margin-bottom: 0;
+}
+
+.lesson-visual .state-scene.has-conflict {
+  width: 100%;
+}
+
+.lesson-visual .state-vessel.is-open.has-information {
+  width: min(100%, 500px);
+}
+
+.lesson-visual
+  .state-scene.has-conflict
+  .state-vessel.is-open.has-information {
+  width: clamp(340px, 38vw, 450px);
+}
+
+.lesson-visual .state-scene.has-conflict .conflict-connector {
+  width: 32px;
+  margin-right: 4px;
+  margin-left: 4px;
+}
+
+.lesson-visual .state-scene.has-conflict .rejected-token {
+  width: 130px;
+}
+
+.lesson-guidance {
   display: flex;
-  width: min(100%, 920px);
-  align-items: center;
+  min-width: 0;
+  align-items: flex-start;
   flex-direction: column;
-  text-align: center;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  text-align: left;
 }
 
 .eyebrow {
@@ -1024,6 +1074,12 @@ button:focus-visible {
   justify-items: center;
 }
 
+.lesson-guidance .lesson-copy {
+  width: 100%;
+  min-height: 0;
+  justify-items: start;
+}
+
 .lesson-copy h1 {
   max-width: 700px;
   margin: 0;
@@ -1035,12 +1091,22 @@ button:focus-visible {
   line-height: 1.08;
 }
 
+.lesson-guidance .lesson-copy h1 {
+  font-size: clamp(1.85rem, 3.2vw, 2.65rem);
+}
+
 .lesson-copy p {
   max-width: 630px;
   margin: 16px 0 0;
   color: #536b66;
   font-size: 1rem;
   line-height: 1.65;
+}
+
+.lesson-guidance .lesson-copy p {
+  margin-top: 13px;
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
 .lesson-copy code {
@@ -1059,14 +1125,16 @@ button:focus-visible {
 
 .model-definition {
   display: grid;
-  width: min(100%, 840px);
-  grid-template-columns: 128px 1fr;
+  width: 100%;
+  grid-template-columns: 1fr;
   align-items: stretch;
-  gap: 12px;
-  margin-top: 18px;
-  padding: 10px;
+  grid-column: 1;
+  grid-row: 2;
+  gap: 7px;
+  margin: 0;
+  padding: 8px;
   border: 1px solid rgb(23 60 58 / 13%);
-  border-radius: 22px;
+  border-radius: 18px;
   color: #294b47;
   background: rgb(255 253 246 / 57%);
   box-shadow: 0 10px 28px rgb(23 60 58 / 6%);
@@ -1077,9 +1145,9 @@ button:focus-visible {
   display: flex;
   align-items: center;
   margin: 0;
-  padding: 10px 14px;
-  border-right: 1px solid rgb(23 60 58 / 12%);
-  font-size: 0.72rem;
+  padding: 3px 8px 6px;
+  border-bottom: 1px solid rgb(23 60 58 / 12%);
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   line-height: 1.35;
@@ -1088,23 +1156,23 @@ button:focus-visible {
 
 .model-definition dl {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  gap: 5px;
   margin: 0;
 }
 
 .model-fact {
   min-width: 0;
-  padding: 9px 11px;
-  border-radius: 13px;
+  padding: 7px 8px;
+  border-radius: 11px;
   background: rgb(255 255 255 / 48%);
   animation: model-fact-arrives 300ms ease-out both;
 }
 
 .model-fact dt {
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: #738681;
-  font-size: 0.57rem;
+  font-size: 0.52rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -1112,7 +1180,7 @@ button:focus-visible {
 
 .model-fact dd {
   margin: 0;
-  font-size: 0.77rem;
+  font-size: 0.7rem;
   font-weight: 650;
   line-height: 1.4;
 }
@@ -1120,7 +1188,7 @@ button:focus-visible {
 .model-fact code {
   color: #315c56;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   white-space: pre-wrap;
 }
 
@@ -1179,6 +1247,25 @@ button:focus-visible {
   margin: 0;
   padding: 0;
   border: 0;
+}
+
+.lesson-guidance .token-choice-fieldset,
+.lesson-guidance .token-choices {
+  width: 100%;
+}
+
+.lesson-guidance .token-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.lesson-guidance .token-choice {
+  min-width: 0;
+  padding: 15px 17px;
+}
+
+.lesson-guidance .choice-meaning {
+  max-width: none;
 }
 
 .opposite-question {
@@ -1309,6 +1396,10 @@ button:focus-visible {
   flex-direction: column;
 }
 
+.lesson-guidance .lesson-actions {
+  align-items: flex-start;
+}
+
 .primary-action {
   display: inline-flex;
   min-width: 188px;
@@ -1416,9 +1507,39 @@ button:focus-visible {
 }
 
 @media (max-width: 900px) {
+  .lesson-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 20px;
+  }
+
+  .lesson-visual {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .lesson-guidance {
+    width: min(100%, 700px);
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0 auto;
+  }
+
+  .model-definition {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
   .state-scene.has-conflict {
     width: 100%;
     flex-direction: column;
+  }
+
+  .lesson-visual .state-vessel.is-open.has-information,
+  .lesson-visual
+    .state-scene.has-conflict
+    .state-vessel.is-open.has-information {
+    width: min(100%, 500px);
   }
 
   .conflict-connector {
@@ -1432,9 +1553,19 @@ button:focus-visible {
     );
   }
 
+  .lesson-visual .state-scene.has-conflict .conflict-connector {
+    width: 4px;
+    height: 45px;
+    margin: 12px 0;
+  }
+
   .rejected-token {
     width: 210px;
     min-height: 112px;
+  }
+
+  .lesson-visual .state-scene.has-conflict .rejected-token {
+    width: 210px;
   }
 }
 
@@ -1576,6 +1707,13 @@ button:focus-visible {
     height: 390px;
   }
 
+  .lesson-visual .state-vessel.is-open.has-information,
+  .lesson-visual
+    .state-scene.has-conflict
+    .state-vessel.is-open.has-information {
+    width: min(100%, 360px);
+  }
+
   .has-information .state-tokens {
     flex-direction: column;
     gap: 11px;
@@ -1693,6 +1831,10 @@ button:focus-visible {
   .order-inspection {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+
+  .lesson-guidance .token-choices {
+    grid-template-columns: 1fr;
   }
 
   .token-card {

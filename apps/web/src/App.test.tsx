@@ -112,6 +112,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       screen.getByText(/A state is all the compatible information/),
     ).toBeVisible();
     expect(screen.getByText(/least informative state/)).toBeVisible();
+    expect(screen.queryByText("Begin here")).not.toBeInTheDocument();
     const model = screen.getByRole("complementary", {
       name: "Designed model",
     });
@@ -350,6 +351,10 @@ describe("ScottLab introduction and bottom-first lesson", () => {
           name: `Formal target: {${targetToken}}`,
         }),
       ).toBeVisible();
+      const model = screen.getByRole("complementary", {
+        name: "Designed model",
+      });
+      expect(within(model).getByText("States derived")).toBeVisible();
       expect(screen.queryByText("Δ")).not.toBeInTheDocument();
 
       await user.click(

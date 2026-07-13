@@ -791,14 +791,6 @@ export function App() {
 
   const lessonHeading = currentLessonHeading();
   const lessonExplanation = currentLessonExplanation();
-  const lessonEyebrow =
-    challengeContext !== undefined
-      ? copy.challenge.eyebrow
-      : orderState?.completedChallengeTokenId !== undefined
-        ? copy.challenge.completeEyebrow
-        : orderState !== undefined
-          ? copy.informationOrder.eyebrow
-          : copy.eyebrow;
   const lessonFooterStage =
     challengeContext !== undefined
       ? copy.challenge.footerStage
@@ -815,6 +807,56 @@ export function App() {
       </h1>
       <p>{lessonExplanation}</p>
     </div>
+  );
+
+  const showsModelTokens =
+    lessonState.step !== "bottom" && lessonState.step !== "inside";
+  const showsModelRule =
+    hasInformation(lessonState) || challengeContext !== undefined;
+  const showsModelStates =
+    lessonState.step === "conflict" ||
+    lessonState.step === "order" ||
+    challengeContext !== undefined;
+  const modelDefinition = (
+    <aside
+      className="model-definition"
+      aria-labelledby="model-definition-title"
+    >
+      <h2 id="model-definition-title">{copy.modelDefinition.title}</h2>
+      <dl>
+        <div className="model-fact">
+          <dt>{copy.modelDefinition.subjectLabel}</dt>
+          <dd>{copy.modelDefinition.subject}</dd>
+        </div>
+
+        {showsModelTokens ? (
+          <div className="model-fact">
+            <dt>{copy.modelDefinition.tokensLabel}</dt>
+            <dd>
+              <code>{modelTokenSet}</code>
+            </dd>
+          </div>
+        ) : null}
+
+        {showsModelRule ? (
+          <div className="model-fact">
+            <dt>{copy.modelDefinition.ruleLabel}</dt>
+            <dd>
+              <code>{copy.modelDefinition.rule(modelRule)}</code>
+            </dd>
+          </div>
+        ) : null}
+
+        {showsModelStates ? (
+          <div className="model-fact">
+            <dt>{copy.modelDefinition.statesLabel}</dt>
+            <dd>
+              <code>{modelStates}</code>
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+    </aside>
   );
 
   return (
@@ -995,150 +1037,111 @@ export function App() {
       ) : (
       <main className="lesson-main">
         <section className="lesson-panel" aria-labelledby="lesson-title">
-          <p className="eyebrow">
-            <span className="eyebrow-dot" aria-hidden="true" />
-            {lessonEyebrow}
-          </p>
-
-          {orderState === undefined ? null : lessonCopy}
-
-          {orderState === undefined ? (
-            <div className="state-space">
-              <div
-                className={`state-scene${
-                  conflictState === undefined ? "" : " has-conflict"
-                }`}
-              >
-                <figure
-                  id="current-state"
-                  className={`state-vessel${isOpen ? " is-open" : ""}${
-                    displayedToken === undefined ? "" : " has-information"
-                  }`}
-                  aria-label={stateDescription}
-                >
-                  <div className="bottom-identity" aria-hidden="true">
-                    <span
-                      className={`bottom-symbol${
-                        displayedToken === undefined ? "" : " is-word"
+          <div className="lesson-workspace">
+            <div className="lesson-visual">
+              {orderState === undefined ? (
+                <div className="state-space">
+                  <div
+                    className={`state-scene${
+                      conflictState === undefined ? "" : " has-conflict"
+                    }`}
+                  >
+                    <figure
+                      id="current-state"
+                      className={`state-vessel${isOpen ? " is-open" : ""}${
+                        displayedToken === undefined
+                          ? ""
+                          : " has-information"
                       }`}
+                      aria-label={stateDescription}
                     >
-                      {displayedToken === undefined ? "⊥" : copy.stateNoun}
-                    </span>
-                    <span className="state-kind">
-                      {displayedToken === undefined
-                        ? copy.stateNoun
-                        : stateLabel}
-                    </span>
+                      <div className="bottom-identity" aria-hidden="true">
+                        <span
+                          className={`bottom-symbol${
+                            displayedToken === undefined ? "" : " is-word"
+                          }`}
+                        >
+                          {displayedToken === undefined ? "⊥" : copy.stateNoun}
+                        </span>
+                        <span className="state-kind">
+                          {displayedToken === undefined
+                            ? copy.stateNoun
+                            : stateLabel}
+                        </span>
+                      </div>
+
+                      {isOpen && stateTokens.length === 0 ? (
+                        <div
+                          className="empty-observations"
+                          aria-label={copy.emptyStateLabel}
+                        >
+                          <span
+                            className="empty-set-symbol"
+                            aria-hidden="true"
+                          >
+                            ∅
+                          </span>
+                          <span>{copy.noObservations}</span>
+                        </div>
+                      ) : null}
+
+                      {isOpen && stateTokens.length > 0 ? (
+                        <ul
+                          className="state-tokens"
+                          aria-label={copy.tokensInState}
+                        >
+                          {stateTokens.map((token) => (
+                            <TokenCard
+                              key={token.id}
+                              token={token}
+                              text={tokenText(copy, token)}
+                              roleLabel={copy.tokenRole}
+                              informative
+                            />
+                          ))}
+                        </ul>
+                      ) : null}
+                    </figure>
+
+                    {attemptedToken === undefined ? null : (
+                      <>
+                        <div
+                          className="conflict-connector"
+                          aria-hidden="true"
+                        >
+                          <span>×</span>
+                        </div>
+                        <aside
+                          className="rejected-token"
+                          aria-label={copy.rejectedToken(
+                            attemptedTokenText?.label ?? "",
+                          )}
+                        >
+                          <span className="rejected-role">
+                            {copy.rejectedRole}
+                          </span>
+                          <strong>{attemptedTokenText?.label}</strong>
+                          <span className="rejected-detail">
+                            {copy.rejectedDetail}
+                          </span>
+                        </aside>
+                      </>
+                    )}
                   </div>
-
-                  {isOpen && stateTokens.length === 0 ? (
-                    <div
-                      className="empty-observations"
-                      aria-label={copy.emptyStateLabel}
-                    >
-                      <span className="empty-set-symbol" aria-hidden="true">
-                        ∅
-                      </span>
-                      <span>{copy.noObservations}</span>
-                    </div>
-                  ) : null}
-
-                  {isOpen && stateTokens.length > 0 ? (
-                    <ul
-                      className="state-tokens"
-                      aria-label={copy.tokensInState}
-                    >
-                      {stateTokens.map((token) => (
-                        <TokenCard
-                          key={token.id}
-                          token={token}
-                          text={tokenText(copy, token)}
-                          roleLabel={copy.tokenRole}
-                          informative
-                        />
-                      ))}
-                    </ul>
-                  ) : null}
-                </figure>
-
-                {attemptedToken === undefined ? null : (
-                  <>
-                    <div className="conflict-connector" aria-hidden="true">
-                      <span>×</span>
-                    </div>
-                    <aside
-                      className="rejected-token"
-                      aria-label={copy.rejectedToken(
-                        attemptedTokenText?.label ?? "",
-                      )}
-                    >
-                      <span className="rejected-role">
-                        {copy.rejectedRole}
-                      </span>
-                      <strong>{attemptedTokenText?.label}</strong>
-                      <span className="rejected-detail">
-                        {copy.rejectedDetail}
-                      </span>
-                    </aside>
-                  </>
-                )}
-              </div>
-            </div>
-          ) : (
-            <InformationOrderDiagram
-              copy={copy}
-              inspectedState={orderState.inspectedState}
-              onInspect={inspectOrderState}
-            />
-          )}
-
-          {orderState === undefined ? lessonCopy : null}
-
-          {challengeContext === undefined ? (
-            <aside
-              className="model-definition"
-              aria-labelledby="model-definition-title"
-            >
-              <h2 id="model-definition-title">
-                {copy.modelDefinition.title}
-              </h2>
-              <dl>
-                <div className="model-fact">
-                  <dt>{copy.modelDefinition.subjectLabel}</dt>
-                  <dd>{copy.modelDefinition.subject}</dd>
                 </div>
+              ) : (
+                <InformationOrderDiagram
+                  copy={copy}
+                  inspectedState={orderState.inspectedState}
+                  onInspect={inspectOrderState}
+                />
+              )}
+            </div>
 
-                {lessonState.step === "bottom" ||
-                lessonState.step === "inside" ? null : (
-                  <div className="model-fact">
-                    <dt>{copy.modelDefinition.tokensLabel}</dt>
-                    <dd>
-                      <code>{modelTokenSet}</code>
-                    </dd>
-                  </div>
-                )}
+            {modelDefinition}
 
-                {hasInformation(lessonState) ? (
-                  <div className="model-fact">
-                    <dt>{copy.modelDefinition.ruleLabel}</dt>
-                    <dd>
-                      <code>{copy.modelDefinition.rule(modelRule)}</code>
-                    </dd>
-                  </div>
-                ) : null}
-
-                {lessonState.step === "conflict" ||
-                lessonState.step === "order" ? (
-                  <div className="model-fact">
-                    <dt>{copy.modelDefinition.statesLabel}</dt>
-                    <dd>
-                      <code>{modelStates}</code>
-                    </dd>
-                  </div>
-                ) : null}
-              </dl>
-            </aside>
-          ) : null}
+            <div className="lesson-guidance">
+              {lessonCopy}
 
           {conflictState === undefined ? null : (
             <aside
@@ -1405,6 +1408,8 @@ export function App() {
                 </button>
               </>
             ) : null}
+          </div>
+            </div>
           </div>
         </section>
       </main>

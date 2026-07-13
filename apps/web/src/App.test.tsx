@@ -33,13 +33,24 @@ async function reachConflict(
   );
 }
 
-async function reachInformationOrder(
+async function reachChallenge(
   user: ReturnType<typeof userEvent.setup>,
   firstToken = "true",
 ): Promise<void> {
   await reachConflict(user, firstToken);
   await user.click(
-    screen.getByRole("button", { name: "Show all possible states" }),
+    screen.getByRole("button", { name: "Try a short challenge" }),
+  );
+}
+
+async function reachInformationOrder(
+  user: ReturnType<typeof userEvent.setup>,
+  firstToken = "true",
+): Promise<void> {
+  await reachChallenge(user, firstToken);
+  const targetToken = firstToken === "true" ? "false" : "true";
+  await user.click(
+    screen.getByRole("button", { name: `Add ${targetToken} token` }),
   );
 }
 
@@ -214,9 +225,14 @@ describe("ScottLab introduction and bottom-first lesson", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "Three states, ordered by information.",
+        name: "Good — that was correct.",
       }),
     ).toHaveFocus();
+    expect(
+      screen.getByRole("heading", {
+        name: "Three states, ordered by information.",
+      }),
+    ).toBeVisible();
     expect(
       screen.getByText(/Moving upward means gaining information/),
     ).toBeVisible();
@@ -235,8 +251,8 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     });
 
     expect(bottomNode).toHaveAttribute("aria-pressed", "false");
-    expect(falseNode).toHaveAttribute("aria-pressed", "false");
-    expect(trueNode).toHaveAttribute("aria-pressed", "true");
+    expect(falseNode).toHaveAttribute("aria-pressed", "true");
+    expect(trueNode).toHaveAttribute("aria-pressed", "false");
     expect(within(order).queryByText("Δ")).not.toBeInTheDocument();
 
     await user.click(within(order).getByText("Read the diagram as text"));
@@ -291,27 +307,12 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(bottomNode).toHaveFocus();
   });
 
-  it("translates the information-order view without changing its state", async () => {
+  it("translates the challenge and its information-order reward", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await reachInformationOrder(user);
+    await reachConflict(user);
 
     await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
-
-    expect(
-      screen.getByRole("heading", {
-        name: "Drei Zustände, nach Information geordnet.",
-      }),
-    ).toBeVisible();
-    const order = screen.getByRole("region", {
-      name: "Informationsordnung der drei booleschen Zustände",
-    });
-    expect(
-      within(order).getByRole("button", {
-        name: "Zustand untersuchen: {true}: Die boolesche Antwort ist true",
-      }),
-    ).toHaveAttribute("aria-pressed", "true");
-    expect(within(order).getByText("Ausgewählter Zustand")).toBeVisible();
 
     await user.click(
       screen.getByRole("button", { name: "Eine kurze Aufgabe lösen" }),
@@ -331,6 +332,28 @@ describe("ScottLab introduction and bottom-first lesson", () => {
         name: "Formales Ziel: {false}",
       }),
     ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "false-Token hinzufügen" }),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Gut – das war richtig." }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("heading", {
+        name: "Drei Zustände, nach Information geordnet.",
+      }),
+    ).toBeVisible();
+    const order = screen.getByRole("region", {
+      name: "Informationsordnung der drei booleschen Zustände",
+    });
+    expect(
+      within(order).getByRole("button", {
+        name: "Zustand untersuchen: {false}: Die boolesche Antwort ist false",
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(within(order).getByText("Ausgewählter Zustand")).toBeVisible();
   });
 
   it.each([
@@ -341,11 +364,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     async ({ firstToken, targetToken, targetMeaning }) => {
       const user = userEvent.setup();
       render(<App />);
-      await reachInformationOrder(user, firstToken);
-
-      await user.click(
-        screen.getByRole("button", { name: "Try a short challenge" }),
-      );
+      await reachChallenge(user, firstToken);
 
       expect(
         screen.getByRole("heading", {
@@ -372,6 +391,11 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       });
       expect(within(model).getByText("States derived")).toBeVisible();
       expect(screen.queryByText("Δ")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("region", {
+          name: "Information order of the three Boolean states",
+        }),
+      ).not.toBeInTheDocument();
 
       await user.click(
         screen.getByRole("button", { name: `Add ${targetToken} token` }),
@@ -382,6 +406,11 @@ describe("ScottLab introduction and bottom-first lesson", () => {
           name: "Good — that was correct.",
         }),
       ).toHaveFocus();
+      expect(
+        screen.getByRole("heading", {
+          name: "Three states, ordered by information.",
+        }),
+      ).toBeVisible();
       const order = screen.getByRole("region", {
         name: "Information order of the three Boolean states",
       });
@@ -406,12 +435,12 @@ describe("ScottLab introduction and bottom-first lesson", () => {
   it("shows an incorrect branch honestly and supports a keyboard retry", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await reachInformationOrder(user);
+    await reachConflict(user);
 
-    const startChallenge = screen.getByRole("button", {
+    const startChallengeButton = screen.getByRole("button", {
       name: "Try a short challenge",
     });
-    startChallenge.focus();
+    startChallengeButton.focus();
     await user.keyboard("{Enter}");
 
     const wrongToken = screen.getByRole("button", { name: "Add true token" });
@@ -682,19 +711,27 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       expect(
         within(model).getByText(/∅\s+\{false\}\s+\{true\}/),
       ).toBeVisible();
-      expect(
-        screen.getByLabelText(`Rejected ${oppositeLabel} token`),
-      ).toBeVisible();
+      const rejectedToken = screen.getByLabelText(
+        `Rejected ${oppositeLabel} token`,
+      );
+      expect(rejectedToken).toBeVisible();
+      expect(unchangedState).not.toContainElement(rejectedToken);
+      expect(rejectedToken.closest(".lesson-guidance")).not.toBeNull();
 
       await user.click(
-        screen.getByRole("button", { name: "Show all possible states" }),
+        screen.getByRole("button", { name: "Try a short challenge" }),
+      );
+      await user.click(
+        screen.getByRole("button", {
+          name: `Add ${oppositeLabel} token`,
+        }),
       );
       const order = screen.getByRole("region", {
         name: "Information order of the three Boolean states",
       });
       expect(
         within(order).getByRole("button", {
-          name: `Inspect state {${tokenLabel}}: the Boolean answer is ${tokenLabel}`,
+          name: `Inspect state {${oppositeLabel}}: the Boolean answer is ${oppositeLabel}`,
         }),
       ).toHaveAttribute("aria-pressed", "true");
     },

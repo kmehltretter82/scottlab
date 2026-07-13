@@ -470,34 +470,13 @@ button:focus-visible {
 }
 
 .lesson-visual .state-scene {
-  width: 100%;
+  width: auto;
+  min-width: 0;
+  justify-self: stretch;
 }
 
 .lesson-visual .state-vessel.is-open.has-information {
   width: min(100%, 500px);
-}
-
-.lesson-visual .state-scene.has-conflict {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 40px 130px;
-  align-items: center;
-}
-
-.lesson-visual
-  .state-scene.has-conflict
-  .state-vessel.is-open.has-information {
-  width: min(100%, 390px);
-  justify-self: end;
-}
-
-.lesson-visual .state-scene.has-conflict .conflict-connector {
-  width: 32px;
-  margin-right: 4px;
-  margin-left: 4px;
-}
-
-.lesson-visual .state-scene.has-conflict .rejected-token {
-  width: 130px;
 }
 
 .lesson-guidance {
@@ -542,6 +521,15 @@ button:focus-visible {
   width: min(100%, 840px);
   margin-bottom: 25px;
   animation: order-arrives 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.order-heading {
+  margin: 0 0 12px;
+  color: #355a55;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  font-weight: 600;
+  text-align: left;
 }
 
 .order-plot {
@@ -788,10 +776,6 @@ button:focus-visible {
   justify-content: center;
 }
 
-.state-scene.has-conflict {
-  width: min(calc(100vw - 48px), 920px);
-}
-
 .state-vessel {
   position: relative;
   display: grid;
@@ -1006,26 +990,19 @@ button:focus-visible {
   color: #27675f;
 }
 
-.conflict-connector {
-  position: relative;
-  width: 62px;
-  height: 4px;
-  flex: 0 0 auto;
-  margin: 0 12px;
-  background: repeating-linear-gradient(
-    90deg,
-    #b16a39 0 7px,
-    transparent 7px 12px
-  );
+.rejection-feedback {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.conflict-connector span {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+.rejection-cross {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   place-items: center;
   border: 2px solid #9c542c;
   border-radius: 50%;
@@ -1033,7 +1010,6 @@ button:focus-visible {
   background: #f3efe4;
   font-size: 1.15rem;
   font-weight: 800;
-  transform: translate(-50%, -50%);
 }
 
 .rejected-token {
@@ -1060,6 +1036,21 @@ button:focus-visible {
 .rejected-token strong {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 1.3rem;
+}
+
+.lesson-guidance .rejected-token {
+  width: 100%;
+  min-height: 0;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px 13px;
+  padding: 13px 16px;
+  border-radius: 18px;
+}
+
+.lesson-guidance .rejected-role,
+.lesson-guidance .rejected-detail {
+  margin: 0;
 }
 
 .rejected-role,
@@ -1585,48 +1576,6 @@ button:focus-visible {
     grid-column: 1;
     grid-row: 3;
   }
-
-  .state-scene.has-conflict {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .lesson-visual .state-scene.has-conflict {
-    display: flex;
-  }
-
-  .lesson-visual .state-vessel.is-open.has-information,
-  .lesson-visual
-    .state-scene.has-conflict
-    .state-vessel.is-open.has-information {
-    width: min(100%, 500px);
-  }
-
-  .conflict-connector {
-    width: 4px;
-    height: 45px;
-    margin: 12px 0;
-    background: repeating-linear-gradient(
-      180deg,
-      #b16a39 0 7px,
-      transparent 7px 12px
-    );
-  }
-
-  .lesson-visual .state-scene.has-conflict .conflict-connector {
-    width: 4px;
-    height: 45px;
-    margin: 12px 0;
-  }
-
-  .rejected-token {
-    width: 210px;
-    min-height: 112px;
-  }
-
-  .lesson-visual .state-scene.has-conflict .rejected-token {
-    width: 210px;
-  }
 }
 
 @media (max-width: 800px) {
@@ -1827,10 +1776,7 @@ button:focus-visible {
     height: 390px;
   }
 
-  .lesson-visual .state-vessel.is-open.has-information,
-  .lesson-visual
-    .state-scene.has-conflict
-    .state-vessel.is-open.has-information {
+  .lesson-visual .state-vessel.is-open.has-information {
     width: min(100%, 360px);
   }
 
@@ -1958,6 +1904,11 @@ button:focus-visible {
   }
 
   .lesson-guidance .opposite-question {
+    grid-template-columns: 1fr;
+  }
+
+  .rejection-feedback,
+  .lesson-guidance .rejected-token {
     grid-template-columns: 1fr;
   }
 

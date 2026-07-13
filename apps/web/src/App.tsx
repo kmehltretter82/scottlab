@@ -301,6 +301,7 @@ function InformationOrderDiagram({
       className="information-order"
       aria-label={copy.informationOrder.diagramLabel}
     >
+      <h2 className="order-heading">{copy.headings.order}</h2>
       <div className="order-plot">
         <svg
           className="order-lines"
@@ -608,21 +609,6 @@ export function App() {
     });
   }
 
-  function showInformationOrder(): void {
-    if (conflictState === undefined) {
-      throw new Error("The information order follows the conflict step.");
-    }
-
-    setLessonState({
-      step: "order",
-      selectedTokenId: conflictState.selectedTokenId,
-      attemptedTokenId: conflictState.attemptedTokenId,
-      closure: conflictState.closure,
-      rejection: conflictState.rejection,
-      inspectedState: conflictState.closure.state,
-    });
-  }
-
   function inspectOrderState(state: readonly TokenId[]): void {
     if (orderState === undefined) {
       throw new Error("A state can be inspected only in the information order.");
@@ -630,25 +616,12 @@ export function App() {
     setLessonState({ ...orderState, inspectedState: state });
   }
 
-  function returnToConflict(): void {
-    if (orderState === undefined) {
-      throw new Error("The conflict view requires an information-order state.");
-    }
-    setLessonState({
-      step: "conflict",
-      selectedTokenId: orderState.selectedTokenId,
-      attemptedTokenId: orderState.attemptedTokenId,
-      closure: orderState.closure,
-      rejection: orderState.rejection,
-    });
-  }
-
   function startChallenge(): void {
-    if (orderState === undefined) {
-      throw new Error("The challenge follows the information order.");
+    if (conflictState === undefined) {
+      throw new Error("The challenge follows the conflict experiment.");
     }
     const target = informativeTokens.find(
-      ({ id }) => id !== orderState.selectedTokenId,
+      ({ id }) => id !== conflictState.selectedTokenId,
     );
     if (target === undefined) {
       throw new Error("The Boolean challenge requires an opposite token.");
@@ -656,10 +629,10 @@ export function App() {
 
     setLessonState({
       step: "challenge",
-      selectedTokenId: orderState.selectedTokenId,
-      attemptedTokenId: orderState.attemptedTokenId,
-      closure: orderState.closure,
-      rejection: orderState.rejection,
+      selectedTokenId: conflictState.selectedTokenId,
+      attemptedTokenId: conflictState.attemptedTokenId,
+      closure: conflictState.closure,
+      rejection: conflictState.rejection,
       targetTokenId: target.id,
     });
   }
@@ -711,17 +684,16 @@ export function App() {
     });
   }
 
-  function returnToInformationOrder(): void {
+  function returnToConflict(): void {
     if (challengeContext === undefined) {
-      throw new Error("The challenge must begin from the information order.");
+      throw new Error("Only an active challenge can return to the conflict.");
     }
     setLessonState({
-      step: "order",
+      step: "conflict",
       selectedTokenId: challengeContext.selectedTokenId,
       attemptedTokenId: challengeContext.attemptedTokenId,
       closure: challengeContext.closure,
       rejection: challengeContext.rejection,
-      inspectedState: challengeContext.closure.state,
     });
   }
 
@@ -779,10 +751,10 @@ export function App() {
       case "order":
         return completedChallengeToken === undefined
           ? copy.explanations.order
-          : copy.challenge.successExplanation(
+          : `${copy.challenge.successExplanation(
               completedChallengeTokenText?.label ?? "",
               completedChallengeStateLabel,
-            );
+            )} ${copy.explanations.order}`;
       case "challenge":
         return copy.challenge.explanation(
           previousChallengeStateLabel,
@@ -1113,30 +1085,6 @@ export function App() {
                       ) : null}
                     </figure>
 
-                    {attemptedToken === undefined ? null : (
-                      <>
-                        <div
-                          className="conflict-connector"
-                          aria-hidden="true"
-                        >
-                          <span>×</span>
-                        </div>
-                        <aside
-                          className="rejected-token"
-                          aria-label={copy.rejectedToken(
-                            attemptedTokenText?.label ?? "",
-                          )}
-                        >
-                          <span className="rejected-role">
-                            {copy.rejectedRole}
-                          </span>
-                          <strong>{attemptedTokenText?.label}</strong>
-                          <span className="rejected-detail">
-                            {copy.rejectedDetail}
-                          </span>
-                        </aside>
-                      </>
-                    )}
                   </div>
                 </div>
               ) : (
@@ -1152,6 +1100,26 @@ export function App() {
 
             <div className="lesson-guidance">
               {lessonCopy}
+
+              {attemptedToken === undefined ? null : (
+                <div className="rejection-feedback">
+                  <span className="rejection-cross" aria-hidden="true">
+                    ×
+                  </span>
+                  <aside
+                    className="rejected-token"
+                    aria-label={copy.rejectedToken(
+                      attemptedTokenText?.label ?? "",
+                    )}
+                  >
+                    <span className="rejected-role">{copy.rejectedRole}</span>
+                    <strong>{attemptedTokenText?.label}</strong>
+                    <span className="rejected-detail">
+                      {copy.rejectedDetail}
+                    </span>
+                  </aside>
+                </div>
+              )}
 
           {conflictState === undefined ? null : (
             <aside
@@ -1329,11 +1297,11 @@ export function App() {
                 <button
                   className="primary-action"
                   type="button"
-                  onClick={showInformationOrder}
+                  onClick={startChallenge}
                 >
-                  <span>{copy.actions.showOrder}</span>
+                  <span>{copy.actions.startChallenge}</span>
                   <span className="button-arrow" aria-hidden="true">
-                    ↑
+                    ↗
                   </span>
                 </button>
                 <button
@@ -1354,45 +1322,22 @@ export function App() {
             ) : null}
 
             {lessonState.step === "order" ? (
-              <>
-                {lessonState.completedChallengeTokenId === undefined ? (
-                  <>
-                    <button
-                      className="primary-action"
-                      type="button"
-                      onClick={startChallenge}
-                    >
-                      <span>{copy.actions.startChallenge}</span>
-                      <span className="button-arrow" aria-hidden="true">
-                        ↗
-                      </span>
-                    </button>
-                    <button
-                      className="secondary-action"
-                      type="button"
-                      onClick={returnToConflict}
-                    >
-                      {copy.actions.backToConflict}
-                    </button>
-                  </>
-                ) : null}
-                <button
-                  className="secondary-action"
-                  type="button"
-                  onClick={() => setLessonState({ step: "bottom" })}
-                >
-                  {copy.actions.startOver}
-                </button>
-              </>
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => setLessonState({ step: "bottom" })}
+              >
+                {copy.actions.startOver}
+              </button>
             ) : null}
 
             {lessonState.step === "challenge" ? (
               <button
                 className="secondary-action"
                 type="button"
-                onClick={returnToInformationOrder}
+                onClick={returnToConflict}
               >
-                {copy.actions.backToOrder}
+                {copy.actions.backToConflict}
               </button>
             ) : null}
 
@@ -1411,9 +1356,9 @@ export function App() {
                 <button
                   className="secondary-action"
                   type="button"
-                  onClick={returnToInformationOrder}
+                  onClick={returnToConflict}
                 >
-                  {copy.actions.backToOrder}
+                  {copy.actions.backToConflict}
                 </button>
               </>
             ) : null}

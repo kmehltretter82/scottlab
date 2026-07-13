@@ -141,11 +141,9 @@ export interface LessonMessages {
     readonly back: string;
     readonly chooseAnother: string;
     readonly tryOtherPath: string;
-    readonly showOrder: string;
     readonly backToConflict: string;
     readonly startChallenge: string;
     readonly retryChallenge: string;
-    readonly backToOrder: string;
     readonly startOver: string;
   };
   readonly footerSystem: string;
@@ -312,11 +310,9 @@ const english: LessonMessages = {
     back: "Back",
     chooseAnother: "Choose another first token",
     tryOtherPath: "Try the other path",
-    showOrder: "Show all possible states",
     backToConflict: "Back to the conflict",
     startChallenge: "Try a short challenge",
     retryChallenge: "Return to ⊥ and try again",
-    backToOrder: "Back to the information order",
     startOver: "Start over",
   },
   footerSystem: "Flat Booleans",
@@ -483,11 +479,9 @@ const german: LessonMessages = {
     back: "Zurück",
     chooseAnother: "Anderes erstes Token wählen",
     tryOtherPath: "Den anderen Weg ausprobieren",
-    showOrder: "Alle möglichen Zustände zeigen",
     backToConflict: "Zurück zum Konflikt",
     startChallenge: "Eine kurze Aufgabe lösen",
     retryChallenge: "Zu ⊥ zurückkehren und erneut versuchen",
-    backToOrder: "Zurück zur Informationsordnung",
     startOver: "Neu beginnen",
   },
   footerSystem: "Flache boolesche Werte",

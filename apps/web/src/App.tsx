@@ -149,18 +149,24 @@ function TokenCard({
   roleLabel,
   informative = false,
 }: TokenCardProps) {
-  const symbol = token.symbol ?? token.label;
+  const symbol = token.symbol;
 
   return (
     <li
-      className={`token-card${informative ? " is-informative" : ""}`}
-      aria-label={`${text.accessibleName}, ${symbol}`}
+      className={`token-card${symbol === undefined ? "" : " has-symbol"}${informative ? " is-informative" : ""}`}
+      aria-label={
+        symbol === undefined
+          ? text.accessibleName
+          : `${text.accessibleName}, ${symbol}`
+      }
     >
       <span className="token-role">{roleLabel}</span>
       <span className="token-label">{text.label}</span>
-      <span className="token-symbol" aria-hidden="true">
-        {symbol}
-      </span>
+      {symbol === undefined ? null : (
+        <span className="token-symbol" aria-hidden="true">
+          {symbol}
+        </span>
+      )}
     </li>
   );
 }

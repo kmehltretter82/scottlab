@@ -855,7 +855,7 @@ button:focus-visible {
   min-height: 138px;
   align-content: center;
   justify-items: start;
-  padding: 25px 72px 25px 27px;
+  padding: 25px 27px;
   border: 1px solid rgb(141 83 38 / 24%);
   border-radius: 25px;
   color: #233d39;
@@ -867,22 +867,32 @@ button:focus-visible {
   animation: token-arrives 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+.token-card.has-symbol {
+  padding-right: 72px;
+}
+
 .token-role {
+  max-width: 100%;
   margin-bottom: 8px;
   color: #9b663d;
   font-size: 0.61rem;
   font-weight: 750;
   letter-spacing: 0.12em;
+  line-height: 1.4;
   text-transform: uppercase;
 }
 
 .token-label {
-  max-width: 130px;
+  max-width: 100%;
   font-size: 1.08rem;
   font-weight: 680;
   letter-spacing: -0.025em;
   line-height: 1.2;
   text-align: left;
+}
+
+.token-card.has-symbol .token-label {
+  max-width: 130px;
 }
 
 .token-symbol {
@@ -1687,13 +1697,20 @@ button:focus-visible {
 
   .token-card {
     width: 198px;
-    padding-right: 64px;
+    padding-right: 22px;
     padding-left: 22px;
   }
 
+  .token-card.has-symbol {
+    padding-right: 64px;
+  }
+
   .token-label {
-    max-width: 115px;
     font-size: 1rem;
+  }
+
+  .token-card.has-symbol .token-label {
+    max-width: 115px;
   }
 
   .conflict-witness {

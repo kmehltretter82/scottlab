@@ -616,14 +616,14 @@ describe("ScottLab introduction and bottom-first lesson", () => {
         screen.getByRole("button", { name: `Add ${tokenLabel} token` }),
       );
 
+      const stateFigure = screen.getByRole("figure", {
+        name: `State containing the ${tokenLabel} token`,
+      });
+      expect(stateFigure).toBeVisible();
       expect(
-        screen.getByRole("figure", {
-          name: `State containing the ${tokenLabel} token`,
-        }),
-      ).toBeVisible();
-      expect(
-        screen.getByLabelText(`${tokenLabel} token, ${tokenLabel}`),
+        within(stateFigure).getByLabelText(`${tokenLabel} token`),
       ).toBeInTheDocument();
+      expect(within(stateFigure).getAllByText(tokenLabel)).toHaveLength(1);
       expect(
         screen.getByRole("heading", {
           name: `Now the Boolean value is known as ${tokenLabel}.`,
@@ -643,7 +643,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       expect(unchangedState).toBeVisible();
       expect(
         within(unchangedState).queryByLabelText(
-          `${oppositeLabel} token, ${oppositeLabel}`,
+          `${oppositeLabel} token`,
         ),
       ).not.toBeInTheDocument();
       expect(

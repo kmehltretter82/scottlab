@@ -81,6 +81,7 @@ export interface LessonMessages {
     readonly choose: string;
     readonly informed: (token: string) => string;
     readonly conflict: string;
+    readonly order: string;
   };
   readonly explanations: {
     readonly bottom: string;
@@ -88,6 +89,23 @@ export interface LessonMessages {
     readonly choose: string;
     readonly informed: (token: string, state: string) => string;
     readonly conflict: string;
+    readonly order: string;
+  };
+  readonly informationOrder: {
+    readonly eyebrow: string;
+    readonly diagramLabel: string;
+    readonly moreInformation: string;
+    readonly selectedState: string;
+    readonly bottomSummary: string;
+    readonly informedSummary: (state: string, token: string) => string;
+    readonly stateButton: (summary: string) => string;
+    readonly bottomDetail: string;
+    readonly informedDetail: (state: string) => string;
+    readonly textViewSummary: string;
+    readonly statesHeading: string;
+    readonly edgesHeading: string;
+    readonly edgeDescription: (lower: string, upper: string) => string;
+    readonly footerStage: string;
   };
   readonly rejectedToken: (token: string) => string;
   readonly rejectedRole: string;
@@ -107,6 +125,8 @@ export interface LessonMessages {
     readonly back: string;
     readonly chooseAnother: string;
     readonly tryOtherPath: string;
+    readonly showOrder: string;
+    readonly backToConflict: string;
     readonly startOver: string;
   };
   readonly footerSystem: string;
@@ -201,6 +221,7 @@ const english: LessonMessages = {
     choose: "A token is one piece of information.",
     informed: (token) => `Now the Boolean value is known as ${token}.`,
     conflict: "One Boolean value cannot be both true and false.",
+    order: "Three states, ordered by information.",
   },
   explanations: {
     bottom:
@@ -213,6 +234,28 @@ const english: LessonMessages = {
       `The ${token} token is one piece of information. The state ${state} collects everything known so far.`,
     conflict:
       "ScottLab did not infer this from the token names. It checked the compatibility rule chosen for this model, so the attempted token stays outside. Another information system could allow both tokens and would model something different.",
+    order:
+      "Moving upward means gaining information. At ⊥ we know no answer. Adding true or false reaches one of two more informative states. Neither answer is above the other because they contain different information.",
+  },
+  informationOrder: {
+    eyebrow: "The whole model",
+    diagramLabel: "Information order of the three Boolean states",
+    moreInformation: "more information",
+    selectedState: "Selected state",
+    bottomSummary: "⊥, shown as ∅: no observations",
+    informedSummary: (state, token) =>
+      `${state}: the Boolean answer is ${token}`,
+    stateButton: (summary) => `Inspect state ${summary}`,
+    bottomDetail:
+      "At ⊥, the visible collection is ∅: no observation tells us whether the answer is true or false.",
+    informedDetail: (state) =>
+      `The state ${state} contains one observation, so it lies above ⊥ and carries more information.`,
+    textViewSummary: "Read the diagram as text",
+    statesHeading: "States",
+    edgesHeading: "Steps to more information",
+    edgeDescription: (lower, upper) =>
+      `${lower} is directly below ${upper}.`,
+    footerStage: "Information order",
   },
   rejectedToken: (token) => `Rejected ${token} token`,
   rejectedRole: "not added",
@@ -233,6 +276,8 @@ const english: LessonMessages = {
     back: "Back",
     chooseAnother: "Choose another first token",
     tryOtherPath: "Try the other path",
+    showOrder: "Show all possible states",
+    backToConflict: "Back to the conflict",
     startOver: "Start over",
   },
   footerSystem: "Flat Booleans",
@@ -327,6 +372,7 @@ const german: LessonMessages = {
     choose: "Ein Token ist ein Stück Information.",
     informed: (token) => `Der boolesche Wert ist nun als ${token} bekannt.`,
     conflict: "Ein boolescher Wert kann nicht zugleich true und false sein.",
+    order: "Drei Zustände, nach Information geordnet.",
   },
   explanations: {
     bottom:
@@ -339,6 +385,28 @@ const german: LessonMessages = {
       `Das ${token}-Token ist ein Stück Information. Der Zustand ${state} sammelt alles, was bisher bekannt ist.`,
     conflict:
       "ScottLab hat dies nicht aus den Namen der Token abgeleitet. Es hat die für dieses Modell gewählte Verträglichkeitsregel geprüft; deshalb bleibt das versuchte Token außerhalb. Ein anderes Informationssystem könnte beide Token erlauben und würde etwas anderes modellieren.",
+    order:
+      "Nach oben zu gehen bedeutet, Information hinzuzugewinnen. Bei ⊥ kennen wir keine Antwort. Mit true oder false erreichen wir einen von zwei informativeren Zuständen. Keiner der beiden liegt über dem anderen, denn sie enthalten unterschiedliche Information.",
+  },
+  informationOrder: {
+    eyebrow: "Das ganze Modell",
+    diagramLabel: "Informationsordnung der drei booleschen Zustände",
+    moreInformation: "mehr Information",
+    selectedState: "Ausgewählter Zustand",
+    bottomSummary: "⊥, dargestellt als ∅: keine Beobachtungen",
+    informedSummary: (state, token) =>
+      `${state}: Die boolesche Antwort ist ${token}`,
+    stateButton: (summary) => `Zustand untersuchen: ${summary}`,
+    bottomDetail:
+      "Bei ⊥ ist die sichtbare Menge ∅: Keine Beobachtung sagt uns, ob die Antwort true oder false ist.",
+    informedDetail: (state) =>
+      `Der Zustand ${state} enthält eine Beobachtung. Daher liegt er über ⊥ und trägt mehr Information.`,
+    textViewSummary: "Diagramm als Text lesen",
+    statesHeading: "Zustände",
+    edgesHeading: "Schritte zu mehr Information",
+    edgeDescription: (lower, upper) =>
+      `${lower} liegt direkt unter ${upper}.`,
+    footerStage: "Informationsordnung",
   },
   rejectedToken: (token) => `Abgelehntes ${token}-Token`,
   rejectedRole: "nicht hinzugefügt",
@@ -359,6 +427,8 @@ const german: LessonMessages = {
     back: "Zurück",
     chooseAnother: "Anderes erstes Token wählen",
     tryOtherPath: "Den anderen Weg ausprobieren",
+    showOrder: "Alle möglichen Zustände zeigen",
+    backToConflict: "Zurück zum Konflikt",
     startOver: "Neu beginnen",
   },
   footerSystem: "Flache boolesche Werte",

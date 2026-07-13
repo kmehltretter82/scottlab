@@ -1,7 +1,7 @@
 import {
   computeBottom,
   computeClosure,
-  enumerateStates,
+  computeCoverRelation,
   type ClosureComputation,
   type ObservationAttempt,
   type TokenDefinition,
@@ -9,7 +9,12 @@ import {
   tryAddObservation,
 } from "@scottlab/core";
 import { flatBooleanSystem } from "@scottlab/examples";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 
 import {
   isSupportedLanguage,
@@ -22,7 +27,8 @@ import {
 } from "./i18n";
 
 const bottom = computeBottom(flatBooleanSystem);
-const enumeratedStates = enumerateStates(flatBooleanSystem).states;
+const informationOrder = computeCoverRelation(flatBooleanSystem);
+const enumeratedStates = informationOrder.states;
 const scottHomepageUrl = "https://www.cs.cmu.edu/~scott/";
 const scottPaperUrl = "https://doi.org/10.1007/BFb0012801";
 const informativeTokens = flatBooleanSystem.tokens.filter(
@@ -36,6 +42,11 @@ interface InformedLessonState {
 
 type RejectedObservation = Extract<ObservationAttempt, { readonly ok: false }>;
 
+interface RejectedLessonState extends InformedLessonState {
+  readonly attemptedTokenId: TokenId;
+  readonly rejection: RejectedObservation;
+}
+
 type LessonState =
   | { readonly step: "intro" }
   | { readonly step: "example" }
@@ -43,11 +54,11 @@ type LessonState =
   | { readonly step: "inside" }
   | { readonly step: "choose" }
   | ({ readonly step: "informed" } & InformedLessonState)
+  | ({ readonly step: "conflict" } & RejectedLessonState)
   | ({
-      readonly step: "conflict";
-      readonly attemptedTokenId: TokenId;
-      readonly rejection: RejectedObservation;
-    } & InformedLessonState);
+      readonly step: "order";
+      readonly inspectedState: readonly TokenId[];
+    } & RejectedLessonState);
 
 interface TokenCardProps {
   readonly token: TokenDefinition;
@@ -79,16 +90,25 @@ function requireToken(tokenId: TokenId): TokenDefinition {
   return token;
 }
 
-function beginnerVisibleTokenIds(
-  tokenIds: readonly TokenId[],
-): TokenId[] {
+function beginnerVisibleTokenIds(tokenIds: readonly TokenId[]): TokenId[] {
   return tokenIds.filter((tokenId) => tokenId !== flatBooleanSystem.delta);
 }
 
 function hasInformation(
   state: LessonState,
-): state is Extract<LessonState, { readonly step: "informed" | "conflict" }> {
-  return state.step === "informed" || state.step === "conflict";
+): state is Extract<
+  LessonState,
+  { readonly step: "informed" | "conflict" | "order" }
+> {
+  return (
+    state.step === "informed" ||
+    state.step === "conflict" ||
+    state.step === "order"
+  );
+}
+
+function stateKey(tokenIds: readonly TokenId[]): string {
+  return tokenIds.join("\0");
 }
 
 function tokenText(copy: LessonMessages, token: TokenDefinition): TokenText {
@@ -134,6 +154,253 @@ function TokenCard({
   );
 }
 
+interface PositionedOrderState {
+  readonly coreState: readonly TokenId[];
+  readonly key: string;
+  readonly visibleTokenIds: readonly TokenId[];
+  readonly x: number;
+  readonly y: number;
+}
+
+interface InformationOrderDiagramProps {
+  readonly copy: LessonMessages;
+  readonly inspectedState: readonly TokenId[];
+  readonly onInspect: (state: readonly TokenId[]) => void;
+}
+
+function positionOrderStates(): readonly PositionedOrderState[] {
+  const statesByRank = new Map<number, (readonly TokenId[])[]>();
+
+  for (const coreState of informationOrder.states) {
+    const visibleTokenIds = beginnerVisibleTokenIds(coreState);
+    const rankStates = statesByRank.get(visibleTokenIds.length) ?? [];
+    rankStates.push(coreState);
+    statesByRank.set(visibleTokenIds.length, rankStates);
+  }
+
+  const ranks = [...statesByRank.keys()].sort((left, right) => left - right);
+  return ranks.flatMap((rank, rankIndex) => {
+    const states = statesByRank.get(rank) ?? [];
+    const y =
+      ranks.length === 1
+        ? 50
+        : 82 - (rankIndex / (ranks.length - 1)) * 64;
+
+    return states.map((coreState, stateIndex) => ({
+      coreState,
+      key: stateKey(coreState),
+      visibleTokenIds: beginnerVisibleTokenIds(coreState),
+      x: ((stateIndex + 0.5) / states.length) * 100,
+      y,
+    }));
+  });
+}
+
+const positionedOrderStates = positionOrderStates();
+
+function InformationOrderDiagram({
+  copy,
+  inspectedState,
+  onInspect,
+}: InformationOrderDiagramProps) {
+  const nodeRefs = useRef(new Map<string, HTMLButtonElement>());
+  const inspectedKey = stateKey(inspectedState);
+  const positionByKey = new Map(
+    positionedOrderStates.map((state) => [state.key, state]),
+  );
+  const inspectedVisibleTokenIds = beginnerVisibleTokenIds(inspectedState);
+  const inspectedLabel = formatTokenSet(copy, inspectedVisibleTokenIds);
+  const inspectedDisplayLabel =
+    inspectedVisibleTokenIds.length === 0
+      ? `⊥ · ${inspectedLabel}`
+      : inspectedLabel;
+  const inspectedDetail =
+    inspectedVisibleTokenIds.length === 0
+      ? copy.informationOrder.bottomDetail
+      : copy.informationOrder.informedDetail(inspectedLabel);
+
+  function orderStateLabel(state: PositionedOrderState): string {
+    return state.visibleTokenIds.length === 0
+      ? "⊥ (∅)"
+      : formatTokenSet(copy, state.visibleTokenIds);
+  }
+
+  function orderStateSummary(state: PositionedOrderState): string {
+    if (state.visibleTokenIds.length === 0) {
+      return copy.informationOrder.bottomSummary;
+    }
+
+    const tokenId = state.visibleTokenIds[0];
+    const tokenLabel =
+      tokenId === undefined
+        ? ""
+        : tokenText(copy, requireToken(tokenId)).label;
+    return copy.informationOrder.informedSummary(
+      formatTokenSet(copy, state.visibleTokenIds),
+      tokenLabel,
+    );
+  }
+
+  function focusState(targetState: readonly TokenId[] | undefined): void {
+    if (targetState === undefined) {
+      return;
+    }
+    nodeRefs.current.get(stateKey(targetState))?.focus();
+  }
+
+  function handleNodeKeyDown(
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    currentState: PositionedOrderState,
+  ): void {
+    const currentRank = currentState.visibleTokenIds.length;
+    const sameRank = positionedOrderStates.filter(
+      ({ visibleTokenIds }) => visibleTokenIds.length === currentRank,
+    );
+    const rankIndex = sameRank.findIndex(({ key }) => key === currentState.key);
+    let targetState: readonly TokenId[] | undefined;
+
+    if (event.key === "ArrowUp") {
+      targetState = informationOrder.edges.find(
+        ({ lower }) => stateKey(lower) === currentState.key,
+      )?.upper;
+    } else if (event.key === "ArrowDown") {
+      targetState = informationOrder.edges.find(
+        ({ upper }) => stateKey(upper) === currentState.key,
+      )?.lower;
+    } else if (event.key === "ArrowLeft" && rankIndex > 0) {
+      targetState = sameRank[rankIndex - 1]?.coreState;
+    } else if (event.key === "ArrowRight" && rankIndex < sameRank.length - 1) {
+      targetState = sameRank[rankIndex + 1]?.coreState;
+    }
+
+    if (targetState !== undefined) {
+      event.preventDefault();
+      focusState(targetState);
+    }
+  }
+
+  return (
+    <section
+      className="information-order"
+      aria-label={copy.informationOrder.diagramLabel}
+    >
+      <div className="order-plot">
+        <svg
+          className="order-lines"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <marker
+              id="information-arrow"
+              viewBox="0 0 10 10"
+              refX="8"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto"
+            >
+              <path d="M 0 0 L 10 5 L 0 10 z" />
+            </marker>
+          </defs>
+          {informationOrder.edges.map((edge) => {
+            const lower = positionByKey.get(stateKey(edge.lower));
+            const upper = positionByKey.get(stateKey(edge.upper));
+            return lower === undefined || upper === undefined ? null : (
+              <line
+                key={`${lower.key}-${upper.key}`}
+                x1={lower.x}
+                y1={lower.y - 12}
+                x2={upper.x}
+                y2={upper.y + 12}
+                markerEnd="url(#information-arrow)"
+              />
+            );
+          })}
+        </svg>
+
+        <div className="order-direction" aria-hidden="true">
+          <span>↑</span>
+          <span>{copy.informationOrder.moreInformation}</span>
+        </div>
+
+        {positionedOrderStates.map((state) => {
+          const isBottom = state.visibleTokenIds.length === 0;
+          const label = orderStateLabel(state);
+          const summary = orderStateSummary(state);
+          return (
+            <button
+              key={state.key}
+              ref={(node) => {
+                if (node === null) {
+                  nodeRefs.current.delete(state.key);
+                } else {
+                  nodeRefs.current.set(state.key, node);
+                }
+              }}
+              className={`order-node${isBottom ? " is-bottom" : ""}`}
+              style={{ left: `${state.x}%`, top: `${state.y}%` }}
+              type="button"
+              aria-label={copy.informationOrder.stateButton(summary)}
+              aria-pressed={state.key === inspectedKey}
+              onClick={() => onInspect(state.coreState)}
+              onKeyDown={(event) => handleNodeKeyDown(event, state)}
+            >
+              <span className="order-node-label">{isBottom ? "⊥" : label}</span>
+              {isBottom ? (
+                <span className="order-node-detail">
+                  ∅ · {copy.noObservations}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="order-inspection" aria-live="polite">
+        <span>{copy.informationOrder.selectedState}</span>
+        <strong>{inspectedDisplayLabel}</strong>
+        <p>{inspectedDetail}</p>
+      </div>
+
+      <details className="order-text-view">
+        <summary>{copy.informationOrder.textViewSummary}</summary>
+        <div className="order-text-columns">
+          <section>
+            <h2>{copy.informationOrder.statesHeading}</h2>
+            <ul>
+              {positionedOrderStates.map((state) => (
+                <li key={state.key}>{orderStateSummary(state)}</li>
+              ))}
+            </ul>
+          </section>
+          <section>
+            <h2>{copy.informationOrder.edgesHeading}</h2>
+            <ul>
+              {informationOrder.edges.map((edge) => {
+                const lower = positionByKey.get(stateKey(edge.lower));
+                const upper = positionByKey.get(stateKey(edge.upper));
+                if (lower === undefined || upper === undefined) {
+                  return null;
+                }
+                return (
+                  <li key={`${lower.key}-${upper.key}`}>
+                    {copy.informationOrder.edgeDescription(
+                      orderStateLabel(lower),
+                      orderStateLabel(upper),
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </div>
+      </details>
+    </section>
+  );
+}
+
 export function App() {
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [lessonState, setLessonState] = useState<LessonState>({
@@ -153,6 +420,7 @@ export function App() {
   const informedState = hasInformation(lessonState) ? lessonState : undefined;
   const conflictState =
     lessonState.step === "conflict" ? lessonState : undefined;
+  const orderState = lessonState.step === "order" ? lessonState : undefined;
   const selectedToken =
     informedState === undefined
       ? undefined
@@ -225,7 +493,11 @@ export function App() {
     if (lessonState.step === "choose") {
       firstChoiceRef.current?.focus();
     }
-    if (lessonState.step === "informed" || lessonState.step === "conflict") {
+    if (
+      lessonState.step === "informed" ||
+      lessonState.step === "conflict" ||
+      lessonState.step === "order"
+    ) {
       resultHeadingRef.current?.focus();
     }
   }, [lessonState.step]);
@@ -267,6 +539,41 @@ export function App() {
     });
   }
 
+  function showInformationOrder(): void {
+    if (conflictState === undefined) {
+      throw new Error("The information order follows the conflict step.");
+    }
+
+    setLessonState({
+      step: "order",
+      selectedTokenId: conflictState.selectedTokenId,
+      attemptedTokenId: conflictState.attemptedTokenId,
+      closure: conflictState.closure,
+      rejection: conflictState.rejection,
+      inspectedState: conflictState.closure.state,
+    });
+  }
+
+  function inspectOrderState(state: readonly TokenId[]): void {
+    if (orderState === undefined) {
+      throw new Error("A state can be inspected only in the information order.");
+    }
+    setLessonState({ ...orderState, inspectedState: state });
+  }
+
+  function returnToConflict(): void {
+    if (orderState === undefined) {
+      throw new Error("The conflict view requires an information-order state.");
+    }
+    setLessonState({
+      step: "conflict",
+      selectedTokenId: orderState.selectedTokenId,
+      attemptedTokenId: orderState.attemptedTokenId,
+      closure: orderState.closure,
+      rejection: orderState.rejection,
+    });
+  }
+
   const stateDescription =
     selectedToken === undefined
       ? isOpen
@@ -285,7 +592,9 @@ export function App() {
           ? copy.headings.choose
           : lessonState.step === "informed"
             ? copy.headings.informed(selectedTokenText?.label ?? "")
-            : copy.headings.conflict;
+            : lessonState.step === "conflict"
+              ? copy.headings.conflict
+              : copy.headings.order;
 
   const lessonExplanation =
     lessonState.step === "intro" || lessonState.step === "example"
@@ -301,7 +610,18 @@ export function App() {
                 selectedTokenText?.label ?? "",
                 stateLabel,
               )
-            : copy.explanations.conflict;
+            : lessonState.step === "conflict"
+              ? copy.explanations.conflict
+              : copy.explanations.order;
+
+  const lessonCopy = (
+    <div className="lesson-copy" aria-live="polite">
+      <h1 id="lesson-title" ref={resultHeadingRef} tabIndex={-1}>
+        {lessonHeading}
+      </h1>
+      <p>{lessonExplanation}</p>
+    </div>
+  );
 
   return (
     <div className="app-shell">
@@ -483,99 +803,104 @@ export function App() {
         <section className="lesson-panel" aria-labelledby="lesson-title">
           <p className="eyebrow">
             <span className="eyebrow-dot" aria-hidden="true" />
-            {copy.eyebrow}
+            {orderState === undefined
+              ? copy.eyebrow
+              : copy.informationOrder.eyebrow}
           </p>
 
-          <div className="state-space">
-            <div
-              className={`state-scene${
-                conflictState === undefined ? "" : " has-conflict"
-              }`}
-            >
-              <figure
-                id="current-state"
-                className={`state-vessel${isOpen ? " is-open" : ""}${
-                  selectedToken === undefined ? "" : " has-information"
+          {orderState === undefined ? null : lessonCopy}
+
+          {orderState === undefined ? (
+            <div className="state-space">
+              <div
+                className={`state-scene${
+                  conflictState === undefined ? "" : " has-conflict"
                 }`}
-                aria-label={stateDescription}
               >
-                <div className="bottom-identity" aria-hidden="true">
-                  <span
-                    className={`bottom-symbol${
-                      selectedToken === undefined ? "" : " is-word"
-                    }`}
-                  >
-                    {selectedToken === undefined ? "⊥" : copy.stateNoun}
-                  </span>
-                  <span className="state-kind">
-                    {selectedToken === undefined
-                      ? copy.stateNoun
-                      : stateLabel}
-                  </span>
-                </div>
-
-                {isOpen && stateTokens.length === 0 ? (
-                  <div
-                    className="empty-observations"
-                    aria-label={copy.emptyStateLabel}
-                  >
-                    <span className="empty-set-symbol" aria-hidden="true">
-                      ∅
+                <figure
+                  id="current-state"
+                  className={`state-vessel${isOpen ? " is-open" : ""}${
+                    selectedToken === undefined ? "" : " has-information"
+                  }`}
+                  aria-label={stateDescription}
+                >
+                  <div className="bottom-identity" aria-hidden="true">
+                    <span
+                      className={`bottom-symbol${
+                        selectedToken === undefined ? "" : " is-word"
+                      }`}
+                    >
+                      {selectedToken === undefined ? "⊥" : copy.stateNoun}
                     </span>
-                    <span>{copy.noObservations}</span>
-                  </div>
-                ) : null}
-
-                {isOpen && stateTokens.length > 0 ? (
-                  <ul
-                    className="state-tokens"
-                    aria-label={copy.tokensInState}
-                  >
-                    {stateTokens.map((token) => (
-                      <TokenCard
-                        key={token.id}
-                        token={token}
-                        text={tokenText(copy, token)}
-                        roleLabel={copy.tokenRole}
-                        informative
-                      />
-                    ))}
-                  </ul>
-                ) : null}
-              </figure>
-
-              {attemptedToken === undefined ? null : (
-                <>
-                  <div className="conflict-connector" aria-hidden="true">
-                    <span>×</span>
-                  </div>
-                  <aside
-                    className="rejected-token"
-                    aria-label={copy.rejectedToken(
-                      attemptedTokenText?.label ?? "",
-                    )}
-                  >
-                    <span className="rejected-role">{copy.rejectedRole}</span>
-                    <strong>{attemptedTokenText?.label}</strong>
-                    <span className="rejected-detail">
-                      {copy.rejectedDetail}
+                    <span className="state-kind">
+                      {selectedToken === undefined
+                        ? copy.stateNoun
+                        : stateLabel}
                     </span>
-                  </aside>
-                </>
-              )}
+                  </div>
+
+                  {isOpen && stateTokens.length === 0 ? (
+                    <div
+                      className="empty-observations"
+                      aria-label={copy.emptyStateLabel}
+                    >
+                      <span className="empty-set-symbol" aria-hidden="true">
+                        ∅
+                      </span>
+                      <span>{copy.noObservations}</span>
+                    </div>
+                  ) : null}
+
+                  {isOpen && stateTokens.length > 0 ? (
+                    <ul
+                      className="state-tokens"
+                      aria-label={copy.tokensInState}
+                    >
+                      {stateTokens.map((token) => (
+                        <TokenCard
+                          key={token.id}
+                          token={token}
+                          text={tokenText(copy, token)}
+                          roleLabel={copy.tokenRole}
+                          informative
+                        />
+                      ))}
+                    </ul>
+                  ) : null}
+                </figure>
+
+                {attemptedToken === undefined ? null : (
+                  <>
+                    <div className="conflict-connector" aria-hidden="true">
+                      <span>×</span>
+                    </div>
+                    <aside
+                      className="rejected-token"
+                      aria-label={copy.rejectedToken(
+                        attemptedTokenText?.label ?? "",
+                      )}
+                    >
+                      <span className="rejected-role">
+                        {copy.rejectedRole}
+                      </span>
+                      <strong>{attemptedTokenText?.label}</strong>
+                      <span className="rejected-detail">
+                        {copy.rejectedDetail}
+                      </span>
+                    </aside>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <InformationOrderDiagram
+              copy={copy}
+              inspectedState={orderState.inspectedState}
+              onInspect={inspectOrderState}
+            />
+          )}
 
-          <div className="lesson-copy" aria-live="polite">
-            <h1
-              id="lesson-title"
-              ref={resultHeadingRef}
-              tabIndex={-1}
-            >
-              {lessonHeading}
-            </h1>
-            <p>{lessonExplanation}</p>
-          </div>
+          {orderState === undefined ? lessonCopy : null}
 
           <aside
             className="model-definition"
@@ -609,7 +934,8 @@ export function App() {
                 </div>
               ) : null}
 
-              {lessonState.step === "conflict" ? (
+              {lessonState.step === "conflict" ||
+              lessonState.step === "order" ? (
                 <div className="model-fact">
                   <dt>{copy.modelDefinition.statesLabel}</dt>
                   <dd>
@@ -760,12 +1086,38 @@ export function App() {
                 <button
                   className="primary-action"
                   type="button"
+                  onClick={showInformationOrder}
+                >
+                  <span>{copy.actions.showOrder}</span>
+                  <span className="button-arrow" aria-hidden="true">
+                    ↑
+                  </span>
+                </button>
+                <button
+                  className="secondary-action"
+                  type="button"
                   onClick={() => setLessonState({ step: "choose" })}
                 >
-                  <span>{copy.actions.tryOtherPath}</span>
-                  <span className="button-arrow" aria-hidden="true">
-                    ↙
-                  </span>
+                  {copy.actions.tryOtherPath}
+                </button>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={() => setLessonState({ step: "bottom" })}
+                >
+                  {copy.actions.startOver}
+                </button>
+              </>
+            ) : null}
+
+            {lessonState.step === "order" ? (
+              <>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={returnToConflict}
+                >
+                  {copy.actions.backToConflict}
                 </button>
                 <button
                   className="secondary-action"
@@ -790,7 +1142,9 @@ export function App() {
               ? copy.introduction.footerStage
               : isExampleIntroduction
                 ? copy.exampleIntroduction.footerStage
-                : copy.footerStage}
+                : orderState === undefined
+                  ? copy.footerStage
+                  : copy.informationOrder.footerStage}
           </span>
         </div>
         <a

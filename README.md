@@ -1,8 +1,9 @@
 # ScottLab
 
 > [!IMPORTANT]
-> **ScottLab is under construction.** A small local preview now introduces the
-> bottom state; the complete lesson and sandbox are not implemented yet.
+> **ScottLab is under construction.** The interactive preview now reaches the
+> three-state Boolean information order; the challenge and sandbox are not
+> implemented yet.
 
 **[Open the current interactive preview](https://kmehltretter82.github.io/scottlab/)**
 
@@ -68,7 +69,8 @@ The mathematical convention, versioned data format, and first lesson flow are
 documented. The Vite and React application gives a short historical
 introduction, explains why its first model is a Boolean, then begins at `⊥`
 and opens it as an empty collection before introducing the `true` and `false`
-tokens.
+tokens. It rejects their incompatible combination with a concrete witness and
+turns the result into an interactive three-state information order.
 
 ## Run locally
 

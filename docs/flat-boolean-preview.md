@@ -259,16 +259,21 @@ The view pulls back to show the three states:
       ∅ (⊥)
 ```
 
-The displayed node labels are `true`, `false`, and `⊥`; inspecting any node
-reveals its beginner-visible observations. Edges are produced by
-`coverRelation`, not drawn from a UI-specific hard-coded model.
+The displayed node labels are `{true}`, `{false}`, and `⊥`; inspecting any node
+reveals its beginner-visible observations. The state just built is initially
+selected. Edges are produced by `computeCoverRelation`, not drawn from a
+UI-specific hard-coded model. The visual diagram has a collapsible structured
+text equivalent listing all three states and both cover edges.
 
 Canonical explanation:
 
-> Moving upward adds information. `⊥` is below both Boolean answers because it
-> contains no specific Boolean information.
+> Moving upward means gaining information. At `⊥` we know no answer. Adding
+> `true` or `false` reaches one of two more informative states. Neither answer
+> is above the other because they contain different information.
 
-The interface explicitly says that `⊥` is not Boolean `false`.
+The interface explicitly says that `⊥` is not Boolean `false`. The three nodes
+are native buttons. Up and down follow cover edges, left and right move between
+states at the same level, and Enter or Space inspects the focused state.
 
 ### 7. Complete the challenge
 

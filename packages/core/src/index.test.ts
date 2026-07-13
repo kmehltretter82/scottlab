@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeBottom,
   computeClosure,
+  computeCoverRelation,
   enumerateStates,
   SemanticError,
   tryAddObservation,
@@ -153,6 +154,43 @@ describe("enumerateStates", () => {
       ["delta", "false"],
       ["delta", "true"],
       ["delta", "false", "true"],
+    ]);
+  });
+});
+
+describe("computeCoverRelation", () => {
+  it("derives the two flat-Boolean cover edges", () => {
+    const result = computeCoverRelation(flatBoolean);
+
+    expect(result.edges).toEqual([
+      { lower: ["delta"], upper: ["delta", "false"] },
+      { lower: ["delta"], upper: ["delta", "true"] },
+    ]);
+    expect(result.events).toEqual([
+      {
+        kind: "coverRelationComputed",
+        edges: result.edges,
+      },
+    ]);
+  });
+
+  it("omits transitive edges", () => {
+    const result = computeCoverRelation({
+      ...flatBoolean,
+      minimalInconsistentSets: [],
+    });
+
+    expect(result.edges).toEqual([
+      { lower: ["delta"], upper: ["delta", "false"] },
+      { lower: ["delta"], upper: ["delta", "true"] },
+      {
+        lower: ["delta", "false"],
+        upper: ["delta", "false", "true"],
+      },
+      {
+        lower: ["delta", "true"],
+        upper: ["delta", "false", "true"],
+      },
     ]);
   });
 });

@@ -74,6 +74,21 @@ export interface StateEnumeration {
   readonly states: readonly (readonly TokenId[])[];
 }
 
+export interface CoverRelationEdge {
+  readonly lower: readonly TokenId[];
+  readonly upper: readonly TokenId[];
+}
+
+export interface CoverRelationSemanticEvent {
+  readonly kind: "coverRelationComputed";
+  readonly edges: readonly CoverRelationEdge[];
+}
+
+export interface CoverRelationComputation extends StateEnumeration {
+  readonly edges: readonly CoverRelationEdge[];
+  readonly events: readonly CoverRelationSemanticEvent[];
+}
+
 export interface InconsistencyEvent {
   readonly kind: "inconsistencyFound";
   readonly category: "minimalInconsistentSet";
@@ -397,6 +412,48 @@ export function enumerateStates(
   });
 
   return { states };
+}
+
+function isSubset(
+  candidateSubset: readonly TokenId[],
+  candidateSuperset: readonly TokenId[],
+): boolean {
+  const superset = new Set(candidateSuperset);
+  return candidateSubset.every((tokenId) => superset.has(tokenId));
+}
+
+/** Compute the cover edges of the finite information order. */
+export function computeCoverRelation(
+  system: InformationSystemDefinition,
+): CoverRelationComputation {
+  const { states } = enumerateStates(system);
+  const edges: CoverRelationEdge[] = [];
+
+  for (const lower of states) {
+    for (const upper of states) {
+      if (lower.length >= upper.length || !isSubset(lower, upper)) {
+        continue;
+      }
+
+      const hasIntermediateState = states.some(
+        (intermediate) =>
+          intermediate.length > lower.length &&
+          intermediate.length < upper.length &&
+          isSubset(lower, intermediate) &&
+          isSubset(intermediate, upper),
+      );
+
+      if (!hasIntermediateState) {
+        edges.push({ lower, upper });
+      }
+    }
+  }
+
+  return {
+    states,
+    edges,
+    events: [{ kind: "coverRelationComputed", edges }],
+  };
 }
 
 /** Attempt to refine a validated state without mutating it on rejection. */

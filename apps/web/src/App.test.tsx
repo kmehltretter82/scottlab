@@ -15,6 +15,33 @@ async function beginLesson(
   );
 }
 
+async function reachConflict(
+  user: ReturnType<typeof userEvent.setup>,
+  firstToken = "true",
+): Promise<void> {
+  await beginLesson(user);
+  await user.click(screen.getByRole("button", { name: "Look inside" }));
+  await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
+  await user.click(
+    screen.getByRole("button", { name: `Add ${firstToken} token` }),
+  );
+  const oppositeToken = firstToken === "true" ? "false" : "true";
+  await user.click(
+    screen.getByRole("button", {
+      name: `Try adding ${oppositeToken} token`,
+    }),
+  );
+}
+
+async function reachInformationOrder(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await reachConflict(user);
+  await user.click(
+    screen.getByRole("button", { name: "Show all possible states" }),
+  );
+}
+
 describe("ScottLab introduction and bottom-first lesson", () => {
   it("introduces Dana Scott and the purpose of information systems", () => {
     render(<App />);
@@ -168,6 +195,113 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByText(/ScottLab did not infer this from the token names/),
     ).toBeVisible();
+  });
+
+  it("turns the experiment into the computed information order", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachInformationOrder(user);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Three states, ordered by information.",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.getByText(/Moving upward means gaining information/),
+    ).toBeVisible();
+
+    const order = screen.getByRole("region", {
+      name: "Information order of the three Boolean states",
+    });
+    const bottomNode = within(order).getByRole("button", {
+      name: "Inspect state ⊥, shown as ∅: no observations",
+    });
+    const falseNode = within(order).getByRole("button", {
+      name: "Inspect state {false}: the Boolean answer is false",
+    });
+    const trueNode = within(order).getByRole("button", {
+      name: "Inspect state {true}: the Boolean answer is true",
+    });
+
+    expect(bottomNode).toHaveAttribute("aria-pressed", "false");
+    expect(falseNode).toHaveAttribute("aria-pressed", "false");
+    expect(trueNode).toHaveAttribute("aria-pressed", "true");
+    expect(within(order).queryByText("Δ")).not.toBeInTheDocument();
+
+    await user.click(within(order).getByText("Read the diagram as text"));
+    expect(
+      within(order).getByText("⊥ (∅) is directly below {false}."),
+    ).toBeVisible();
+    expect(
+      within(order).getByText("⊥ (∅) is directly below {true}."),
+    ).toBeVisible();
+  });
+
+  it("supports inspecting the order with arrow keys", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachInformationOrder(user);
+
+    const order = screen.getByRole("region", {
+      name: "Information order of the three Boolean states",
+    });
+    const bottomNode = within(order).getByRole("button", {
+      name: "Inspect state ⊥, shown as ∅: no observations",
+    });
+    const falseNode = within(order).getByRole("button", {
+      name: "Inspect state {false}: the Boolean answer is false",
+    });
+    const trueNode = within(order).getByRole("button", {
+      name: "Inspect state {true}: the Boolean answer is true",
+    });
+
+    await user.click(bottomNode);
+    expect(bottomNode).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(order).getByText(/At ⊥, the visible collection is ∅/),
+    ).toBeVisible();
+
+    await user.keyboard("{ArrowUp}");
+    expect(falseNode).toHaveFocus();
+    await user.keyboard("{Enter}");
+    expect(falseNode).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(order).getByText(
+        /The state \{false\} contains one observation/,
+      ),
+    ).toBeVisible();
+
+    await user.keyboard("{ArrowRight}");
+    expect(trueNode).toHaveFocus();
+    await user.keyboard(" ");
+    expect(trueNode).toHaveAttribute("aria-pressed", "true");
+
+    await user.keyboard("{ArrowDown}");
+    expect(bottomNode).toHaveFocus();
+  });
+
+  it("translates the information-order view without changing its state", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachInformationOrder(user);
+
+    await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Drei Zustände, nach Information geordnet.",
+      }),
+    ).toBeVisible();
+    const order = screen.getByRole("region", {
+      name: "Informationsordnung der drei booleschen Zustände",
+    });
+    expect(
+      within(order).getByRole("button", {
+        name: "Zustand untersuchen: {true}: Die boolesche Antwort ist true",
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(within(order).getByText("Ausgewählter Zustand")).toBeVisible();
   });
 
   it("explains the Boolean tokens before asking for a choice", async () => {
@@ -402,6 +536,18 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       expect(
         screen.getByLabelText(`Rejected ${oppositeLabel} token`),
       ).toBeVisible();
+
+      await user.click(
+        screen.getByRole("button", { name: "Show all possible states" }),
+      );
+      const order = screen.getByRole("region", {
+        name: "Information order of the three Boolean states",
+      });
+      expect(
+        within(order).getByRole("button", {
+          name: `Inspect state {${tokenLabel}}: the Boolean answer is ${tokenLabel}`,
+        }),
+      ).toHaveAttribute("aria-pressed", "true");
     },
   );
 });

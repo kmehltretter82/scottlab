@@ -16,7 +16,8 @@ The preview contains:
 1. one short historical introduction;
 2. one bottom-first guided lesson;
 3. one short branch-aware challenge; and
-4. the same system in a read-only sandbox.
+4. one marked transition to the explicit distinguished-token convention; and
+5. the same system in a read-only sandbox.
 
 It does not contain a general editor, import/export, arbitrary systems,
 continuous maps, fixed points, accounts, or server-side behavior.
@@ -84,10 +85,10 @@ The presentation therefore removes `Δ` from each core state:
 | `{Δ, true}` | `{true}` |
 
 This is a projection of the same computed states, not a second implementation
-of the semantics. A later formal lesson may reveal `Δ` when the
-distinguished-token convention helps explain entailment and closure. Until
-then, visible copy must not suggest that a learner needs `Δ` to understand
-bottom, tokens, or the Boolean example.
+of the semantics. After the introductory challenge and information-order
+diagram, a marked advanced phase reveals `Δ` to explain entailment and
+closure. Before that transition, visible copy must not suggest that a learner
+needs `Δ` to understand bottom, tokens, or the Boolean example.
 
 ## Interaction model
 
@@ -251,33 +252,7 @@ The model card reveals the three beginner-visible states `∅`, `{false}`, and
 The learner can focus either token in the witness to hear the same relationship
 described from that token's perspective.
 
-### 6. Build the information order
-
-The view pulls back to show the three states:
-
-```text
-{true}    {false}
-    \      /
-      ∅ (⊥)
-```
-
-The displayed node labels are `{true}`, `{false}`, and `⊥`; inspecting any node
-reveals its beginner-visible observations. The state just built is initially
-selected. Edges are produced by `computeCoverRelation`, not drawn from a
-UI-specific hard-coded model. The visual diagram has a collapsible structured
-text equivalent listing all three states and both cover edges.
-
-Canonical explanation:
-
-> Moving upward means gaining information. At `⊥` we know no answer. Adding
-> `true` or `false` reaches one of two more informative states. Neither answer
-> is above the other because they contain different information.
-
-The interface explicitly says that `⊥` is not Boolean `false`. The three nodes
-are native buttons. Up and down follow cover edges, left and right move between
-states at the same level, and Enter or Space inspects the focused state.
-
-### 7. Complete the challenge
+### 6. Complete the challenge
 
 The lesson resets to `⊥` and asks the learner to build the informative state
 they did not choose first. If the learner first selected `true`, the target is
@@ -294,15 +269,55 @@ valid but unintended state. The explanation contrasts its light-switch meaning
 with the target, then offers “Return to `⊥` and try again.” It does not pretend
 that the observation had no effect.
 
-Success copy:
+Success begins with “Good—that was correct” and then reveals the computed
+information order with the newly built state selected. The completion state
+retains the target and branch locally; it does not record personal data or send
+network requests.
 
-> You built both possible Boolean answers.
+### 7. Reveal the information order
 
-Success returns to the computed information order with the newly built state
-selected. The completion state retains the target and branch locally; it does
-not record personal data or send network requests.
+Only after the challenge is solved does the view pull back to show the three
+states:
 
-### 8. Open the read-only sandbox
+```text
+{true}    {false}
+    \      /
+      ∅ (⊥)
+```
+
+The displayed node labels are `{true}`, `{false}`, and `⊥`; inspecting any node
+reveals its beginner-visible observations. The state built in the challenge is
+initially selected. Edges are produced by `computeCoverRelation`, not drawn
+from a UI-specific hard-coded model. The visual diagram has a collapsible
+structured text equivalent listing all three states and both cover edges.
+
+Canonical explanation:
+
+> Moving upward means gaining information. At `⊥` we know no answer. Adding
+> `true` or `false` reaches one of two more informative states. Neither answer
+> is above the other because they contain different information.
+
+The interface explicitly says that `⊥` is not Boolean `false`. The three nodes
+are native buttons. Up and down follow cover edges, left and right move between
+states at the same level, and Enter or Space inspects the focused state.
+
+### 8. Reveal the explicit convention
+
+After the challenge, the learner may enter a clearly marked advanced phase.
+It revisits the same Boolean computation without the beginner projection and
+must make these distinctions explicit:
+
+- `Δ` is the distinguished token that belongs to every state;
+- `⊥` is the whole least state and is not another name for `Δ`;
+- the empty set is consistent but is not entailment-closed; and
+- `closure(∅) = {Δ} = ⊥`.
+
+The view shows the tuple `A = (T, Δ, Con, ⊢)` and relates the introductory
+states `∅`, `{false}`, and `{true}` to `{Δ}`, `{Δ, false}`, and `{Δ, true}`.
+All state rows come from the same core enumeration used by the introductory
+diagram.
+
+### 9. Open the read-only sandbox
 
 The final action opens the same flat-Boolean system in a read-only sandbox. It
 introduces the four synchronized areas without exposing editing controls:
@@ -469,5 +484,7 @@ coverRelationComputed(
 - The displayed diagram is computed from the three enumerated states and two
   cover edges.
 - The branch-aware challenge works from either first choice.
+- The advanced phase distinguishes `Δ` from `⊥` and displays the three formal
+  states computed by the core.
 - Mouse, touch, keyboard, reduced-motion, and structured-text paths expose the
   same mathematical behavior.

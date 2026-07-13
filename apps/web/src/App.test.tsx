@@ -264,6 +264,90 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     ).toBeVisible();
   });
 
+  it("raises the level and reveals Scott's explicit Delta convention", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachInformationOrder(user);
+
+    expect(screen.queryByText("Δ")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Use the explicit convention" }),
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Now reveal the complete information system.",
+      }),
+    ).toHaveFocus();
+    expect(document.title).toBe("ScottLab · The formal Boolean system");
+    expect(
+      screen.getByRole("heading", { name: "Δ is a token. ⊥ is a state." }),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText("Delta, the always-present token"),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText("least state: ⊥ = {Δ}"),
+    ).toBeVisible();
+    expect(screen.getByText("A = (T, Δ, Con, ⊢)")).toBeVisible();
+    expect(screen.getByText("T = {Δ, false, true}")).toBeVisible();
+    expect(screen.getByText("{false, true} ∉ Con")).toBeVisible();
+    expect(
+      screen.getByText("X ⊢ a ⇔ a = Δ or a ∈ X"),
+    ).toBeVisible();
+    expect(screen.getByText("∅ ⊢ Δ")).toBeVisible();
+    expect(
+      screen.getByText(
+        /The empty set is consistent—not contradictory.*Closure adds Δ/,
+      ),
+    ).toBeVisible();
+
+    const stateTable = screen.getByRole("table");
+    expect(within(stateTable).getByText("∅")).toBeVisible();
+    expect(within(stateTable).getByText("{Δ}")).toBeVisible();
+    expect(within(stateTable).getByText("{Δ, false}")).toBeVisible();
+    expect(within(stateTable).getByText("{Δ, true}")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Back to the introductory diagram",
+      }),
+    );
+    expect(
+      screen.getByRole("region", {
+        name: "Information order of the three Boolean states",
+      }),
+    ).toBeVisible();
+    expect(screen.queryByText("Δ")).not.toBeInTheDocument();
+  });
+
+  it("translates the explicit formal view without duplicating its model", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachInformationOrder(user);
+    await user.click(
+      screen.getByRole("button", { name: "Use the explicit convention" }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
+
+    expect(document.documentElement.lang).toBe("de-DE");
+    expect(
+      screen.getByRole("heading", {
+        name: "Nun legen wir das vollständige Informationssystem offen.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByLabelText("Delta, das stets vorhandene Token"),
+    ).toBeVisible();
+    expect(screen.getByText("T = {Δ, false, true}")).toBeVisible();
+    expect(
+      screen.getByText(/Die leere Menge ist verträglich.*Abschluss fügt Δ/),
+    ).toBeVisible();
+    expect(screen.getAllByRole("row")).toHaveLength(4);
+  });
+
   it("supports inspecting the order with arrow keys", async () => {
     const user = userEvent.setup();
     render(<App />);

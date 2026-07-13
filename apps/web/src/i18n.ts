@@ -123,6 +123,45 @@ export interface LessonMessages {
     readonly footerStage: string;
     readonly completeFooterStage: string;
   };
+  readonly formalisation: {
+    readonly pageTitle: string;
+    readonly markerLabel: string;
+    readonly markerName: string;
+    readonly eyebrow: string;
+    readonly title: string;
+    readonly lead: string;
+    readonly continuity: string;
+    readonly distinctionHeading: string;
+    readonly deltaRole: string;
+    readonly deltaName: string;
+    readonly deltaDescription: string;
+    readonly belongsTo: string;
+    readonly bottomRole: string;
+    readonly bottomDescription: string;
+    readonly systemHeading: string;
+    readonly systemIntroduction: string;
+    readonly tokensLabel: string;
+    readonly tokensDescription: string;
+    readonly deltaLabel: string;
+    readonly deltaDefinition: string;
+    readonly consistencyLabel: string;
+    readonly consistencyDefinition: (inconsistentSet: string) => string;
+    readonly entailmentLabel: string;
+    readonly entailmentDefinition: string;
+    readonly closureHeading: string;
+    readonly closureExplanation: string;
+    readonly statesHeading: string;
+    readonly beginnerColumn: string;
+    readonly formalColumn: string;
+    readonly meaningColumn: string;
+    readonly bottomMeaning: string;
+    readonly informedMeaning: (token: string) => string;
+    readonly projectionNote: string;
+    readonly continueAction: string;
+    readonly backAction: string;
+    readonly restartAction: string;
+    readonly footerStage: string;
+  };
   readonly rejectedToken: (token: string) => string;
   readonly rejectedRole: string;
   readonly rejectedDetail: string;
@@ -205,6 +244,11 @@ const english: LessonMessages = {
     informed: (token) => `State containing the ${token} token`,
   },
   tokens: {
+    delta: {
+      label: "always-present token",
+      accessibleName: "Delta, the always-present token",
+      description: "The distinguished token present in every state.",
+    },
     false: {
       label: "false",
       accessibleName: "false token",
@@ -291,6 +335,54 @@ const english: LessonMessages = {
     footerStage: "Boolean challenge",
     completeFooterStage: "Challenge complete",
   },
+  formalisation: {
+    pageTitle: "ScottLab · The formal Boolean system",
+    markerLabel: "Lesson 2: Formalisation",
+    markerName: "Formalisation",
+    eyebrow: "Advanced phase · Scott’s convention",
+    title: "Now reveal the complete information system.",
+    lead:
+      "The introduction hid one formal token so that you could first concentrate on partial information. From here on, we use Scott’s explicit notation and expose more of the machinery.",
+    continuity:
+      "The Boolean model has not changed. This is the same computation, shown without the beginner projection.",
+    distinctionHeading: "Δ is a token. ⊥ is a state.",
+    deltaRole: "distinguished token",
+    deltaName: "always-present token",
+    deltaDescription:
+      "It records no specific answer about the light, but it belongs to every state.",
+    belongsTo: "belongs to every state",
+    bottomRole: "least state",
+    bottomDescription:
+      "This is a whole, consistent, entailment-closed collection of tokens.",
+    systemHeading: "The four ingredients",
+    systemIntroduction:
+      "Scott writes an information system as a tuple. For the Boolean example, each component is now visible.",
+    tokensLabel: "Token set",
+    tokensDescription: "The finite observations available in this system.",
+    deltaLabel: "Distinguished token",
+    deltaDefinition: "The designated token that every consistent set entails.",
+    consistencyLabel: "Consistency",
+    consistencyDefinition: (inconsistentSet) =>
+      `${inconsistentSet} is the only forbidden combination.`,
+    entailmentLabel: "Entailment",
+    entailmentDefinition:
+      "A set entails its own tokens and always entails Δ.",
+    closureHeading: "Why Δ appears at bottom",
+    closureExplanation:
+      "The empty set is consistent—not contradictory. But in the explicit convention it is not yet closed under entailment. Closure adds Δ, producing the least state.",
+    statesHeading: "The same three states, written explicitly",
+    beginnerColumn: "Introductory view",
+    formalColumn: "Formal state",
+    meaningColumn: "Boolean information",
+    bottomMeaning: "No specific answer is known",
+    informedMeaning: (token) => `The answer is ${token}`,
+    projectionNote:
+      "The introductory column hid Δ. It was a projection of these formal states, not a different model.",
+    continueAction: "Use the explicit convention",
+    backAction: "Back to the introductory diagram",
+    restartAction: "Restart the introduction",
+    footerStage: "Explicit Δ",
+  },
   rejectedToken: (token) => `Rejected ${token} token`,
   rejectedRole: "not added",
   rejectedDetail: "outside the state",
@@ -374,6 +466,11 @@ const german: LessonMessages = {
     informed: (token) => `Zustand mit dem ${token}-Token`,
   },
   tokens: {
+    delta: {
+      label: "stets vorhandenes Token",
+      accessibleName: "Delta, das stets vorhandene Token",
+      description: "Das ausgezeichnete Token, das zu jedem Zustand gehört.",
+    },
     false: {
       label: "false",
       accessibleName: "false-Token",
@@ -459,6 +556,55 @@ const german: LessonMessages = {
       `Von ⊥ aus hast du das ${token}-Token hinzugefügt und ${state} gebaut. Das Diagramm hebt nun den Zustand hervor, den du gerade gebaut hast.`,
     footerStage: "Boolean-Aufgabe",
     completeFooterStage: "Aufgabe gelöst",
+  },
+  formalisation: {
+    pageTitle: "ScottLab · Das formale Boolean-System",
+    markerLabel: "Lektion 2: Formalisierung",
+    markerName: "Formalisierung",
+    eyebrow: "Fortgeschrittene Phase · Scotts Konvention",
+    title: "Nun legen wir das vollständige Informationssystem offen.",
+    lead:
+      "In der Einführung blieb ein formales Token verborgen, damit du dich zunächst auf partielle Information konzentrieren konntest. Von jetzt an verwenden wir Scotts explizite Notation und zeigen mehr von der mathematischen Struktur.",
+    continuity:
+      "Das Boolean-Modell hat sich nicht geändert. Es ist dieselbe Berechnung, jetzt ohne die Projektion für Einsteiger.",
+    distinctionHeading: "Δ ist ein Token. ⊥ ist ein Zustand.",
+    deltaRole: "ausgezeichnetes Token",
+    deltaName: "stets vorhandenes Token",
+    deltaDescription:
+      "Es enthält keine konkrete Antwort über das Licht, gehört aber zu jedem Zustand.",
+    belongsTo: "gehört zu jedem Zustand",
+    bottomRole: "kleinster Zustand",
+    bottomDescription:
+      "Dies ist eine ganze, verträgliche und unter Folgerung abgeschlossene Menge von Token.",
+    systemHeading: "Die vier Bestandteile",
+    systemIntroduction:
+      "Scott schreibt ein Informationssystem als Tupel. Beim Boolean-Beispiel sind nun alle Bestandteile sichtbar.",
+    tokensLabel: "Tokenmenge",
+    tokensDescription: "Die endlichen Beobachtungen dieses Systems.",
+    deltaLabel: "Ausgezeichnetes Token",
+    deltaDefinition:
+      "Das festgelegte Token, das aus jeder verträglichen Menge folgt.",
+    consistencyLabel: "Verträglichkeit",
+    consistencyDefinition: (inconsistentSet) =>
+      `${inconsistentSet} ist die einzige verbotene Kombination.`,
+    entailmentLabel: "Folgerung",
+    entailmentDefinition:
+      "Eine Menge impliziert ihre eigenen Token und immer auch Δ.",
+    closureHeading: "Warum Δ im Bottom erscheint",
+    closureExplanation:
+      "Die leere Menge ist verträglich – nicht widersprüchlich. In der expliziten Konvention ist sie jedoch noch nicht unter Folgerung abgeschlossen. Der Abschluss fügt Δ hinzu und erzeugt den kleinsten Zustand.",
+    statesHeading: "Dieselben drei Zustände, nun explizit geschrieben",
+    beginnerColumn: "Einführende Darstellung",
+    formalColumn: "Formaler Zustand",
+    meaningColumn: "Boolean-Information",
+    bottomMeaning: "Keine konkrete Antwort ist bekannt",
+    informedMeaning: (token) => `Die Antwort ist ${token}`,
+    projectionNote:
+      "In der einführenden Spalte war Δ ausgeblendet. Sie war eine Projektion dieser formalen Zustände und kein anderes Modell.",
+    continueAction: "Die explizite Konvention verwenden",
+    backAction: "Zurück zum einführenden Diagramm",
+    restartAction: "Die Einführung neu beginnen",
+    footerStage: "Explizites Δ",
   },
   rejectedToken: (token) => `Abgelehntes ${token}-Token`,
   rejectedRole: "nicht hinzugefügt",

@@ -33,6 +33,7 @@ button:focus-visible {
 }
 
 .example-heading h1:focus,
+.formal-heading h1:focus,
 .lesson-copy h1:focus {
   outline: none;
 }
@@ -443,6 +444,344 @@ button:focus-visible {
 
 .example-actions .primary-action {
   min-width: 285px;
+}
+
+.formal-main {
+  display: grid;
+  place-items: center;
+  padding: 14px 24px 34px;
+}
+
+.formal-panel {
+  display: grid;
+  width: min(100%, 1120px);
+  gap: 24px;
+  text-align: left;
+}
+
+.formal-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: 8px 44px;
+  align-items: end;
+}
+
+.formal-heading .eyebrow,
+.formal-heading h1 {
+  grid-column: 1;
+}
+
+.formal-heading .eyebrow {
+  margin-bottom: 2px;
+}
+
+.formal-heading h1 {
+  margin: 0;
+  color: #173c3a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 1.03;
+}
+
+.formal-lead,
+.formal-continuity {
+  grid-column: 2;
+  margin: 0;
+  color: #526b66;
+  font-size: 0.9rem;
+  line-height: 1.58;
+}
+
+.formal-lead {
+  grid-row: 1 / span 2;
+  align-self: end;
+}
+
+.formal-continuity {
+  margin-top: 3px;
+  padding: 10px 13px;
+  border-left: 3px solid #df8c45;
+  color: #47635e;
+  background: rgb(255 249 235 / 64%);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.formal-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 18px;
+}
+
+.formal-distinction,
+.formal-definition,
+.formal-closure,
+.formal-states {
+  border: 1px solid rgb(23 60 58 / 13%);
+  border-radius: 25px;
+  background: rgb(255 253 246 / 68%);
+  box-shadow: 0 14px 38px rgb(23 60 58 / 6%);
+}
+
+.formal-distinction,
+.formal-definition {
+  padding: 20px 22px;
+}
+
+.formal-distinction h2,
+.formal-definition h2,
+.formal-closure h2,
+.formal-states h2 {
+  margin: 0;
+  color: #294f4a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.formal-object-relation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  margin-top: 17px;
+}
+
+.formal-object {
+  display: grid;
+  min-height: 188px;
+  align-content: start;
+  padding: 16px;
+  border: 1px solid rgb(23 91 85 / 18%);
+  border-radius: 21px;
+  background: linear-gradient(145deg, #f0fbf3, #dcefe6);
+}
+
+.formal-object.is-state {
+  border-color: rgb(141 83 38 / 18%);
+  background: linear-gradient(145deg, #fffaf0, #f3e1bc);
+}
+
+.formal-object-role {
+  color: #71847f;
+  font-size: 0.57rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.formal-object strong {
+  margin-top: 12px;
+  color: #24534d;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+
+.formal-object.is-token strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.6rem;
+  font-weight: 400;
+}
+
+.formal-object.is-state strong {
+  color: #704e31;
+  font-size: 1.05rem;
+}
+
+.formal-object-name {
+  margin-top: 2px;
+  color: #3d655f;
+  font-size: 0.72rem;
+  font-weight: 750;
+}
+
+.formal-object p {
+  margin: 10px 0 0;
+  color: #5d716c;
+  font-size: 0.72rem;
+  line-height: 1.48;
+}
+
+.formal-relation {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  color: #9a6036;
+  text-align: center;
+}
+
+.formal-relation span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+}
+
+.formal-relation small {
+  max-width: 75px;
+  color: #6c7e79;
+  font-size: 0.55rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.formal-definition > p {
+  margin: 8px 0 13px;
+  color: #61746f;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.formal-tuple {
+  display: block;
+  width: fit-content;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: #224d47;
+  background: #e9f4ec;
+  font-size: 0.94rem;
+  font-weight: 750;
+}
+
+.formal-definition dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin: 0;
+}
+
+.formal-definition dl > div {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid rgb(23 60 58 / 10%);
+  border-radius: 13px;
+  background: rgb(255 255 255 / 38%);
+}
+
+.formal-definition dt {
+  color: #748681;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.formal-definition dd {
+  display: grid;
+  gap: 5px;
+  margin: 5px 0 0;
+}
+
+.formal-definition dd code {
+  overflow-wrap: anywhere;
+  color: #315a54;
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+
+.formal-definition dd span {
+  color: #687b76;
+  font-size: 0.65rem;
+  line-height: 1.42;
+}
+
+.formal-closure {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.75fr) minmax(0, 1.25fr);
+  align-items: center;
+  gap: 22px;
+  padding: 17px 20px;
+  border-color: rgb(154 96 54 / 18%);
+  background: rgb(255 249 235 / 72%);
+}
+
+.formal-closure p {
+  margin: 7px 0 0;
+  color: #5e716c;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.closure-derivation {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  color: #895b38;
+  background: rgb(255 253 246 / 78%);
+}
+
+.closure-derivation code {
+  color: #345d56;
+  font-size: clamp(0.68rem, 1.2vw, 0.82rem);
+  font-weight: 750;
+}
+
+.formal-states {
+  padding: 17px 20px 14px;
+}
+
+.formal-table-scroll {
+  margin-top: 11px;
+  overflow-x: auto;
+}
+
+.formal-states table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.formal-states th,
+.formal-states td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgb(23 60 58 / 10%);
+  text-align: left;
+}
+
+.formal-states th {
+  color: #748681;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.formal-states td {
+  color: #5c716c;
+  font-size: 0.72rem;
+}
+
+.formal-states td code {
+  color: #2f5a53;
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.formal-states td span {
+  margin-left: 5px;
+  color: #895b38;
+  font-weight: 750;
+}
+
+.formal-projection-note {
+  margin: 11px 0 0;
+  color: #5a706b;
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.formal-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
 }
 
 .lesson-panel {
@@ -1554,6 +1893,10 @@ button:focus-visible {
 }
 
 @media (max-width: 900px) {
+  .formal-overview {
+    grid-template-columns: 1fr;
+  }
+
   .lesson-workspace {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
@@ -1579,6 +1922,19 @@ button:focus-visible {
 }
 
 @media (max-width: 800px) {
+  .formal-heading {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .formal-heading .eyebrow,
+  .formal-heading h1,
+  .formal-lead,
+  .formal-continuity {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
   .introduction-panel,
   .example-panel {
     width: min(100%, 700px);
@@ -1671,6 +2027,10 @@ button:focus-visible {
   }
 
   .example-main {
+    padding: 12px 18px 28px;
+  }
+
+  .formal-main {
     padding: 12px 18px 28px;
   }
 
@@ -1859,6 +2219,32 @@ button:focus-visible {
 }
 
 @media (max-width: 420px) {
+  .formal-object-relation,
+  .formal-definition dl,
+  .formal-closure {
+    grid-template-columns: 1fr;
+  }
+
+  .formal-object {
+    min-height: 0;
+  }
+
+  .formal-distinction,
+  .formal-definition,
+  .formal-closure,
+  .formal-states {
+    border-radius: 20px;
+  }
+
+  .formal-relation {
+    padding: 3px 0;
+  }
+
+  .formal-actions,
+  .formal-actions .secondary-action {
+    width: 100%;
+  }
+
   .lesson-name,
   .lesson-number {
     font-size: 0.68rem;

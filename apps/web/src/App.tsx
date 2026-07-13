@@ -14,6 +14,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
+  type Ref,
 } from "react";
 
 import {
@@ -51,6 +52,11 @@ interface ChallengeContext extends RejectedLessonState {
   readonly targetTokenId: TokenId;
 }
 
+interface CompletedChallengeContext extends RejectedLessonState {
+  readonly inspectedState: readonly TokenId[];
+  readonly completedChallengeTokenId: TokenId;
+}
+
 type LessonState =
   | { readonly step: "intro" }
   | { readonly step: "example" }
@@ -59,11 +65,8 @@ type LessonState =
   | { readonly step: "choose" }
   | ({ readonly step: "informed" } & InformedLessonState)
   | ({ readonly step: "conflict" } & RejectedLessonState)
-  | ({
-      readonly step: "order";
-      readonly inspectedState: readonly TokenId[];
-      readonly completedChallengeTokenId?: TokenId;
-    } & RejectedLessonState)
+  | ({ readonly step: "order" } & CompletedChallengeContext)
+  | ({ readonly step: "formal" } & CompletedChallengeContext)
   | ({ readonly step: "challenge" } & ChallengeContext)
   | ({
       readonly step: "challengeAttempt";
@@ -419,6 +422,205 @@ function InformationOrderDiagram({
   );
 }
 
+interface FormalStateRow {
+  readonly beginnerState: string;
+  readonly formalState: string;
+  readonly isBottom: boolean;
+  readonly tokenLabel: string | undefined;
+}
+
+interface FormalisationViewProps {
+  readonly bottomState: string;
+  readonly copy: LessonMessages;
+  readonly deltaText: TokenText;
+  readonly formalTokenSet: string;
+  readonly headingRef: Ref<HTMLHeadingElement>;
+  readonly inconsistentSet: string;
+  readonly onBack: () => void;
+  readonly onRestart: () => void;
+  readonly stateRows: readonly FormalStateRow[];
+}
+
+function FormalisationView({
+  bottomState,
+  copy,
+  deltaText,
+  formalTokenSet,
+  headingRef,
+  inconsistentSet,
+  onBack,
+  onRestart,
+  stateRows,
+}: FormalisationViewProps) {
+  return (
+    <main className="formal-main">
+      <section className="formal-panel" aria-labelledby="formal-title">
+        <header className="formal-heading">
+          <p className="eyebrow">
+            <span className="eyebrow-dot" aria-hidden="true" />
+            {copy.formalisation.eyebrow}
+          </p>
+          <h1 id="formal-title" ref={headingRef} tabIndex={-1}>
+            {copy.formalisation.title}
+          </h1>
+          <p className="formal-lead">{copy.formalisation.lead}</p>
+          <p className="formal-continuity">{copy.formalisation.continuity}</p>
+        </header>
+
+        <div className="formal-overview">
+          <section
+            className="formal-distinction"
+            aria-labelledby="formal-distinction-title"
+          >
+            <h2 id="formal-distinction-title">
+              {copy.formalisation.distinctionHeading}
+            </h2>
+            <div className="formal-object-relation">
+              <article
+                className="formal-object is-token"
+                aria-label={deltaText.accessibleName}
+              >
+                <span className="formal-object-role">
+                  {copy.formalisation.deltaRole}
+                </span>
+                <strong aria-hidden="true">Δ</strong>
+                <span className="formal-object-name">
+                  {copy.formalisation.deltaName}
+                </span>
+                <p>{copy.formalisation.deltaDescription}</p>
+              </article>
+
+              <div className="formal-relation" aria-hidden="true">
+                <span>∈</span>
+                <small>{copy.formalisation.belongsTo}</small>
+              </div>
+
+              <article
+                className="formal-object is-state"
+                aria-label={`${copy.formalisation.bottomRole}: ⊥ = ${bottomState}`}
+              >
+                <span className="formal-object-role">
+                  {copy.formalisation.bottomRole}
+                </span>
+                <strong>⊥ = {bottomState}</strong>
+                <p>{copy.formalisation.bottomDescription}</p>
+              </article>
+            </div>
+          </section>
+
+          <section
+            className="formal-definition"
+            aria-labelledby="formal-definition-title"
+          >
+            <h2 id="formal-definition-title">
+              {copy.formalisation.systemHeading}
+            </h2>
+            <p>{copy.formalisation.systemIntroduction}</p>
+            <code className="formal-tuple">A = (T, Δ, Con, ⊢)</code>
+            <dl>
+              <div>
+                <dt>{copy.formalisation.tokensLabel}</dt>
+                <dd>
+                  <code>T = {formalTokenSet}</code>
+                  <span>{copy.formalisation.tokensDescription}</span>
+                </dd>
+              </div>
+              <div>
+                <dt>{copy.formalisation.deltaLabel}</dt>
+                <dd>
+                  <code>Δ ∈ T</code>
+                  <span>{copy.formalisation.deltaDefinition}</span>
+                </dd>
+              </div>
+              <div>
+                <dt>{copy.formalisation.consistencyLabel}</dt>
+                <dd>
+                  <code>{inconsistentSet} ∉ Con</code>
+                  <span>
+                    {copy.formalisation.consistencyDefinition(inconsistentSet)}
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt>{copy.formalisation.entailmentLabel}</dt>
+                <dd>
+                  <code>X ⊢ a ⇔ a = Δ or a ∈ X</code>
+                  <span>{copy.formalisation.entailmentDefinition}</span>
+                </dd>
+              </div>
+            </dl>
+          </section>
+        </div>
+
+        <section className="formal-closure" aria-labelledby="closure-title">
+          <div>
+            <h2 id="closure-title">{copy.formalisation.closureHeading}</h2>
+            <p>{copy.formalisation.closureExplanation}</p>
+          </div>
+          <div className="closure-derivation">
+            <code>∅ ∈ Con</code>
+            <span aria-hidden="true">⇒</span>
+            <code>∅ ⊢ Δ</code>
+            <span aria-hidden="true">⇒</span>
+            <code>closure(∅) = {bottomState} = ⊥</code>
+          </div>
+        </section>
+
+        <section className="formal-states" aria-labelledby="formal-states-title">
+          <h2 id="formal-states-title">{copy.formalisation.statesHeading}</h2>
+          <div className="formal-table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">{copy.formalisation.beginnerColumn}</th>
+                  <th scope="col">{copy.formalisation.formalColumn}</th>
+                  <th scope="col">{copy.formalisation.meaningColumn}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stateRows.map((row) => (
+                  <tr key={row.formalState}>
+                    <td>
+                      <code>{row.beginnerState}</code>
+                    </td>
+                    <td>
+                      <code>{row.formalState}</code>
+                      {row.isBottom ? <span> = ⊥</span> : null}
+                    </td>
+                    <td>
+                      {row.isBottom
+                        ? copy.formalisation.bottomMeaning
+                        : copy.formalisation.informedMeaning(
+                            row.tokenLabel ?? "",
+                          )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="formal-projection-note">
+            {copy.formalisation.projectionNote}
+          </p>
+        </section>
+
+        <div className="formal-actions">
+          <button className="secondary-action" type="button" onClick={onBack}>
+            {copy.formalisation.backAction}
+          </button>
+          <button
+            className="secondary-action"
+            type="button"
+            onClick={onRestart}
+          >
+            {copy.formalisation.restartAction}
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
 export function App() {
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [lessonState, setLessonState] = useState<LessonState>({
@@ -427,10 +629,12 @@ export function App() {
   const insideActionRef = useRef<HTMLButtonElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
   const exampleHeadingRef = useRef<HTMLHeadingElement>(null);
+  const formalHeadingRef = useRef<HTMLHeadingElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const copy = messages[language];
   const isIntroduction = lessonState.step === "intro";
   const isExampleIntroduction = lessonState.step === "example";
+  const isFormalisation = lessonState.step === "formal";
   const isOpen =
     lessonState.step !== "intro" &&
     lessonState.step !== "example" &&
@@ -439,6 +643,7 @@ export function App() {
   const conflictState =
     lessonState.step === "conflict" ? lessonState : undefined;
   const orderState = lessonState.step === "order" ? lessonState : undefined;
+  const formalState = lessonState.step === "formal" ? lessonState : undefined;
   const challengeState =
     lessonState.step === "challenge" ? lessonState : undefined;
   const challengeAttemptState =
@@ -457,10 +662,11 @@ export function App() {
     challengeContext === undefined
       ? undefined
       : requireToken(challengeContext.targetTokenId);
+  const completedContext = orderState ?? formalState;
   const completedChallengeToken =
-    orderState?.completedChallengeTokenId === undefined
+    completedContext === undefined
       ? undefined
-      : requireToken(orderState.completedChallengeTokenId);
+      : requireToken(completedContext.completedChallengeTokenId);
   const attemptedToken =
     conflictState === undefined
       ? undefined
@@ -529,6 +735,25 @@ export function App() {
       formatTokenSet(copy, beginnerVisibleTokenIds(tokenIds)),
     )
     .join("  ");
+  const deltaText = tokenText(copy, requireToken(flatBooleanSystem.delta));
+  const formalTokenSet = formatTokenSet(
+    copy,
+    flatBooleanSystem.tokens.map(({ id }) => id),
+  );
+  const formalBottomState = formatTokenSet(copy, bottom.state);
+  const formalStateRows = enumeratedStates.map((tokenIds): FormalStateRow => {
+    const visibleTokenIds = beginnerVisibleTokenIds(tokenIds);
+    const tokenId = visibleTokenIds[0];
+    return {
+      beginnerState: formatTokenSet(copy, visibleTokenIds),
+      formalState: formatTokenSet(copy, tokenIds),
+      isBottom: visibleTokenIds.length === 0,
+      tokenLabel:
+        tokenId === undefined
+          ? undefined
+          : tokenText(copy, requireToken(tokenId)).label,
+    };
+  });
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -536,7 +761,9 @@ export function App() {
       ? copy.introduction.pageTitle
       : isExampleIntroduction
         ? copy.exampleIntroduction.pageTitle
-        : copy.pageTitle;
+        : isFormalisation
+          ? copy.formalisation.pageTitle
+          : copy.pageTitle;
     document
       .querySelector<HTMLMetaElement>('meta[name="description"]')
       ?.setAttribute("content", copy.pageDescription);
@@ -546,11 +773,14 @@ export function App() {
     } catch {
       // The selected language remains active for the current page.
     }
-  }, [copy, isExampleIntroduction, isIntroduction, language]);
+  }, [copy, isExampleIntroduction, isFormalisation, isIntroduction, language]);
 
   useEffect(() => {
     if (lessonState.step === "example") {
       exampleHeadingRef.current?.focus();
+    }
+    if (lessonState.step === "formal") {
+      formalHeadingRef.current?.focus();
     }
     if (lessonState.step === "bottom") {
       resultHeadingRef.current?.focus();
@@ -697,6 +927,20 @@ export function App() {
     });
   }
 
+  function showFormalisation(): void {
+    if (orderState === undefined) {
+      throw new Error("Formalisation follows the completed introduction.");
+    }
+    setLessonState({ ...orderState, step: "formal" });
+  }
+
+  function returnToOrder(): void {
+    if (formalState === undefined) {
+      throw new Error("Only the formal view can return to the introduction.");
+    }
+    setLessonState({ ...formalState, step: "order" });
+  }
+
   const stateDescription =
     displayedToken === undefined
       ? isOpen
@@ -708,6 +952,7 @@ export function App() {
     switch (lessonState.step) {
       case "intro":
       case "example":
+      case "formal":
         return "";
       case "bottom":
         return copy.headings.bottom;
@@ -734,6 +979,7 @@ export function App() {
     switch (lessonState.step) {
       case "intro":
       case "example":
+      case "formal":
         return "";
       case "bottom":
         return copy.explanations.bottom;
@@ -773,11 +1019,9 @@ export function App() {
   const lessonFooterStage =
     challengeContext !== undefined
       ? copy.challenge.footerStage
-      : orderState?.completedChallengeTokenId !== undefined
+      : orderState !== undefined
         ? copy.challenge.completeFooterStage
-        : orderState !== undefined
-          ? copy.informationOrder.footerStage
-          : copy.footerStage;
+        : copy.footerStage;
 
   const lessonCopy = (
     <div className="lesson-copy" aria-live="polite">
@@ -873,22 +1117,30 @@ export function App() {
           <div
             className="lesson-marker"
             aria-label={
-              isIntroduction
-                ? copy.introduction.markerLabel
-                : isExampleIntroduction
-                  ? copy.exampleIntroduction.markerLabel
-                  : copy.lessonMarkerLabel
+              isFormalisation
+                ? copy.formalisation.markerLabel
+                : isIntroduction
+                  ? copy.introduction.markerLabel
+                  : isExampleIntroduction
+                    ? copy.exampleIntroduction.markerLabel
+                    : copy.lessonMarkerLabel
             }
           >
             <span className="lesson-number">
-              {isIntroduction || isExampleIntroduction ? "00" : "01"}
+              {isFormalisation
+                ? "02"
+                : isIntroduction || isExampleIntroduction
+                  ? "00"
+                  : "01"}
             </span>
             <span className="lesson-name">
-              {isIntroduction
-                ? copy.introduction.markerName
-                : isExampleIntroduction
-                  ? copy.exampleIntroduction.markerName
-                  : copy.lessonName}
+              {isFormalisation
+                ? copy.formalisation.markerName
+                : isIntroduction
+                  ? copy.introduction.markerName
+                  : isExampleIntroduction
+                    ? copy.exampleIntroduction.markerName
+                    : copy.lessonName}
             </span>
           </div>
         </div>
@@ -1016,6 +1268,18 @@ export function App() {
             </div>
           </section>
         </main>
+      ) : isFormalisation ? (
+        <FormalisationView
+          bottomState={formalBottomState}
+          copy={copy}
+          deltaText={deltaText}
+          formalTokenSet={formalTokenSet}
+          headingRef={formalHeadingRef}
+          inconsistentSet={modelRule}
+          onBack={returnToOrder}
+          onRestart={() => setLessonState({ step: "bottom" })}
+          stateRows={formalStateRows}
+        />
       ) : (
       <main className="lesson-main">
         <section className="lesson-panel" aria-labelledby="lesson-title">
@@ -1322,13 +1586,25 @@ export function App() {
             ) : null}
 
             {lessonState.step === "order" ? (
-              <button
-                className="secondary-action"
-                type="button"
-                onClick={() => setLessonState({ step: "bottom" })}
-              >
-                {copy.actions.startOver}
-              </button>
+              <>
+                <button
+                  className="primary-action"
+                  type="button"
+                  onClick={showFormalisation}
+                >
+                  <span>{copy.formalisation.continueAction}</span>
+                  <span className="button-arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </button>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={() => setLessonState({ step: "bottom" })}
+                >
+                  {copy.actions.startOver}
+                </button>
+              </>
             ) : null}
 
             {lessonState.step === "challenge" ? (
@@ -1378,7 +1654,9 @@ export function App() {
               ? copy.introduction.footerStage
               : isExampleIntroduction
                 ? copy.exampleIntroduction.footerStage
-                : lessonFooterStage}
+                : isFormalisation
+                  ? copy.formalisation.footerStage
+                  : lessonFooterStage}
           </span>
         </div>
         <a

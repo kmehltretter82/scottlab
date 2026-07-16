@@ -20,6 +20,96 @@ async function expectNoHorizontalPageOverflow(page: Page): Promise<void> {
     .toBe(true);
 }
 
+async function expectPageFitsViewport(page: Page): Promise<void> {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollHeight <= window.innerHeight + 1,
+      ),
+    )
+    .toBe(true);
+}
+
+async function reachFormalisation(page: Page): Promise<void> {
+  await page.goto("#/lesson");
+  for (const action of [
+    "Explore a first example",
+    "Begin the Boolean model at ⊥",
+    "Look inside",
+    "Meet the tokens",
+    "Add true token",
+    "Try adding false token",
+    "Try a short challenge",
+    "Add false token",
+    "Use the explicit convention",
+  ]) {
+    await page.getByRole("button", { name: action, exact: true }).click();
+  }
+}
+
+test.describe("function-first lesson density", () => {
+  test.use({ viewport: { width: 1280, height: 720 } });
+
+  test("keeps each formalisation topic on one laptop-sized page", async ({
+    page,
+  }) => {
+    await reachFormalisation(page);
+
+    for (const heading of [
+      "Δ is a token. ⊥ is a state.",
+      "The four ingredients",
+      "Why Δ appears at bottom",
+      "The same three states, written explicitly",
+    ]) {
+      await expect(
+        page.getByRole("heading", { level: 1, name: heading }),
+      ).toBeFocused();
+      await expect(
+        page.getByRole("button", {
+          name: "Return to the ScottLab start",
+        }),
+      ).toBeInViewport();
+      const shellScrollLeft = await page
+        .locator(".app-shell")
+        .evaluate((shell) => shell.scrollLeft);
+      expect(shellScrollLeft).toBe(0);
+      await expectPageFitsViewport(page);
+      if (heading !== "The same three states, written explicitly") {
+        await page.getByRole("button", { name: "Next", exact: true }).click();
+      }
+    }
+
+    const formalBodySize = await page
+      .locator(".formal-projection-note")
+      .evaluate((element) =>
+        Number.parseFloat(window.getComputedStyle(element).fontSize),
+      );
+    expect(formalBodySize).toBeGreaterThanOrEqual(13.5);
+  });
+
+  test("opens entailment with one compact task instead of four panels", async ({
+    page,
+  }) => {
+    await page.goto("#/lesson/entailment");
+
+    await expect(page.locator(".entailment-stage")).toHaveCount(1);
+    await expect(
+      page.getByRole("list", { name: "Closure trace" }),
+    ).toHaveCount(0);
+    await expect(page.locator(".entailment-formal-details")).toHaveCount(0);
+    const headingSize = await page
+      .getByRole("heading", {
+        level: 1,
+        name: "Watch one observation teach the state more.",
+      })
+      .evaluate((element) =>
+        Number.parseFloat(window.getComputedStyle(element).fontSize),
+      );
+    expect(headingSize).toBeLessThanOrEqual(36);
+    await expectPageFitsViewport(page);
+  });
+});
+
 test.describe("reduced-motion presentation", () => {
   test.use({ reducedMotion: "reduce" });
 
@@ -226,5 +316,18 @@ test.describe("narrow-screen workspaces", () => {
       "The target closes to {Δ, false}",
     );
     await expectNoHorizontalPageOverflow(page);
+  });
+
+  test("keeps all four formalisation pages within the mobile width", async ({
+    page,
+  }) => {
+    await reachFormalisation(page);
+
+    for (let formalPage = 1; formalPage <= 4; formalPage += 1) {
+      await expectNoHorizontalPageOverflow(page);
+      if (formalPage < 4) {
+        await page.getByRole("button", { name: "Next", exact: true }).click();
+      }
+    }
   });
 });

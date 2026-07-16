@@ -84,6 +84,12 @@ interface CompletedChallengeContext extends RejectedLessonState {
   readonly completedChallengeTokenId: TokenId;
 }
 
+type FormalisationPage =
+  | "distinction"
+  | "ingredients"
+  | "closure"
+  | "states";
+
 type LessonState =
   | { readonly step: "intro" }
   | { readonly step: "example" }
@@ -93,7 +99,10 @@ type LessonState =
   | ({ readonly step: "informed" } & InformedLessonState)
   | ({ readonly step: "conflict" } & RejectedLessonState)
   | ({ readonly step: "order" } & CompletedChallengeContext)
-  | ({ readonly step: "formal" } & CompletedChallengeContext)
+  | ({
+      readonly step: "formal";
+      readonly formalisationPage: FormalisationPage;
+    } & CompletedChallengeContext)
   | ({ readonly step: "challenge" } & ChallengeContext)
   | ({
       readonly step: "challengeAttempt";
@@ -120,6 +129,7 @@ function createDirectFormalLessonState(): Extract<
 
   return {
     step: "formal",
+    formalisationPage: "states",
     selectedTokenId,
     attemptedTokenId,
     closure,
@@ -488,29 +498,64 @@ interface FormalisationViewProps {
   readonly bottomState: string;
   readonly copy: LessonMessages;
   readonly deltaText: TokenText;
+  readonly formalisationPage: FormalisationPage;
   readonly formalTokenSet: string;
   readonly headingRef: Ref<HTMLHeadingElement>;
   readonly inconsistentSet: string;
   readonly onBack: () => void;
   readonly onContinueEntailment: () => void;
   readonly onOpenSandbox: () => void;
+  readonly onPageChange: (page: FormalisationPage) => void;
   readonly onRestart: () => void;
   readonly stateRows: readonly FormalStateRow[];
 }
+
+const formalisationPages: readonly FormalisationPage[] = [
+  "distinction",
+  "ingredients",
+  "closure",
+  "states",
+];
 
 function FormalisationView({
   bottomState,
   copy,
   deltaText,
+  formalisationPage,
   formalTokenSet,
   headingRef,
   inconsistentSet,
   onBack,
   onContinueEntailment,
   onOpenSandbox,
+  onPageChange,
   onRestart,
   stateRows,
 }: FormalisationViewProps) {
+  const pageIndex = formalisationPages.indexOf(formalisationPage);
+  const pageHeading: Readonly<Record<FormalisationPage, string>> = {
+    distinction: copy.formalisation.distinctionHeading,
+    ingredients: copy.formalisation.systemHeading,
+    closure: copy.formalisation.closureHeading,
+    states: copy.formalisation.statesHeading,
+  };
+
+  function showPreviousPage(): void {
+    const previousPage = formalisationPages[pageIndex - 1];
+    if (previousPage === undefined) {
+      onBack();
+      return;
+    }
+    onPageChange(previousPage);
+  }
+
+  function showNextPage(): void {
+    const nextPage = formalisationPages[pageIndex + 1];
+    if (nextPage !== undefined) {
+      onPageChange(nextPage);
+    }
+  }
+
   return (
     <main className="formal-main">
       <section className="formal-panel" aria-labelledby="formal-title">
@@ -519,21 +564,32 @@ function FormalisationView({
             <span className="eyebrow-dot" aria-hidden="true" />
             {copy.formalisation.eyebrow}
           </p>
+          <p className="formal-progress" aria-live="polite">
+            {copy.formalisation.pageProgress(
+              pageIndex + 1,
+              formalisationPages.length,
+            )}
+          </p>
           <h1 id="formal-title" ref={headingRef} tabIndex={-1}>
-            {copy.formalisation.title}
+            {pageHeading[formalisationPage]}
           </h1>
-          <p className="formal-lead">{copy.formalisation.lead}</p>
-          <p className="formal-continuity">{copy.formalisation.continuity}</p>
+          {formalisationPage === "distinction" ? (
+            <>
+              <p className="formal-lead">{copy.formalisation.lead}</p>
+              <p className="formal-continuity">
+                {copy.formalisation.continuity}
+              </p>
+            </>
+          ) : null}
+          {formalisationPage === "ingredients" ? (
+            <p className="formal-page-introduction">
+              {copy.formalisation.systemIntroduction}
+            </p>
+          ) : null}
         </header>
 
-        <div className="formal-overview">
-          <section
-            className="formal-distinction"
-            aria-labelledby="formal-distinction-title"
-          >
-            <h2 id="formal-distinction-title">
-              {copy.formalisation.distinctionHeading}
-            </h2>
+        {formalisationPage === "distinction" ? (
+          <div className="formal-distinction">
             <div className="formal-object-relation">
               <article
                 className="formal-object is-token"
@@ -565,16 +621,11 @@ function FormalisationView({
                 <p>{copy.formalisation.bottomDescription}</p>
               </article>
             </div>
-          </section>
+          </div>
+        ) : null}
 
-          <section
-            className="formal-definition"
-            aria-labelledby="formal-definition-title"
-          >
-            <h2 id="formal-definition-title">
-              {copy.formalisation.systemHeading}
-            </h2>
-            <p>{copy.formalisation.systemIntroduction}</p>
+        {formalisationPage === "ingredients" ? (
+          <div className="formal-definition">
             <code className="formal-tuple">A = (T, Δ, Con, ⊢)</code>
             <dl>
               <div>
@@ -608,90 +659,118 @@ function FormalisationView({
                 </dd>
               </div>
             </dl>
-          </section>
-        </div>
-
-        <section className="formal-closure" aria-labelledby="closure-title">
-          <div>
-            <h2 id="closure-title">{copy.formalisation.closureHeading}</h2>
-            <p>{copy.formalisation.closureExplanation}</p>
           </div>
-          <div className="closure-derivation">
-            <code>∅ ∈ Con</code>
-            <span aria-hidden="true">⇒</span>
-            <code>∅ ⊢ Δ</code>
-            <span aria-hidden="true">⇒</span>
-            <code>closure(∅) = {bottomState} = ⊥</code>
-          </div>
-        </section>
+        ) : null}
 
-        <section className="formal-states" aria-labelledby="formal-states-title">
-          <h2 id="formal-states-title">{copy.formalisation.statesHeading}</h2>
-          <div className="formal-table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">{copy.formalisation.beginnerColumn}</th>
-                  <th scope="col">{copy.formalisation.formalColumn}</th>
-                  <th scope="col">{copy.formalisation.meaningColumn}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stateRows.map((row) => (
-                  <tr key={row.formalState}>
-                    <td>
-                      <code>{row.beginnerState}</code>
-                    </td>
-                    <td>
-                      <code>{row.formalState}</code>
-                      {row.isBottom ? <span> = ⊥</span> : null}
-                    </td>
-                    <td>
-                      {row.isBottom
-                        ? copy.formalisation.bottomMeaning
-                        : copy.formalisation.informedMeaning(
-                            row.tokenLabel ?? "",
-                          )}
-                    </td>
+        {formalisationPage === "closure" ? (
+          <div className="formal-closure">
+            <div>
+              <p>{copy.formalisation.closureExplanation}</p>
+            </div>
+            <div className="closure-derivation">
+              <code>∅ ∈ Con</code>
+              <span aria-hidden="true">⇒</span>
+              <code>∅ ⊢ Δ</code>
+              <span aria-hidden="true">⇒</span>
+              <code>closure(∅) = {bottomState} = ⊥</code>
+            </div>
+          </div>
+        ) : null}
+
+        {formalisationPage === "states" ? (
+          <div className="formal-states">
+            <div className="formal-table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">{copy.formalisation.beginnerColumn}</th>
+                    <th scope="col">{copy.formalisation.formalColumn}</th>
+                    <th scope="col">{copy.formalisation.meaningColumn}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {stateRows.map((row) => (
+                    <tr key={row.formalState}>
+                      <td>
+                        <code>{row.beginnerState}</code>
+                      </td>
+                      <td>
+                        <code>{row.formalState}</code>
+                        {row.isBottom ? <span> = ⊥</span> : null}
+                      </td>
+                      <td>
+                        {row.isBottom
+                          ? copy.formalisation.bottomMeaning
+                          : copy.formalisation.informedMeaning(
+                              row.tokenLabel ?? "",
+                            )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="formal-projection-note">
+              {copy.formalisation.projectionNote}
+            </p>
           </div>
-          <p className="formal-projection-note">
-            {copy.formalisation.projectionNote}
-          </p>
-        </section>
+        ) : null}
 
-        <div className="formal-actions">
-          <button
-            className="primary-action"
-            type="button"
-            onClick={onOpenSandbox}
-          >
-            <span>{copy.sandboxPreview.openAction}</span>
-            <span className="button-arrow" aria-hidden="true">
-              ↗
-            </span>
-          </button>
+        <nav
+          className="formal-page-navigation"
+          aria-label={copy.formalisation.pageNavigationLabel}
+        >
           <button
             className="secondary-action"
             type="button"
-            onClick={onContinueEntailment}
+            onClick={showPreviousPage}
           >
-            {copy.entailment.actions.startLesson}
+            {pageIndex === 0
+              ? copy.formalisation.backAction
+              : copy.formalisation.previousAction}
           </button>
-          <button className="secondary-action" type="button" onClick={onBack}>
-            {copy.formalisation.backAction}
-          </button>
-          <button
-            className="secondary-action"
-            type="button"
-            onClick={onRestart}
-          >
-            {copy.formalisation.restartAction}
-          </button>
-        </div>
+          {formalisationPage !== "states" ? (
+            <button
+              className="primary-action"
+              type="button"
+              onClick={showNextPage}
+            >
+              <span>{copy.formalisation.nextAction}</span>
+              <span className="button-arrow" aria-hidden="true">
+                →
+              </span>
+            </button>
+          ) : null}
+        </nav>
+
+        {formalisationPage === "states" ? (
+          <div className="formal-actions">
+            <button
+              className="primary-action"
+              type="button"
+              onClick={onOpenSandbox}
+            >
+              <span>{copy.sandboxPreview.openAction}</span>
+              <span className="button-arrow" aria-hidden="true">
+                ↗
+              </span>
+            </button>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={onContinueEntailment}
+            >
+              {copy.entailment.actions.startLesson}
+            </button>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={onRestart}
+            >
+              {copy.formalisation.restartAction}
+            </button>
+          </div>
+        ) : null}
       </section>
     </main>
   );
@@ -718,6 +797,8 @@ export function App() {
   );
   const insideActionRef = useRef<HTMLButtonElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
+  const introductionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const shouldFocusIntroductionRef = useRef(false);
   const exampleHeadingRef = useRef<HTMLHeadingElement>(null);
   const formalHeadingRef = useRef<HTMLHeadingElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -926,6 +1007,13 @@ export function App() {
   }, [isStates]);
 
   useEffect(() => {
+    if (
+      lessonState.step === "intro" &&
+      shouldFocusIntroductionRef.current
+    ) {
+      introductionHeadingRef.current?.focus();
+      shouldFocusIntroductionRef.current = false;
+    }
     if (lessonState.step === "example") {
       exampleHeadingRef.current?.focus();
     }
@@ -950,7 +1038,19 @@ export function App() {
     ) {
       resultHeadingRef.current?.focus();
     }
-  }, [lessonState.step]);
+  }, [formalState?.formalisationPage, lessonState.step, route.kind]);
+
+  useEffect(() => {
+    const scrollingElement = document.scrollingElement;
+    if (scrollingElement !== null && scrollingElement !== undefined) {
+      scrollingElement.scrollLeft = 0;
+      scrollingElement.scrollTop = 0;
+    }
+    document.documentElement.scrollLeft = 0;
+    document.documentElement.scrollTop = 0;
+    document.body.scrollLeft = 0;
+    document.body.scrollTop = 0;
+  }, [formalState?.formalisationPage, lessonState.step, route.kind]);
 
   function navigateTo(nextRoute: AppRoute): void {
     setRoute(nextRoute);
@@ -969,8 +1069,40 @@ export function App() {
     navigateTo(routeBeforeSandboxRef.current);
   }
 
-  function restartFromSandbox(): void {
+  function returnHome(): void {
+    shouldFocusIntroductionRef.current =
+      lessonState.step !== "intro" || route.kind !== "lesson";
     setLessonState({ step: "intro" });
+    setEntailmentProgress(initialEntailmentLessonProgress);
+    setStateLessonProgress(initialStateLessonProgress);
+    setContinuousMapProgress(initialContinuousMapLessonProgress);
+    setStatesUnlocked(false);
+    routeBeforeSandboxRef.current = lessonRoute;
+    navigateTo(lessonRoute);
+  }
+
+  function restartFromSandbox(): void {
+    returnHome();
+  }
+
+  function restartCurrentSystem(): void {
+    if (isMaps) {
+      setContinuousMapProgress(initialContinuousMapLessonProgress);
+      navigateTo(mapsLessonRoute);
+      return;
+    }
+    if (isStates) {
+      setStateLessonProgress(initialStateLessonProgress);
+      navigateTo(statesLessonRoute);
+      return;
+    }
+    if (isEntailment) {
+      setEntailmentProgress(initialEntailmentLessonProgress);
+      navigateTo(entailmentLessonRoute);
+      return;
+    }
+
+    setLessonState({ step: "example" });
     setEntailmentProgress(initialEntailmentLessonProgress);
     setStateLessonProgress(initialStateLessonProgress);
     setContinuousMapProgress(initialContinuousMapLessonProgress);
@@ -1136,7 +1268,18 @@ export function App() {
     if (orderState === undefined) {
       throw new Error("Formalisation follows the completed introduction.");
     }
-    setLessonState({ ...orderState, step: "formal" });
+    setLessonState({
+      ...orderState,
+      step: "formal",
+      formalisationPage: "distinction",
+    });
+  }
+
+  function showFormalisationPage(page: FormalisationPage): void {
+    if (formalState === undefined) {
+      throw new Error("Formalisation pages require the formal lesson view.");
+    }
+    setLessonState({ ...formalState, formalisationPage: page });
   }
 
   function returnToOrder(): void {
@@ -1227,6 +1370,30 @@ export function App() {
       : orderState !== undefined
         ? copy.challenge.completeFooterStage
         : copy.footerStage;
+  const footerSystem = isSandbox
+    ? copy.sandboxPreview.footerSystem
+    : isMaps
+      ? copy.continuousMapLesson.footerSystem
+      : isStates
+        ? copy.stateLesson.footerSystem
+        : isEntailment
+          ? copy.entailment.footerSystem
+          : copy.footerSystem;
+  const footerStage = isSandbox
+    ? copy.sandboxPreview.footerStage
+    : isMaps
+      ? copy.continuousMapLesson.footerStage
+      : isStates
+        ? copy.stateLesson.footerStage
+        : isEntailment
+          ? copy.entailment.footerStage
+          : isIntroduction
+            ? copy.introduction.footerStage
+            : isExampleIntroduction
+              ? copy.exampleIntroduction.footerStage
+              : isFormalisation
+                ? copy.formalisation.footerStage
+                : lessonFooterStage;
 
   const lessonCopy = (
     <div className="lesson-copy" aria-live="polite">
@@ -1290,12 +1457,17 @@ export function App() {
   return (
     <div className="app-shell">
       <header className="site-header">
-        <div className="brand" aria-label="ScottLab">
+        <button
+          className="brand"
+          type="button"
+          aria-label={copy.homeAction}
+          onClick={returnHome}
+        >
           <span className="brand-mark" aria-hidden="true">
             ⊥
           </span>
           <span>ScottLab</span>
-        </div>
+        </button>
 
         <div className="header-controls">
           <fieldset className="language-switcher">
@@ -1424,7 +1596,13 @@ export function App() {
                 <span className="eyebrow-dot" aria-hidden="true" />
                 {copy.introduction.eyebrow}
               </p>
-              <h1 id="introduction-title">{copy.introduction.title}</h1>
+              <h1
+                id="introduction-title"
+                ref={introductionHeadingRef}
+                tabIndex={-1}
+              >
+                {copy.introduction.title}
+              </h1>
             </div>
 
             <div className="introduction-content">
@@ -1540,12 +1718,16 @@ export function App() {
           bottomState={formalBottomState}
           copy={copy}
           deltaText={deltaText}
+          formalisationPage={
+            formalState?.formalisationPage ?? "distinction"
+          }
           formalTokenSet={formalTokenSet}
           headingRef={formalHeadingRef}
           inconsistentSet={modelRule}
           onBack={returnToOrder}
           onContinueEntailment={openEntailmentLesson}
           onOpenSandbox={openSandbox}
+          onPageChange={showFormalisationPage}
           onRestart={() => setLessonState({ step: "bottom" })}
           stateRows={formalStateRows}
         />
@@ -1915,37 +2097,24 @@ export function App() {
       )}
 
       <footer className="lesson-footer">
-        <div className="footer-context">
-          <span>
-            {isSandbox
-              ? copy.sandboxPreview.footerSystem
-              : isMaps
-                ? copy.continuousMapLesson.footerSystem
-                : isStates
-                  ? copy.stateLesson.footerSystem
-                  : isEntailment
-                    ? copy.entailment.footerSystem
-                    : copy.footerSystem}
-          </span>
+        <nav
+          className="footer-context"
+          aria-label={copy.footerNavigationLabel}
+        >
+          <button
+            className="footer-system-link"
+            type="button"
+            aria-label={copy.openSystem(footerSystem)}
+            onClick={restartCurrentSystem}
+          >
+            {footerSystem}
+          </button>
           <span className="footer-rule" aria-hidden="true" />
-          <span>
-            {isSandbox
-              ? copy.sandboxPreview.footerStage
-              : isMaps
-                ? copy.continuousMapLesson.footerStage
-                : isStates
-                  ? copy.stateLesson.footerStage
-                  : isEntailment
-                    ? copy.entailment.footerStage
-                    : isIntroduction
-                      ? copy.introduction.footerStage
-                      : isExampleIntroduction
-                        ? copy.exampleIntroduction.footerStage
-                        : isFormalisation
-                          ? copy.formalisation.footerStage
-                          : lessonFooterStage}
+          <span className="footer-stage" aria-current="step">
+            <span>{copy.currentStageLabel}: </span>
+            {footerStage}
           </span>
-        </div>
+        </nav>
         <a
           className="repository-link"
           href={import.meta.env.VITE_REPOSITORY_URL}

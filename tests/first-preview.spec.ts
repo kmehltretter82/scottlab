@@ -140,6 +140,9 @@ test("completes the essential Boolean path using only the keyboard", async ({
   await pressButton(page, "Try a short challenge", tabKey);
   await pressButton(page, "Add false token", tabKey);
   await pressButton(page, "Use the explicit convention", tabKey);
+  await pressButton(page, "Next", tabKey);
+  await pressButton(page, "Next", tabKey);
+  await pressButton(page, "Next", tabKey);
   await pressButton(page, "Open the read-only sandbox", tabKey);
 
   await expect(page).toHaveURL(/#\/sandbox\/flat-boolean$/);

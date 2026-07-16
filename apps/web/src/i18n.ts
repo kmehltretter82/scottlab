@@ -23,6 +23,10 @@ export interface LessonMessages {
   readonly pageDescription: string;
   readonly languageSelectorLabel: string;
   readonly selectLanguage: (name: string) => string;
+  readonly homeAction: string;
+  readonly footerNavigationLabel: string;
+  readonly openSystem: (system: string) => string;
+  readonly currentStageLabel: string;
   readonly introduction: {
     readonly pageTitle: string;
     readonly markerLabel: string;
@@ -133,7 +137,10 @@ export interface LessonMessages {
     readonly markerLabel: string;
     readonly markerName: string;
     readonly eyebrow: string;
-    readonly title: string;
+    readonly pageProgress: (current: number, total: number) => string;
+    readonly pageNavigationLabel: string;
+    readonly previousAction: string;
+    readonly nextAction: string;
     readonly lead: string;
     readonly continuity: string;
     readonly distinctionHeading: string;
@@ -205,6 +212,10 @@ const english: LessonMessages = {
     "Explore partial information through Scott information systems.",
   languageSelectorLabel: "Choose language",
   selectLanguage: (name) => `Choose ${name}`,
+  homeAction: "Return to the ScottLab start",
+  footerNavigationLabel: "Lesson location",
+  openSystem: (system) => `Restart ${system}`,
+  currentStageLabel: "Current step",
   introduction: {
     pageTitle: "ScottLab · Why information systems?",
     markerLabel: "Introduction: Dana Scott",
@@ -349,7 +360,10 @@ const english: LessonMessages = {
     markerLabel: "Lesson 2: Formalisation",
     markerName: "Formalisation",
     eyebrow: "Advanced phase · Scott’s convention",
-    title: "Now reveal the complete information system.",
+    pageProgress: (current, total) => `Part ${current} of ${total}`,
+    pageNavigationLabel: "Formalisation pages",
+    previousAction: "Previous",
+    nextAction: "Next",
     lead:
       "The introduction hid one formal token so that you could first concentrate on partial information. From here on, we use Scott’s explicit notation and expose more of the machinery.",
     continuity:
@@ -511,9 +525,6 @@ const english: LessonMessages = {
       specificObservations: "No specific permission observations",
     },
     state: {
-      heading: "Executable rule chain",
-      introduction:
-        "Solid cards are already in the state. The outlined card or rule is the current causal focus.",
       currentStateLabel: "Current formal state",
       alwaysPresentRole: "always present",
       chosenPremiseRole: "chosen premise",
@@ -522,15 +533,12 @@ const english: LessonMessages = {
     },
     trace: {
       heading: "Closure trace",
-      introduction:
-        "Move through premise, active rule, and conclusion frames. The state changes only when a conclusion is justified.",
       navigationLabel: "Closure trace controls",
       progress: (current, total) => `Trace frame ${current} of ${total}`,
       premiseLabel: "Premise present",
       pendingRuleLabel: "Rule pending",
       activeRuleLabel: "Active rule",
       appliedRuleLabel: "Rule applied",
-      conclusionLabel: "Conclusion learned",
       premiseHeading: (premises) => `The premise ${premises} is available.`,
       premiseExplanation: (premises) =>
         `ScottLab first checks that ${premises} is already contained in the current state.`,
@@ -543,7 +551,6 @@ const english: LessonMessages = {
       completeHeading: "Closure has stabilized.",
       completeExplanation: (state) =>
         `No declared rule can add another token. The closed state is ${state}.`,
-      structuredSummary: "Read the complete derivation as text",
       structuredHeading: "Ordered semantic derivation",
       structuredInitialState: (state) => `Start at bottom ${state}.`,
       structuredInputStep: (step, input, state) =>
@@ -553,6 +560,7 @@ const english: LessonMessages = {
       structuredFinalState: (state) => `Closure stabilizes at ${state}.`,
     },
     definition: {
+      summary: "Open the formal definition and full derivation",
       heading: "Rule-driven definition",
       introduction:
         "The fixture declares four tokens and two rules. The core supplies reflexivity, Δ, and transitive closure.",
@@ -891,6 +899,10 @@ const german: LessonMessages = {
     "Partielle Information mit Scotts Informationssystemen erkunden.",
   languageSelectorLabel: "Sprache wählen",
   selectLanguage: (name) => `${name} wählen`,
+  homeAction: "Zur ScottLab-Startseite zurückkehren",
+  footerNavigationLabel: "Position im Lernpfad",
+  openSystem: (system) => `${system} neu starten`,
+  currentStageLabel: "Aktueller Schritt",
   introduction: {
     pageTitle: "ScottLab · Warum Informationssysteme?",
     markerLabel: "Einführung: Dana Scott",
@@ -1035,7 +1047,10 @@ const german: LessonMessages = {
     markerLabel: "Lektion 2: Formalisierung",
     markerName: "Formalisierung",
     eyebrow: "Fortgeschrittene Phase · Scotts Konvention",
-    title: "Nun legen wir das vollständige Informationssystem offen.",
+    pageProgress: (current, total) => `Teil ${current} von ${total}`,
+    pageNavigationLabel: "Seiten der Formalisierung",
+    previousAction: "Zurück",
+    nextAction: "Weiter",
     lead:
       "In der Einführung blieb ein formales Token verborgen, damit du dich zunächst auf partielle Information konzentrieren konntest. Von jetzt an verwenden wir Scotts explizite Notation und zeigen mehr von der mathematischen Struktur.",
     continuity:
@@ -1201,9 +1216,6 @@ const german: LessonMessages = {
       specificObservations: "Keine konkreten Beobachtungen zu Rechten",
     },
     state: {
-      heading: "Ausführbare Regelkette",
-      introduction:
-        "Ausgefüllte Karten gehören bereits zum Zustand. Die umrandete Karte oder Regel ist der aktuelle kausale Fokus.",
       currentStateLabel: "Aktueller formaler Zustand",
       alwaysPresentRole: "stets vorhanden",
       chosenPremiseRole: "gewählte Prämisse",
@@ -1212,15 +1224,12 @@ const german: LessonMessages = {
     },
     trace: {
       heading: "Abschlussspur",
-      introduction:
-        "Gehe durch Prämisse, aktive Regel und Konsequenz. Der Zustand ändert sich erst, wenn eine Konsequenz begründet ist.",
       navigationLabel: "Steuerung der Abschlussspur",
       progress: (current, total) => `Spurbild ${current} von ${total}`,
       premiseLabel: "Prämisse vorhanden",
       pendingRuleLabel: "Regel ausstehend",
       activeRuleLabel: "Aktive Regel",
       appliedRuleLabel: "Regel angewendet",
-      conclusionLabel: "Konsequenz gelernt",
       premiseHeading: (premises) => `Die Prämisse ${premises} ist vorhanden.`,
       premiseExplanation: (premises) =>
         `ScottLab prüft zuerst, dass ${premises} bereits im aktuellen Zustand enthalten ist.`,
@@ -1233,7 +1242,6 @@ const german: LessonMessages = {
       completeHeading: "Der Abschluss hat sich stabilisiert.",
       completeExplanation: (state) =>
         `Keine festgelegte Regel kann ein weiteres Token hinzufügen. Der abgeschlossene Zustand ist ${state}.`,
-      structuredSummary: "Vollständige Herleitung als Text lesen",
       structuredHeading: "Geordnete semantische Herleitung",
       structuredInitialState: (state) => `Bei Bottom ${state} beginnen.`,
       structuredInputStep: (step, input, state) =>
@@ -1244,6 +1252,7 @@ const german: LessonMessages = {
         `Der Abschluss stabilisiert sich bei ${state}.`,
     },
     definition: {
+      summary: "Formale Definition und vollständige Herleitung öffnen",
       heading: "Regelbasierte Definition",
       introduction:
         "Die Beispieldatei legt vier Token und zwei Regeln fest. Reflexivität, Δ und den transitiven Abschluss liefert der Kern.",

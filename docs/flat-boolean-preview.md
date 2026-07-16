@@ -312,10 +312,12 @@ must make these distinctions explicit:
 - the empty set is consistent but is not entailment-closed; and
 - `closure(∅) = {Δ} = ⊥`.
 
-The view shows the tuple `A = (T, Δ, Con, ⊢)` and relates the introductory
-states `∅`, `{false}`, and `{true}` to `{Δ}`, `{Δ, false}`, and `{Δ, true}`.
-All state rows come from the same core enumeration used by the introductory
-diagram.
+The phase presents those ideas on four sequential pages: the `Δ`/`⊥`
+distinction, the four ingredients, the bottom closure, and the explicit state
+table. Only the active topic is rendered, and each page moves keyboard focus
+to its heading. The final page relates the introductory states `∅`, `{false}`,
+and `{true}` to `{Δ}`, `{Δ, false}`, and `{Δ, true}`. All state rows come from
+the same core enumeration used by the introductory diagram.
 
 ### 9. Open the read-only sandbox
 

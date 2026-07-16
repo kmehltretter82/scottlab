@@ -63,10 +63,19 @@ async function reachFormalisation(
   );
 }
 
-async function reachEntailmentLesson(
+async function reachFormalisationSummary(
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> {
   await reachFormalisation(user);
+  for (let page = 1; page < 4; page += 1) {
+    await user.click(screen.getByRole("button", { name: "Next" }));
+  }
+}
+
+async function reachEntailmentLesson(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await reachFormalisationSummary(user);
   await user.click(
     screen.getByRole("button", { name: "Continue to entailment" }),
   );
@@ -135,6 +144,42 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       screen.getByRole("button", { name: "Explore a first example" }),
     ).toBeVisible();
     expect(screen.queryByRole("figure")).not.toBeInTheDocument();
+  });
+
+  it("uses the brand and footer as explicit lesson navigation", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const lessonLocation = screen.getByRole("navigation", {
+      name: "Lesson location",
+    });
+    expect(
+      within(lessonLocation).getByRole("button", {
+        name: "Restart Flat Booleans",
+      }),
+    ).toBeVisible();
+    expect(lessonLocation).toHaveTextContent("Current step: Introduction");
+
+    await user.click(
+      screen.getByRole("button", { name: "Explore a first example" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Return to the ScottLab start" }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "Why Dana Scott introduced information systems",
+      }),
+    ).toHaveFocus();
+
+    await user.click(
+      within(lessonLocation).getByRole("button", {
+        name: "Restart Flat Booleans",
+      }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Let’s make the idea concrete." }),
+    ).toHaveFocus();
   });
 
   it("bridges from Scott's general idea to a Boolean example", async () => {
@@ -333,31 +378,52 @@ describe("ScottLab introduction and bottom-first lesson", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: "Now reveal the complete information system.",
+        name: "Δ is a token. ⊥ is a state.",
       }),
     ).toHaveFocus();
     expect(document.title).toBe("ScottLab · The formal Boolean system");
-    expect(
-      screen.getByRole("heading", { name: "Δ is a token. ⊥ is a state." }),
-    ).toBeVisible();
+    expect(screen.getByText("Part 1 of 4")).toBeVisible();
     expect(
       screen.getByLabelText("Delta, the always-present token"),
     ).toBeVisible();
     expect(
       screen.getByLabelText("least state: ⊥ = {Δ}"),
     ).toBeVisible();
+    expect(screen.queryByText("A = (T, Δ, Con, ⊢)")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(
+      screen.getByRole("heading", { name: "The four ingredients" }),
+    ).toHaveFocus();
+    expect(screen.getByText("Part 2 of 4")).toBeVisible();
     expect(screen.getByText("A = (T, Δ, Con, ⊢)")).toBeVisible();
     expect(screen.getByText("T = {Δ, false, true}")).toBeVisible();
     expect(screen.getByText("{false, true} ∉ Con")).toBeVisible();
     expect(
       screen.getByText("X ⊢ a ⇔ a = Δ or a ∈ X"),
     ).toBeVisible();
+    expect(screen.queryByText("∅ ⊢ Δ")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(
+      screen.getByRole("heading", { name: "Why Δ appears at bottom" }),
+    ).toHaveFocus();
+    expect(screen.getByText("Part 3 of 4")).toBeVisible();
     expect(screen.getByText("∅ ⊢ Δ")).toBeVisible();
     expect(
       screen.getByText(
         /The empty set is consistent—not contradictory.*Closure adds Δ/,
       ),
     ).toBeVisible();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(
+      screen.getByRole("heading", {
+        name: "The same three states, written explicitly",
+      }),
+    ).toHaveFocus();
+    expect(screen.getByText("Part 4 of 4")).toBeVisible();
 
     const stateTable = screen.getByRole("table");
     expect(within(stateTable).getByText("∅")).toBeVisible();
@@ -365,10 +431,14 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(within(stateTable).getByText("{Δ, false}")).toBeVisible();
     expect(within(stateTable).getByText("{Δ, true}")).toBeVisible();
 
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    expect(
+      screen.getByRole("heading", { name: "Why Δ appears at bottom" }),
+    ).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: "Previous" }));
+    await user.click(screen.getByRole("button", { name: "Previous" }));
     await user.click(
-      screen.getByRole("button", {
-        name: "Back to the introductory diagram",
-      }),
+      screen.getByRole("button", { name: "Back to the introductory diagram" }),
     );
     expect(
       screen.getByRole("region", {
@@ -391,23 +461,32 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(document.documentElement.lang).toBe("de-DE");
     expect(
       screen.getByRole("heading", {
-        name: "Nun legen wir das vollständige Informationssystem offen.",
+        name: "Δ ist ein Token. ⊥ ist ein Zustand.",
       }),
     ).toBeVisible();
     expect(
       screen.getByLabelText("Delta, das stets vorhandene Token"),
     ).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Weiter" }));
+    expect(
+      screen.getByRole("heading", { name: "Die vier Bestandteile" }),
+    ).toHaveFocus();
     expect(screen.getByText("T = {Δ, false, true}")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Weiter" }));
     expect(
       screen.getByText(/Die leere Menge ist verträglich.*Abschluss fügt Δ/),
     ).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Weiter" }));
     expect(screen.getAllByRole("row")).toHaveLength(4);
   });
 
   it("opens the same Boolean system in a synchronized read-only sandbox", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await reachFormalisation(user);
+    await reachFormalisationSummary(user);
 
     await user.click(
       screen.getByRole("button", { name: "Open the read-only sandbox" }),
@@ -484,7 +563,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(window.location.hash).toBe("#/lesson");
     expect(
       screen.getByRole("heading", {
-        name: "Now reveal the complete information system.",
+        name: "The same three states, written explicitly",
       }),
     ).toHaveFocus();
   });
@@ -582,18 +661,12 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       }),
     ).toBeVisible();
     expect(screen.getByRole("status")).toHaveTextContent("{Δ}");
-    const ruleChain = screen.getByRole("list", { name: "Closure trace" });
-    expect(within(ruleChain).getAllByText("Rule pending")).toHaveLength(2);
-    expect(within(ruleChain).getAllByText("not yet in state")).toHaveLength(2);
-    const definition = screen.getByRole("region", {
-      name: "Rule-driven definition",
-    });
     expect(
-      within(definition).getByText("{administrator} ⊢ may edit"),
-    ).toBeVisible();
+      screen.queryByRole("list", { name: "Closure trace" }),
+    ).not.toBeInTheDocument();
     expect(
-      within(definition).getByText("{may edit} ⊢ may view"),
-    ).toBeVisible();
+      screen.queryByRole("region", { name: "Rule-driven definition" }),
+    ).not.toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", {
@@ -602,6 +675,9 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     );
 
     expect(screen.getByText("Trace frame 1 of 6")).toBeVisible();
+    const ruleChain = screen.getByRole("list", { name: "Closure trace" });
+    expect(within(ruleChain).getAllByText("Rule pending")).toHaveLength(1);
+    expect(within(ruleChain).getAllByText("not yet in state")).toHaveLength(1);
     expect(
       screen.getByRole("heading", {
         name: "The premise {administrator} is available.",
@@ -628,8 +704,8 @@ describe("ScottLab introduction and bottom-first lesson", () => {
         screen.getByRole("region", {
           name: "Apply “Administrators may edit”.",
         }),
-      ).getByText("{administrator} ⊢ may edit"),
-    ).toBeVisible();
+      ).getAllByText("{administrator} ⊢ may edit"),
+    ).toHaveLength(2);
 
     await user.click(nextFrame);
     expect(
@@ -641,9 +717,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       "{administrator, Δ, may edit}",
     );
     expect(within(ruleChain).getAllByText("Rule applied")).toHaveLength(1);
-    expect(within(ruleChain).getAllByText("Rule pending")).toHaveLength(1);
     expect(within(ruleChain).getAllByText("conclusion in state")).toHaveLength(1);
-    expect(within(ruleChain).getAllByText("not yet in state")).toHaveLength(1);
 
     await user.click(nextFrame);
     expect(
@@ -671,14 +745,26 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByRole("heading", { name: "Closure has stabilized." }),
     ).toBeVisible();
-    expect(within(ruleChain).getAllByText("Rule applied")).toHaveLength(2);
-    expect(within(ruleChain).getAllByText("conclusion in state")).toHaveLength(2);
+    expect(
+      screen.queryByRole("list", { name: "Closure trace" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         name: "Which token needed both declared rules?",
       }),
     ).toBeVisible();
-    await user.click(screen.getByText("Read the complete derivation as text"));
+    await user.click(
+      screen.getByText("Open the formal definition and full derivation"),
+    );
+    const definition = screen.getByRole("region", {
+      name: "Rule-driven definition",
+    });
+    expect(
+      within(definition).getByText("{administrator} ⊢ may edit"),
+    ).toBeVisible();
+    expect(
+      within(definition).getByText("{may edit} ⊢ may view"),
+    ).toBeVisible();
     expect(
       screen.getByText(
         "Step 1: observe administrator. Reflexivity adds it to the closure, producing {administrator, Δ}.",
@@ -805,10 +891,10 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(window.location.hash).toBe("#/lesson");
     expect(
       screen.getByRole("heading", {
-        name: "Now reveal the complete information system.",
+        name: "The same three states, written explicitly",
       }),
     ).toHaveFocus();
-    expect(screen.getByText("closure(∅) = {Δ} = ⊥")).toBeVisible();
+    expect(screen.getByRole("table")).toBeVisible();
   });
 
   it("repairs an unclosed selection in the states lesson", async () => {
@@ -1114,18 +1200,15 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     });
     expect(
       within(germanRuleChain).getAllByText("Regel ausstehend"),
-    ).toHaveLength(2);
+    ).toHaveLength(1);
     expect(
       within(germanRuleChain).getAllByText("noch nicht im Zustand"),
-    ).toHaveLength(2);
-    await user.click(
-      screen.getByText("Vollständige Herleitung als Text lesen"),
-    );
+    ).toHaveLength(1);
     expect(
-      screen.getByText(
-        "Schritt 1: Administrator beobachten. Durch Reflexivität kommt das Token zum Abschluss hinzu; es entsteht {Administrator, Δ}.",
+      screen.queryByText(
+        "Formale Definition und vollständige Herleitung öffnen",
       ),
-    ).toBeVisible();
+    ).not.toBeInTheDocument();
   });
 
   it("supports inspecting the order with arrow keys", async () => {
@@ -1453,6 +1536,10 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await user.tab();
+    expect(
+      screen.getByRole("button", { name: "Return to the ScottLab start" }),
+    ).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "Choose English" })).toHaveFocus();
     await user.tab();

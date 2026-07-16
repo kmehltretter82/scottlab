@@ -38,8 +38,6 @@ export interface EntailmentLessonCopy {
     readonly specificObservations: string;
   };
   readonly state: {
-    readonly heading: string;
-    readonly introduction: string;
     readonly currentStateLabel: string;
     readonly alwaysPresentRole: string;
     readonly chosenPremiseRole: string;
@@ -48,14 +46,12 @@ export interface EntailmentLessonCopy {
   };
   readonly trace: {
     readonly heading: string;
-    readonly introduction: string;
     readonly navigationLabel: string;
     readonly progress: (current: number, total: number) => string;
     readonly premiseLabel: string;
     readonly pendingRuleLabel: string;
     readonly activeRuleLabel: string;
     readonly appliedRuleLabel: string;
-    readonly conclusionLabel: string;
     readonly premiseHeading: (premises: string) => string;
     readonly premiseExplanation: (premises: string) => string;
     readonly activeRuleHeading: (rule: string) => string;
@@ -70,7 +66,6 @@ export interface EntailmentLessonCopy {
     ) => string;
     readonly completeHeading: string;
     readonly completeExplanation: (state: string) => string;
-    readonly structuredSummary: string;
     readonly structuredHeading: string;
     readonly structuredInitialState: (state: string) => string;
     readonly structuredInputStep: (
@@ -87,6 +82,7 @@ export interface EntailmentLessonCopy {
     readonly structuredFinalState: (state: string) => string;
   };
   readonly definition: {
+    readonly summary: string;
     readonly heading: string;
     readonly introduction: string;
     readonly tokensHeading: string;
@@ -382,147 +378,146 @@ export function EntailmentLesson({
         aria-label={copy.workspaceLabel}
       >
         <section
-          className="entailment-area entailment-canvas"
-          aria-labelledby="entailment-canvas-title"
+          className={`entailment-stage is-${stage.kind}`}
+          aria-labelledby="entailment-stage-title"
         >
-          <header className="entailment-area-heading">
-            <span>01</span>
-            <div>
-              <h2 id="entailment-canvas-title">{copy.state.heading}</h2>
-              <p>{copy.state.introduction}</p>
+          <header className="entailment-stage-heading">
+            <p>
+              {stage.kind === "bottom"
+                ? copy.bottom.stateLabel
+                : copy.trace.heading}
+            </p>
+            <div aria-live="polite" aria-atomic="true">
+              <h2 id="entailment-stage-title">{explanationHeading}</h2>
+              <p>{explanationText}</p>
             </div>
           </header>
-
-          <ol className="entailment-chain" aria-label={copy.trace.heading}>
-            <li>
-              <article
-                className={`entailment-token${
-                  currentState.includes(administratorTokenId)
-                    ? " is-present"
-                    : ""
-                }${tokenIsFocused(administratorTokenId) ? " is-focused" : ""}`}
-              >
-                <span>{copy.state.chosenPremiseRole}</span>
-                <strong>{tokenLabel(administratorTokenId)}</strong>
-                <small>{requireTokenCopy(administratorTokenId).description}</small>
-              </article>
-            </li>
-            {declaredRuleSteps.flatMap((step, index) => {
-              const ruleCopy = requireRuleCopy(step);
-              const conclusion = step.conclusion;
-              const state = ruleState(step);
-              return [
-                <li className="entailment-rule-item" key={requireRuleId(step)}>
-                  <span className="entailment-connector" aria-hidden="true">
-                    →
-                  </span>
-                  <article className={`entailment-rule is-${state}`}>
-                    <span>
-                      {state === "pending"
-                        ? copy.trace.pendingRuleLabel
-                        : state === "active"
-                          ? copy.trace.activeRuleLabel
-                          : copy.trace.appliedRuleLabel}
-                    </span>
-                    <code>
-                      {premiseLabel(step)} ⊢ {tokenLabel(conclusion)}
-                    </code>
-                    <small>{ruleCopy.explanation}</small>
-                  </article>
-                  <span className="entailment-connector" aria-hidden="true">
-                    →
-                  </span>
-                </li>,
-                <li key={`${requireRuleId(step)}-conclusion`}>
-                  <article
-                    className={`entailment-token is-derived${
-                      currentState.includes(conclusion) ? " is-present" : ""
-                    }${tokenIsFocused(conclusion) ? " is-focused" : ""}`}
-                  >
-                    <span>
-                      {currentState.includes(conclusion)
-                        ? copy.state.presentConclusionRole
-                        : copy.state.pendingConclusionRole}
-                    </span>
-                    <strong>{tokenLabel(conclusion)}</strong>
-                    <small>{requireTokenCopy(conclusion).description}</small>
-                    {index === declaredRuleSteps.length - 1 ? (
-                      <span className="entailment-chain-depth">
-                        {declaredRuleSteps.length}
-                      </span>
-                    ) : null}
-                  </article>
-                </li>,
-              ];
-            })}
-          </ol>
-
-          <output className="entailment-current-state" aria-live="polite">
-            <span>{copy.state.currentStateLabel}</span>
-            <code>{formatSet(currentState)}</code>
-          </output>
-        </section>
-
-        <section
-          className="entailment-area entailment-tray"
-          aria-labelledby="entailment-tray-title"
-        >
-          <header className="entailment-area-heading">
-            <span>02</span>
-            <div>
-              <h2 id="entailment-tray-title">{copy.trace.heading}</h2>
-              <p>{copy.trace.introduction}</p>
-            </div>
-          </header>
-
-          <ul className="entailment-state-tokens">
-            {currentState.map((tokenId) => (
-              <li key={tokenId} className={tokenId === "delta" ? "is-delta" : ""}>
-                <span>{stateTokenRole(tokenId)}</span>
-                <strong>{tokenLabel(tokenId)}</strong>
-              </li>
-            ))}
-          </ul>
 
           {stage.kind === "bottom" ? (
-            <button
-              className="primary-action"
-              type="button"
-              onClick={beginTrace}
-            >
-              <span>{copy.actions.addAdministrator}</span>
-              <span className="button-arrow" aria-hidden="true">
-                ↗
-              </span>
-            </button>
+            <output className="entailment-bottom-state" aria-live="polite">
+              <span>{copy.state.currentStateLabel}</span>
+              <code>{formatSet(currentState)} = ⊥</code>
+              <p>{copy.bottom.specificObservations}</p>
+            </output>
+          ) : currentFrame === undefined ? (
+            null
           ) : (
-            <div className="entailment-trace-controls">
-              {stage.kind === "trace" ? (
+            <ol
+              className="entailment-focus-chain"
+              aria-label={copy.trace.heading}
+            >
+              <li>
+                <article
+                  className={`entailment-token is-present${
+                    currentFrame.kind === "premise" ? " is-focused" : ""
+                  }`}
+                >
+                  <span>{copy.trace.premiseLabel}</span>
+                  <strong>{premiseLabel(currentFrame.step)}</strong>
+                  <small>
+                    {currentFrame.step.premises
+                      .map((tokenId) => requireTokenCopy(tokenId).description)
+                      .join(" ")}
+                  </small>
+                </article>
+              </li>
+              <li className="entailment-focus-connector" aria-hidden="true">
+                →
+              </li>
+              <li>
+                <article
+                  className={`entailment-rule is-${ruleState(
+                    currentFrame.step,
+                  )}`}
+                >
+                  <span>
+                    {currentFrame.kind === "premise"
+                      ? copy.trace.pendingRuleLabel
+                      : currentFrame.kind === "activeRule"
+                        ? copy.trace.activeRuleLabel
+                        : copy.trace.appliedRuleLabel}
+                  </span>
+                  <code>
+                    {premiseLabel(currentFrame.step)} ⊢{" "}
+                    {tokenLabel(currentFrame.step.conclusion)}
+                  </code>
+                  <small>{requireRuleCopy(currentFrame.step).explanation}</small>
+                </article>
+              </li>
+              <li className="entailment-focus-connector" aria-hidden="true">
+                →
+              </li>
+              <li>
+                <article
+                  className={`entailment-token is-derived${
+                    currentState.includes(currentFrame.step.conclusion)
+                      ? " is-present"
+                      : ""
+                  }${
+                    tokenIsFocused(currentFrame.step.conclusion)
+                      ? " is-focused"
+                      : ""
+                  }`}
+                >
+                  <span>
+                    {currentState.includes(currentFrame.step.conclusion)
+                      ? copy.state.presentConclusionRole
+                      : copy.state.pendingConclusionRole}
+                  </span>
+                  <strong>{tokenLabel(currentFrame.step.conclusion)}</strong>
+                  <small>
+                    {requireTokenCopy(currentFrame.step.conclusion).description}
+                  </small>
+                </article>
+              </li>
+            </ol>
+          )}
+
+          {stage.kind === "bottom" ? null : (
+            <output className="entailment-current-state" aria-live="polite">
+              <span>{copy.state.currentStateLabel}</span>
+              <code>{formatSet(currentState)}</code>
+            </output>
+          )}
+
+          <code className="entailment-formal-step">{formalStep}</code>
+
+          <div className="entailment-stage-controls">
+            {stage.kind === "bottom" ? (
+              <button
+                className="primary-action"
+                type="button"
+                onClick={beginTrace}
+              >
+                <span>{copy.actions.addAdministrator}</span>
+                <span className="button-arrow" aria-hidden="true">
+                  →
+                </span>
+              </button>
+            ) : stage.kind === "trace" ? (
+              <>
                 <span className="entailment-progress">
                   {copy.trace.progress(
                     stage.frameIndex + 1,
                     traceFrames.length,
                   )}
                 </span>
-              ) : null}
-              <fieldset aria-label={copy.trace.navigationLabel}>
-                <button
-                  type="button"
-                  disabled={stage.kind !== "trace" || stage.frameIndex === 0}
-                  onClick={showPreviousFrame}
-                >
-                  ← {copy.actions.previous}
-                </button>
-                <button
-                  ref={nextFrameRef}
-                  type="button"
-                  disabled={stage.kind !== "trace"}
-                  onClick={showNextFrame}
-                >
-                  {copy.actions.next} →
-                </button>
-              </fieldset>
-              {stage.kind === "trace" ? (
+                <fieldset aria-label={copy.trace.navigationLabel}>
+                  <button
+                    type="button"
+                    disabled={stage.frameIndex === 0}
+                    onClick={showPreviousFrame}
+                  >
+                    ← {copy.actions.previous}
+                  </button>
+                  <button
+                    ref={nextFrameRef}
+                    type="button"
+                    onClick={showNextFrame}
+                  >
+                    {copy.actions.next} →
+                  </button>
+                </fieldset>
                 <button
                   className="secondary-action"
                   type="button"
@@ -530,78 +525,73 @@ export function EntailmentLesson({
                 >
                   {copy.actions.showCompleteClosure}
                 </button>
-              ) : (
-                <button
-                  className="secondary-action"
-                  type="button"
-                  onClick={beginTrace}
-                >
-                  {copy.actions.replay}
-                </button>
-              )}
-            </div>
-          )}
+              </>
+            ) : (
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={beginTrace}
+              >
+                {copy.actions.replay}
+              </button>
+            )}
+          </div>
         </section>
+      </fieldset>
 
-        <section
-          className="entailment-area entailment-definition"
-          aria-labelledby="entailment-definition-title"
-        >
-          <header className="entailment-area-heading">
-            <span>03</span>
-            <div>
-              <h2 id="entailment-definition-title">{copy.definition.heading}</h2>
-              <p>{copy.definition.introduction}</p>
-            </div>
-          </header>
-          <dl>
-            <div>
-              <dt>{copy.definition.tokensHeading}</dt>
-              <dd>
-                <code>
-                  T = {formatSet(accessPermissionsSystem.tokens.map(({ id }) => id))}
-                </code>
-              </dd>
-            </div>
-            <div>
-              <dt>{copy.definition.consistencyHeading}</dt>
-              <dd>{copy.definition.consistencyValue}</dd>
-            </div>
-            <div>
-              <dt>{copy.definition.rulesHeading}</dt>
-              <dd>
-                <ul>
-                  {accessPermissionsSystem.entailmentRules.map((rule) => (
-                    <li key={rule.id}>
-                      <code>
-                        {formatSet(rule.premises)} ⊢ {tokenLabel(rule.conclusion)}
-                      </code>
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-          </dl>
-        </section>
+      {stage.kind === "complete" ? (
+        <details className="entailment-formal-details">
+          <summary>{copy.definition.summary}</summary>
+          <section
+            className="entailment-definition"
+            aria-labelledby="entailment-definition-title"
+          >
+            <h2 id="entailment-definition-title">
+              {copy.definition.heading}
+            </h2>
+            <p>{copy.definition.introduction}</p>
+            <dl>
+              <div>
+                <dt>{copy.definition.tokensHeading}</dt>
+                <dd>
+                  <code>
+                    T ={" "}
+                    {formatSet(
+                      accessPermissionsSystem.tokens.map(({ id }) => id),
+                    )}
+                  </code>
+                </dd>
+              </div>
+              <div>
+                <dt>{copy.definition.consistencyHeading}</dt>
+                <dd>{copy.definition.consistencyValue}</dd>
+              </div>
+              <div>
+                <dt>{copy.definition.rulesHeading}</dt>
+                <dd>
+                  <ul>
+                    {accessPermissionsSystem.entailmentRules.map((rule) => (
+                      <li key={rule.id}>
+                        <code>
+                          {formatSet(rule.premises)} ⊢{" "}
+                          {tokenLabel(rule.conclusion)}
+                        </code>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            </dl>
+          </section>
 
-        <section
-          className="entailment-area entailment-explanation"
-          aria-labelledby="entailment-explanation-title"
-        >
-          <header className="entailment-area-heading">
-            <span>04</span>
-            <div aria-live="polite" aria-atomic="true">
-              <h2 id="entailment-explanation-title">{explanationHeading}</h2>
-              <p>{explanationText}</p>
-            </div>
-          </header>
-          <code className="entailment-formal-step">{formalStep}</code>
-
-          <details className="entailment-structured-trace">
-            <summary>{copy.trace.structuredSummary}</summary>
-            <h3>{copy.trace.structuredHeading}</h3>
+          <section className="entailment-structured-trace">
+            <h2>{copy.trace.structuredHeading}</h2>
             <ol>
-              <li>{copy.trace.structuredInitialState(formatSet(bottomComputation.state))}</li>
+              <li>
+                {copy.trace.structuredInitialState(
+                  formatSet(bottomComputation.state),
+                )}
+              </li>
               <li>
                 {copy.trace.structuredInputStep(
                   1,
@@ -625,12 +615,15 @@ export function EntailmentLesson({
                 )}
               </li>
             </ol>
-          </details>
-        </section>
-      </fieldset>
+          </section>
+        </details>
+      ) : null}
 
       {stage.kind === "complete" ? (
-        <section className="entailment-challenge" aria-labelledby="challenge-title">
+        <section
+          className="entailment-challenge"
+          aria-labelledby="challenge-title"
+        >
           <div>
             <p>{copy.challenge.eyebrow}</p>
             <h2

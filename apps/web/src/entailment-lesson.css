@@ -1,16 +1,16 @@
 .entailment-main {
   display: grid;
-  width: min(100% - 48px, 1180px);
-  gap: 20px;
+  width: min(100% - 48px, 980px);
+  gap: 16px;
   margin: 0 auto;
-  padding: 14px 0 34px;
+  padding: 6px 0 24px;
 }
 
 .entailment-introduction {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
   align-items: end;
-  gap: 22px 48px;
+  gap: 18px 36px;
 }
 
 .entailment-introduction .eyebrow {
@@ -21,7 +21,7 @@
   margin: 0;
   color: #173c3a;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.2rem, 4.1vw, 3.45rem);
+  font-size: clamp(1.85rem, 2.6vw, 2.2rem);
   font-weight: 400;
   letter-spacing: -0.045em;
   line-height: 1.03;
@@ -31,116 +31,120 @@
   margin: 0;
   color: #526b66;
   font-size: 0.92rem;
-  line-height: 1.62;
+  line-height: 1.55;
 }
 
 .entailment-workspace {
-  display: grid;
+  display: block;
   min-inline-size: 0;
-  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.78fr);
-  grid-template-areas:
-    "canvas tray"
-    "canvas explanation"
-    "definition explanation";
-  gap: 16px;
   margin: 0;
   padding: 0;
   border: 0;
 }
 
-.entailment-area {
+.entailment-stage {
   min-width: 0;
-  border: 1px solid rgb(23 60 58 / 13%);
-  border-radius: 25px;
-  background: rgb(255 253 246 / 72%);
-  box-shadow: 0 14px 38px rgb(23 60 58 / 6%);
+  padding: 22px 24px;
+  border: 1px solid rgb(23 60 58 / 15%);
+  border-radius: 16px;
+  background: rgb(255 253 246 / 78%);
+  box-shadow: 0 8px 22px rgb(23 60 58 / 5%);
 }
 
-.entailment-canvas {
-  grid-area: canvas;
-  padding: 19px 20px 16px;
-}
-
-.entailment-tray {
-  grid-area: tray;
-  padding: 18px;
-}
-
-.entailment-definition {
-  grid-area: definition;
-  padding: 18px 20px;
-}
-
-.entailment-explanation {
-  grid-area: explanation;
-  padding: 18px;
-}
-
-.entailment-area-heading {
+.entailment-stage-heading {
   display: grid;
-  grid-template-columns: 27px minmax(0, 1fr);
+  grid-template-columns: 140px minmax(0, 1fr);
   align-items: start;
-  gap: 9px;
+  gap: 16px;
 }
 
-.entailment-area-heading > span {
-  padding-top: 4px;
-  color: #b27543;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.58rem;
+.entailment-stage-heading > p {
+  margin: 5px 0 0;
+  color: #9a6036;
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
 }
 
-.entailment-area-heading h2 {
+.entailment-stage-heading h2 {
   margin: 0;
   color: #294f4a;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.25rem;
+  font-size: 1.55rem;
   font-weight: 600;
+  line-height: 1.15;
 }
 
-.entailment-area-heading p {
-  margin: 5px 0 0;
+.entailment-stage-heading div > p {
+  max-width: 680px;
+  margin: 7px 0 0;
+  color: #5c716c;
+  font-size: 0.92rem;
+  line-height: 1.52;
+}
+
+.entailment-bottom-state {
+  display: grid;
+  max-width: 620px;
+  grid-template-columns: minmax(160px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: 7px 22px;
+  margin: 20px 0 0 156px;
+  padding: 17px 19px;
+  border-left: 3px solid #df8c45;
+  border-radius: 0 12px 12px 0;
+  background: rgb(255 249 235 / 72%);
+}
+
+.entailment-bottom-state span {
+  color: #748681;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.entailment-bottom-state code {
+  color: #315a54;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+.entailment-bottom-state p {
+  grid-column: 2;
+  margin: 0;
   color: #667974;
-  font-size: 0.7rem;
-  line-height: 1.48;
+  font-size: 0.84rem;
 }
 
-.entailment-chain {
+.entailment-focus-chain {
   display: grid;
   grid-template-columns:
-    minmax(122px, 1fr) minmax(185px, 1.25fr) minmax(122px, 1fr)
-    minmax(185px, 1.25fr) minmax(122px, 1fr);
+    minmax(160px, 1fr) 24px minmax(210px, 1.15fr) 24px
+    minmax(160px, 1fr);
   align-items: center;
-  gap: 9px;
-  margin: 18px 0 0;
-  padding: 18px;
-  overflow-x: auto;
-  border: 1px solid rgb(23 60 58 / 11%);
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 50% 15%, rgb(245 194 118 / 16%), transparent 38%),
-    linear-gradient(180deg, rgb(244 250 245 / 72%), rgb(255 250 238 / 68%));
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 0;
   list-style: none;
 }
 
-.entailment-chain > li {
+.entailment-focus-chain > li {
   min-width: 0;
 }
 
-.entailment-rule-item {
-  display: grid;
-  min-width: 185px;
-  grid-template-columns: 18px minmax(145px, 1fr) 18px;
-  align-items: center;
-  gap: 4px;
+.entailment-focus-connector {
+  color: #81918c;
+  font-size: 1.15rem;
+  text-align: center;
 }
 
-.entailment-connector {
-  color: #84948f;
-  font-size: 1rem;
-  text-align: center;
+.entailment-focus-chain .entailment-token,
+.entailment-focus-chain .entailment-rule {
+  min-height: 126px;
+  padding: 16px;
 }
 
 .entailment-token,
@@ -196,10 +200,9 @@
 
 .entailment-token > span:first-child,
 .entailment-rule > span:first-child,
-.entailment-state-tokens span,
 .entailment-progress {
   color: #748681;
-  font-size: 0.5rem;
+  font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -208,30 +211,15 @@
 .entailment-token strong {
   overflow-wrap: anywhere;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.86rem;
+  font-size: 0.98rem;
   line-height: 1.2;
 }
 
 .entailment-token small,
 .entailment-rule small {
   color: #687a75;
-  font-size: 0.58rem;
-  line-height: 1.4;
-}
-
-.entailment-chain-depth {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: grid;
-  width: 20px;
-  height: 20px;
-  place-items: center;
-  border-radius: 50%;
-  color: #fffdf6;
-  background: #8e6039;
-  font-size: 0.56rem;
-  font-weight: 800;
+  font-size: 0.76rem;
+  line-height: 1.45;
 }
 
 .entailment-rule {
@@ -261,7 +249,7 @@
 .entailment-rule code {
   overflow-wrap: anywhere;
   color: inherit;
-  font-size: 0.67rem;
+  font-size: 0.84rem;
   font-weight: 750;
   line-height: 1.35;
 }
@@ -280,7 +268,7 @@
 
 .entailment-current-state > span {
   color: #748681;
-  font-size: 0.56rem;
+  font-size: 0.67rem;
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -288,85 +276,45 @@
 
 .entailment-current-state code {
   color: #315c56;
-  font-size: 0.76rem;
+  font-size: 0.88rem;
   font-weight: 750;
 }
 
-.entailment-state-tokens {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.entailment-state-tokens li {
-  display: grid;
-  min-width: 0;
-  gap: 3px;
-  padding: 9px 10px;
-  border: 1px solid rgb(23 91 85 / 16%);
-  border-radius: 11px;
-  color: #285951;
-  background: #e7f3e9;
-  animation: entailment-token-arrives 260ms ease-out both;
-}
-
-.entailment-state-tokens li.is-delta {
-  border-color: rgb(141 83 38 / 16%);
-  color: #765130;
-  background: #fff2d9;
-}
-
-.entailment-state-tokens strong {
-  overflow-wrap: anywhere;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.76rem;
-}
-
-.entailment-tray > .primary-action {
-  width: 100%;
+.entailment-stage-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
   margin-top: 14px;
-  padding-left: 17px;
-  font-size: 0.78rem;
 }
 
-.entailment-trace-controls {
-  display: grid;
-  gap: 9px;
-  margin-top: 13px;
+.entailment-stage-controls > .primary-action,
+.entailment-stage-controls > .secondary-action {
+  margin: 0;
 }
 
-.entailment-trace-controls > fieldset {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 7px;
+.entailment-stage-controls > fieldset {
+  display: flex;
+  gap: 8px;
   margin: 0;
   padding: 0;
   border: 0;
 }
 
-.entailment-trace-controls > fieldset button {
-  padding: 8px 10px;
-  border: 1px solid rgb(23 60 58 / 14%);
-  border-radius: 10px;
+.entailment-stage-controls > fieldset button {
+  padding: 9px 13px;
+  border: 1px solid rgb(23 60 58 / 16%);
+  border-radius: 9px;
   color: #315d56;
-  background: rgb(255 255 255 / 55%);
+  background: rgb(255 255 255 / 62%);
   cursor: pointer;
-  font-size: 0.66rem;
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
-.entailment-trace-controls > fieldset button:disabled {
+.entailment-stage-controls > fieldset button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
-}
-
-.entailment-trace-controls .secondary-action {
-  width: fit-content;
-  margin: 0;
-  padding-left: 0;
 }
 
 .entailment-definition dl {
@@ -374,6 +322,44 @@
   grid-template-columns: 1fr 0.8fr 1.2fr;
   gap: 8px;
   margin: 14px 0 0;
+}
+
+.entailment-formal-details {
+  padding: 0;
+  border: 1px solid rgb(23 60 58 / 14%);
+  border-radius: 14px;
+  color: #536e69;
+  background: rgb(255 253 246 / 64%);
+}
+
+.entailment-formal-details > summary {
+  padding: 13px 16px;
+  cursor: pointer;
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.entailment-formal-details[open] > summary {
+  border-bottom: 1px solid rgb(23 60 58 / 12%);
+}
+
+.entailment-formal-details .entailment-definition {
+  padding: 17px 18px 0;
+}
+
+.entailment-formal-details .entailment-definition h2,
+.entailment-formal-details .entailment-structured-trace h2 {
+  margin: 0;
+  color: #294f4a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+}
+
+.entailment-formal-details .entailment-definition > p {
+  margin: 6px 0 0;
+  color: #667974;
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .entailment-definition dl > div {
@@ -386,7 +372,7 @@
 
 .entailment-definition dt {
   color: #748681;
-  font-size: 0.53rem;
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -395,7 +381,7 @@
 .entailment-definition dd {
   margin: 6px 0 0;
   color: #5a706b;
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   line-height: 1.45;
 }
 
@@ -412,7 +398,7 @@
 .entailment-definition code {
   overflow-wrap: anywhere;
   color: #315a54;
-  font-size: 0.64rem;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
@@ -425,31 +411,19 @@
   border-radius: 0 10px 10px 0;
   color: #315a54;
   background: rgb(255 249 235 / 72%);
-  font-size: 0.75rem;
+  font-size: 0.86rem;
   font-weight: 750;
   line-height: 1.45;
 }
 
 .entailment-structured-trace {
-  margin-top: 12px;
+  margin: 18px;
   color: #586f6a;
-  font-size: 0.67rem;
+  font-size: 0.8rem;
 }
 
-.entailment-structured-trace summary {
-  width: fit-content;
-  padding: 4px;
-  cursor: pointer;
-  font-weight: 750;
-  text-decoration: underline;
-  text-decoration-color: rgb(83 108 103 / 36%);
-  text-underline-offset: 3px;
-}
-
-.entailment-structured-trace h3 {
-  margin: 9px 0 6px;
-  color: #3d625d;
-  font-size: 0.66rem;
+.entailment-formal-details .entailment-structured-trace h2 {
+  margin-bottom: 9px;
 }
 
 .entailment-structured-trace ol {
@@ -468,15 +442,15 @@
   gap: 18px 28px;
   padding: 19px 20px;
   border: 1px solid rgb(141 83 38 / 18%);
-  border-radius: 25px;
+  border-radius: 16px;
   background: rgb(255 249 235 / 74%);
-  box-shadow: 0 14px 38px rgb(23 60 58 / 6%);
+  box-shadow: 0 8px 22px rgb(23 60 58 / 5%);
 }
 
 .entailment-challenge > div > p:first-child {
   margin: 0 0 5px;
   color: #a66a3d;
-  font-size: 0.57rem;
+  font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -486,14 +460,14 @@
   margin: 0;
   color: #294f4a;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   font-weight: 600;
 }
 
 .entailment-challenge > div > p:last-child {
   margin: 7px 0 0;
   color: #5b716c;
-  font-size: 0.74rem;
+  font-size: 0.84rem;
   line-height: 1.5;
 }
 
@@ -506,7 +480,7 @@
 .entailment-challenge legend {
   margin-bottom: 8px;
   color: #748681;
-  font-size: 0.54rem;
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -539,7 +513,7 @@
 
 .entailment-challenge fieldset button span {
   color: #748681;
-  font-size: 0.48rem;
+  font-size: 0.61rem;
   font-weight: 800;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -548,7 +522,7 @@
 .entailment-challenge fieldset button strong {
   overflow-wrap: anywhere;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
 }
 
 .entailment-challenge-feedback {
@@ -635,18 +609,6 @@
   }
 }
 
-@keyframes entailment-token-arrives {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (max-width: 980px) {
   .entailment-introduction {
     grid-template-columns: 1fr;
@@ -654,40 +616,37 @@
   }
 
   .entailment-workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(270px, 0.72fr);
-    grid-template-areas:
-      "canvas canvas"
-      "tray explanation"
-      "definition definition";
+    display: block;
   }
 }
 
 @media (max-width: 720px) {
   .entailment-main {
-    width: min(100% - 36px, 1180px);
+    width: min(100% - 36px, 980px);
     padding-top: 12px;
   }
 
   .entailment-workspace {
-    display: flex;
-    flex-direction: column;
+    display: block;
   }
 
-  .entailment-chain {
+  .entailment-stage-heading {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .entailment-bottom-state {
+    margin-left: 0;
+  }
+
+  .entailment-focus-chain {
     min-width: 0;
     grid-template-columns: 1fr;
     justify-items: stretch;
     overflow: visible;
   }
 
-  .entailment-rule-item {
-    width: 100%;
-    min-width: 0;
-    grid-template-columns: 1fr;
-    justify-items: center;
-  }
-
-  .entailment-connector {
+  .entailment-focus-connector {
     transform: rotate(90deg);
   }
 
@@ -705,23 +664,39 @@
 
 @media (max-width: 430px) {
   .entailment-introduction h1 {
-    font-size: clamp(2rem, 11vw, 2.5rem);
+    font-size: clamp(1.75rem, 8.5vw, 2rem);
   }
 
-  .entailment-area,
   .entailment-challenge {
     border-radius: 20px;
   }
 
-  .entailment-canvas,
-  .entailment-tray,
   .entailment-definition,
-  .entailment-explanation,
   .entailment-challenge {
     padding: 15px;
   }
 
-  .entailment-state-tokens,
+  .entailment-stage {
+    padding: 17px;
+  }
+
+  .entailment-bottom-state {
+    grid-template-columns: 1fr;
+  }
+
+  .entailment-bottom-state p {
+    grid-column: 1;
+  }
+
+  .entailment-stage-controls,
+  .entailment-stage-controls > fieldset {
+    width: 100%;
+  }
+
+  .entailment-stage-controls > fieldset button {
+    flex: 1;
+  }
+
   .entailment-challenge fieldset > div {
     grid-template-columns: 1fr;
   }
@@ -734,8 +709,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .entailment-token,
-  .entailment-rule,
-  .entailment-state-tokens li {
+  .entailment-rule {
     animation: none;
     transition: none;
   }

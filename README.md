@@ -73,19 +73,19 @@ and opens it as an empty collection before introducing the `true` and `false`
 tokens. It rejects their incompatible combination with a concrete witness and
 turns the result into an interactive three-state information order. A final
 challenge asks the learner to build the Boolean branch not chosen first. The
-advanced phase then distinguishes `Δ` from `⊥` and opens a hash-addressable,
-four-area read-only sandbox whose diagram, token tray, definition, and closure
-explanation share one selected state.
+advanced phase then distinguishes `Δ` from `⊥` across four focused pages and
+opens a hash-addressable, four-area read-only sandbox whose diagram, token
+tray, definition, and closure explanation share one selected state.
 
 The framework-independent core validates finite system definitions with
 deterministic counterexamples, computes closure traces, recognizes states, and
 enumerates the information order. The rule-driven access-permissions lesson
-uses that core trace to reveal two causal entailment steps, provides manual
-step and replay controls, and ends with a short transitive-consequence
-challenge. The following Editing Policy lesson classifies arbitrary selections
-as inconsistent, consistent-but-unclosed, or states using one structured core
-inspection result. Learners can inspect concrete witnesses and repair an
-unclosed selection manually.
+uses that core trace to reveal one active premise-rule-conclusion triple at a
+time, provides manual step and replay controls, and ends with a short
+transitive-consequence challenge. The following Editing Policy lesson
+classifies arbitrary selections as inconsistent, consistent-but-unclosed, or
+states using one structured core inspection result. Learners can inspect
+concrete witnesses and repair an unclosed selection manually.
 
 The next guided lesson applies an exact finite-generator mapping between two
 separately labelled Boolean copies. It reveals the input premise, active

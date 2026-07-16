@@ -26,6 +26,33 @@ import {
   type LessonMessages,
   type TokenText,
 } from "./i18n";
+import {
+  entailmentLessonRoute,
+  flatBooleanSandboxRoute,
+  formatHashRoute,
+  lessonRoute,
+  mapsLessonRoute,
+  parseHashRoute,
+  statesLessonRoute,
+  subscribeToHashRouteChanges,
+  type AppRoute,
+} from "./navigation";
+import {
+  ContinuousMapLesson,
+  initialContinuousMapLessonProgress,
+  type ContinuousMapLessonProgress,
+} from "./ContinuousMapLesson";
+import {
+  EntailmentLesson,
+  initialEntailmentLessonProgress,
+  type EntailmentLessonProgress,
+} from "./EntailmentLesson";
+import { SandboxPreview } from "./SandboxPreview";
+import {
+  initialStateLessonProgress,
+  StateLesson,
+  type StateLessonProgress,
+} from "./StateLesson";
 
 const bottom = computeBottom(flatBooleanSystem);
 const informationOrder = computeCoverRelation(flatBooleanSystem);
@@ -73,6 +100,34 @@ type LessonState =
       readonly challengeTokenId: TokenId;
       readonly challengeClosure: ClosureComputation;
     } & ChallengeContext);
+
+function createDirectFormalLessonState(): Extract<
+  LessonState,
+  { readonly step: "formal" }
+> {
+  const selectedTokenId = "true";
+  const attemptedTokenId = "false";
+  const closure = computeClosure(flatBooleanSystem, [selectedTokenId]);
+  const rejection = tryAddObservation(
+    flatBooleanSystem,
+    closure.state,
+    attemptedTokenId,
+  );
+  if (rejection.ok) {
+    throw new Error("The direct formal route requires incompatible Booleans.");
+  }
+  const completedClosure = computeClosure(flatBooleanSystem, [attemptedTokenId]);
+
+  return {
+    step: "formal",
+    selectedTokenId,
+    attemptedTokenId,
+    closure,
+    rejection,
+    inspectedState: completedClosure.state,
+    completedChallengeTokenId: attemptedTokenId,
+  };
+}
 
 interface TokenCardProps {
   readonly token: TokenDefinition;
@@ -437,6 +492,8 @@ interface FormalisationViewProps {
   readonly headingRef: Ref<HTMLHeadingElement>;
   readonly inconsistentSet: string;
   readonly onBack: () => void;
+  readonly onContinueEntailment: () => void;
+  readonly onOpenSandbox: () => void;
   readonly onRestart: () => void;
   readonly stateRows: readonly FormalStateRow[];
 }
@@ -449,6 +506,8 @@ function FormalisationView({
   headingRef,
   inconsistentSet,
   onBack,
+  onContinueEntailment,
+  onOpenSandbox,
   onRestart,
   stateRows,
 }: FormalisationViewProps) {
@@ -605,6 +664,23 @@ function FormalisationView({
         </section>
 
         <div className="formal-actions">
+          <button
+            className="primary-action"
+            type="button"
+            onClick={onOpenSandbox}
+          >
+            <span>{copy.sandboxPreview.openAction}</span>
+            <span className="button-arrow" aria-hidden="true">
+              ↗
+            </span>
+          </button>
+          <button
+            className="secondary-action"
+            type="button"
+            onClick={onContinueEntailment}
+          >
+            {copy.entailment.actions.startLesson}
+          </button>
           <button className="secondary-action" type="button" onClick={onBack}>
             {copy.formalisation.backAction}
           </button>
@@ -623,15 +699,38 @@ function FormalisationView({
 
 export function App() {
   const [language, setLanguage] = useState<Language>(initialLanguage);
+  const [route, setRoute] = useState<AppRoute>(() =>
+    parseHashRoute(window.location.hash),
+  );
   const [lessonState, setLessonState] = useState<LessonState>({
     step: "intro",
   });
+  const [entailmentProgress, setEntailmentProgress] =
+    useState<EntailmentLessonProgress>(initialEntailmentLessonProgress);
+  const [stateLessonProgress, setStateLessonProgress] =
+    useState<StateLessonProgress>(initialStateLessonProgress);
+  const [continuousMapProgress, setContinuousMapProgress] =
+    useState<ContinuousMapLessonProgress>(
+      initialContinuousMapLessonProgress,
+    );
+  const [statesUnlocked, setStatesUnlocked] = useState(
+    () => parseHashRoute(window.location.hash).kind === "states",
+  );
   const insideActionRef = useRef<HTMLButtonElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
   const exampleHeadingRef = useRef<HTMLHeadingElement>(null);
   const formalHeadingRef = useRef<HTMLHeadingElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const sandboxHeadingRef = useRef<HTMLHeadingElement>(null);
+  const entailmentHeadingRef = useRef<HTMLHeadingElement>(null);
+  const statesHeadingRef = useRef<HTMLHeadingElement>(null);
+  const continuousMapHeadingRef = useRef<HTMLHeadingElement>(null);
+  const routeBeforeSandboxRef = useRef<AppRoute>(lessonRoute);
   const copy = messages[language];
+  const isSandbox = route.kind === "sandbox";
+  const isEntailment = route.kind === "entailment";
+  const isStates = route.kind === "states";
+  const isMaps = route.kind === "maps";
   const isIntroduction = lessonState.step === "intro";
   const isExampleIntroduction = lessonState.step === "example";
   const isFormalisation = lessonState.step === "formal";
@@ -756,14 +855,35 @@ export function App() {
   });
 
   useEffect(() => {
+    function synchronizeRoute(nextRoute: AppRoute): void {
+      setRoute(nextRoute);
+      const canonicalHash = formatHashRoute(nextRoute);
+      if (window.location.hash !== canonicalHash) {
+        window.history.replaceState(null, "", canonicalHash);
+      }
+    }
+
+    synchronizeRoute(parseHashRoute(window.location.hash));
+    return subscribeToHashRouteChanges(synchronizeRoute);
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = language;
-    document.title = isIntroduction
-      ? copy.introduction.pageTitle
-      : isExampleIntroduction
-        ? copy.exampleIntroduction.pageTitle
-        : isFormalisation
-          ? copy.formalisation.pageTitle
-          : copy.pageTitle;
+    document.title = isSandbox
+      ? copy.sandboxPreview.pageTitle
+      : isMaps
+        ? copy.continuousMapLesson.pageTitle
+        : isStates
+          ? copy.stateLesson.pageTitle
+          : isEntailment
+            ? copy.entailment.pageTitle
+            : isIntroduction
+              ? copy.introduction.pageTitle
+              : isExampleIntroduction
+                ? copy.exampleIntroduction.pageTitle
+                : isFormalisation
+                  ? copy.formalisation.pageTitle
+                  : copy.pageTitle;
     document
       .querySelector<HTMLMetaElement>('meta[name="description"]')
       ?.setAttribute("content", copy.pageDescription);
@@ -773,7 +893,37 @@ export function App() {
     } catch {
       // The selected language remains active for the current page.
     }
-  }, [copy, isExampleIntroduction, isFormalisation, isIntroduction, language]);
+  }, [
+    copy,
+    isExampleIntroduction,
+    isFormalisation,
+    isIntroduction,
+    isEntailment,
+    isMaps,
+    isSandbox,
+    isStates,
+    language,
+  ]);
+
+  useEffect(() => {
+    if (isSandbox) {
+      sandboxHeadingRef.current?.focus();
+    } else if (isMaps) {
+      continuousMapHeadingRef.current?.focus();
+    } else if (isStates) {
+      statesHeadingRef.current?.focus();
+    } else if (isEntailment) {
+      entailmentHeadingRef.current?.focus();
+    } else if (lessonState.step === "formal") {
+      formalHeadingRef.current?.focus();
+    }
+  }, [isEntailment, isMaps, isSandbox, isStates, lessonState.step]);
+
+  useEffect(() => {
+    if (isStates) {
+      setStatesUnlocked(true);
+    }
+  }, [isStates]);
 
   useEffect(() => {
     if (lessonState.step === "example") {
@@ -801,6 +951,61 @@ export function App() {
       resultHeadingRef.current?.focus();
     }
   }, [lessonState.step]);
+
+  function navigateTo(nextRoute: AppRoute): void {
+    setRoute(nextRoute);
+    const nextHash = formatHashRoute(nextRoute);
+    if (window.location.hash !== nextHash) {
+      window.location.hash = nextHash;
+    }
+  }
+
+  function openSandbox(): void {
+    routeBeforeSandboxRef.current = route;
+    navigateTo(flatBooleanSandboxRoute);
+  }
+
+  function returnFromSandbox(): void {
+    navigateTo(routeBeforeSandboxRef.current);
+  }
+
+  function restartFromSandbox(): void {
+    setLessonState({ step: "intro" });
+    setEntailmentProgress(initialEntailmentLessonProgress);
+    setStateLessonProgress(initialStateLessonProgress);
+    setContinuousMapProgress(initialContinuousMapLessonProgress);
+    setStatesUnlocked(false);
+    routeBeforeSandboxRef.current = lessonRoute;
+    navigateTo(lessonRoute);
+  }
+
+  function openEntailmentLesson(): void {
+    navigateTo(entailmentLessonRoute);
+  }
+
+  function returnFromEntailmentLesson(): void {
+    if (lessonState.step !== "formal") {
+      setLessonState(createDirectFormalLessonState());
+    }
+    navigateTo(lessonRoute);
+  }
+
+  function openStatesLesson(): void {
+    setStatesUnlocked(true);
+    navigateTo(statesLessonRoute);
+  }
+
+  function returnFromStatesLesson(): void {
+    navigateTo(entailmentLessonRoute);
+  }
+
+  function openMapsLesson(): void {
+    navigateTo(mapsLessonRoute);
+  }
+
+  function returnFromMapsLesson(): void {
+    navigateTo(statesLessonRoute);
+  }
 
   function selectObservation(tokenId: TokenId): void {
     const closure = computeClosure(flatBooleanSystem, [tokenId]);
@@ -1117,36 +1322,98 @@ export function App() {
           <div
             className="lesson-marker"
             aria-label={
-              isFormalisation
-                ? copy.formalisation.markerLabel
-                : isIntroduction
-                  ? copy.introduction.markerLabel
-                  : isExampleIntroduction
-                    ? copy.exampleIntroduction.markerLabel
-                    : copy.lessonMarkerLabel
+              isSandbox
+                ? copy.sandboxPreview.markerLabel
+                : isMaps
+                  ? copy.continuousMapLesson.markerLabel
+                  : isStates
+                    ? copy.stateLesson.markerLabel
+                    : isEntailment
+                      ? copy.entailment.markerLabel
+                      : isFormalisation
+                        ? copy.formalisation.markerLabel
+                        : isIntroduction
+                          ? copy.introduction.markerLabel
+                          : isExampleIntroduction
+                            ? copy.exampleIntroduction.markerLabel
+                            : copy.lessonMarkerLabel
             }
           >
             <span className="lesson-number">
-              {isFormalisation
-                ? "02"
-                : isIntroduction || isExampleIntroduction
-                  ? "00"
-                  : "01"}
+              {isSandbox
+                ? "S"
+                : isMaps
+                  ? "05"
+                  : isStates
+                    ? "04"
+                    : isEntailment
+                      ? "03"
+                      : isFormalisation
+                        ? "02"
+                        : isIntroduction || isExampleIntroduction
+                          ? "00"
+                          : "01"}
             </span>
             <span className="lesson-name">
-              {isFormalisation
-                ? copy.formalisation.markerName
-                : isIntroduction
-                  ? copy.introduction.markerName
-                  : isExampleIntroduction
-                    ? copy.exampleIntroduction.markerName
-                    : copy.lessonName}
+              {isSandbox
+                ? copy.sandboxPreview.markerName
+                : isMaps
+                  ? copy.continuousMapLesson.markerName
+                  : isStates
+                    ? copy.stateLesson.markerName
+                    : isEntailment
+                      ? copy.entailment.markerName
+                      : isFormalisation
+                        ? copy.formalisation.markerName
+                        : isIntroduction
+                          ? copy.introduction.markerName
+                          : isExampleIntroduction
+                            ? copy.exampleIntroduction.markerName
+                            : copy.lessonName}
             </span>
           </div>
         </div>
       </header>
 
-      {isIntroduction ? (
+      {isSandbox ? (
+        <SandboxPreview
+          copy={copy.sandboxPreview}
+          headingRef={sandboxHeadingRef}
+          initialState={formalState?.inspectedState}
+          onBack={returnFromSandbox}
+          onRestart={restartFromSandbox}
+          tokenTextById={copy.tokens}
+        />
+      ) : isMaps ? (
+        <ContinuousMapLesson
+          copy={copy.continuousMapLesson}
+          headingRef={continuousMapHeadingRef}
+          progress={continuousMapProgress}
+          onProgressChange={setContinuousMapProgress}
+          onBack={returnFromMapsLesson}
+          onOpenSandbox={openSandbox}
+        />
+      ) : isStates ? (
+        <StateLesson
+          copy={copy.stateLesson}
+          headingRef={statesHeadingRef}
+          progress={stateLessonProgress}
+          onProgressChange={setStateLessonProgress}
+          onBack={returnFromStatesLesson}
+          onContinueMaps={openMapsLesson}
+        />
+      ) : isEntailment ? (
+        <EntailmentLesson
+          copy={copy.entailment}
+          headingRef={entailmentHeadingRef}
+          progress={entailmentProgress}
+          onProgressChange={setEntailmentProgress}
+          statesUnlocked={statesUnlocked}
+          onBack={returnFromEntailmentLesson}
+          onContinueStates={openStatesLesson}
+          onOpenSandbox={openSandbox}
+        />
+      ) : isIntroduction ? (
         <main className="introduction-main">
           <section
             className="introduction-panel"
@@ -1277,6 +1544,8 @@ export function App() {
           headingRef={formalHeadingRef}
           inconsistentSet={modelRule}
           onBack={returnToOrder}
+          onContinueEntailment={openEntailmentLesson}
+          onOpenSandbox={openSandbox}
           onRestart={() => setLessonState({ step: "bottom" })}
           stateRows={formalStateRows}
         />
@@ -1647,16 +1916,34 @@ export function App() {
 
       <footer className="lesson-footer">
         <div className="footer-context">
-          <span>{copy.footerSystem}</span>
+          <span>
+            {isSandbox
+              ? copy.sandboxPreview.footerSystem
+              : isMaps
+                ? copy.continuousMapLesson.footerSystem
+                : isStates
+                  ? copy.stateLesson.footerSystem
+                  : isEntailment
+                    ? copy.entailment.footerSystem
+                    : copy.footerSystem}
+          </span>
           <span className="footer-rule" aria-hidden="true" />
           <span>
-            {isIntroduction
-              ? copy.introduction.footerStage
-              : isExampleIntroduction
-                ? copy.exampleIntroduction.footerStage
-                : isFormalisation
-                  ? copy.formalisation.footerStage
-                  : lessonFooterStage}
+            {isSandbox
+              ? copy.sandboxPreview.footerStage
+              : isMaps
+                ? copy.continuousMapLesson.footerStage
+                : isStates
+                  ? copy.stateLesson.footerStage
+                  : isEntailment
+                    ? copy.entailment.footerStage
+                    : isIntroduction
+                      ? copy.introduction.footerStage
+                      : isExampleIntroduction
+                        ? copy.exampleIntroduction.footerStage
+                        : isFormalisation
+                          ? copy.formalisation.footerStage
+                          : lessonFooterStage}
           </span>
         </div>
         <a

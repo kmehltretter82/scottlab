@@ -1,0 +1,179 @@
+/// <reference types="vite/client" />
+
+import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
+import { applyMapping, validateMapping } from "@scottlab/core";
+import { describe, expect, it } from "vitest";
+
+import approximableMappingSchema from "../../../schemas/approximable-mapping.v1.schema.json";
+import informationSystemSchema from "../../../schemas/information-system.v1.schema.json";
+import { booleanNegationMapping, flatBooleanSystem } from "./index";
+
+const informationSystemDocuments = import.meta.glob("../*.system.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+const approximableMappingDocuments = import.meta.glob("../*.mapping.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, unknown>;
+
+function compileSchemas(): {
+  validateInformationSystem: ValidateFunction;
+  validateApproximableMapping: ValidateFunction;
+} {
+  const ajv = new Ajv2020({ allErrors: true, strict: true });
+
+  return {
+    validateInformationSystem: ajv.compile(informationSystemSchema),
+    validateApproximableMapping: ajv.compile(approximableMappingSchema),
+  };
+}
+
+function formatErrors(errors: ErrorObject[] | null | undefined): string {
+  if (errors === null || errors === undefined || errors.length === 0) {
+    return "No JSON Schema error details were reported.";
+  }
+
+  return errors
+    .map((error) => {
+      const location = error.instancePath === "" ? "/" : error.instancePath;
+      return `${location} ${error.message ?? error.keyword}`;
+    })
+    .join("\n");
+}
+
+function expectValid(
+  filename: string,
+  document: unknown,
+  validate: ValidateFunction,
+): void {
+  const valid = validate(document);
+  expect(
+    valid,
+    `${filename} failed JSON Schema validation:\n${formatErrors(validate.errors)}`,
+  ).toBe(true);
+}
+
+function firstDocument(
+  documents: Record<string, unknown>,
+  kind: string,
+): Record<string, unknown> {
+  const document = Object.values(documents)[0];
+  expect(document, `Expected at least one persisted ${kind} fixture.`).toBeDefined();
+  expect(document).toBeTypeOf("object");
+  expect(document).not.toBeNull();
+  return document as Record<string, unknown>;
+}
+
+describe("persisted JSON fixtures", () => {
+  const { validateInformationSystem, validateApproximableMapping } =
+    compileSchemas();
+
+  it("validates every information-system fixture against Draft 2020-12", () => {
+    expect(Object.keys(informationSystemDocuments).length).toBeGreaterThan(0);
+
+    for (const [filename, document] of Object.entries(
+      informationSystemDocuments,
+    )) {
+      expectValid(filename, document, validateInformationSystem);
+    }
+  });
+
+  it("validates every approximable-mapping fixture against Draft 2020-12", () => {
+    expect(Object.keys(approximableMappingDocuments).length).toBeGreaterThan(0);
+
+    for (const [filename, document] of Object.entries(
+      approximableMappingDocuments,
+    )) {
+      expectValid(filename, document, validateApproximableMapping);
+    }
+  });
+
+  it("rejects a malformed information-system fixture", () => {
+    const malformedDocument = {
+      ...firstDocument(informationSystemDocuments, "information-system"),
+      schemaVersion: "2",
+    };
+
+    expect(validateInformationSystem(malformedDocument)).toBe(false);
+    expect(formatErrors(validateInformationSystem.errors)).toContain(
+      "/schemaVersion must be equal to constant",
+    );
+  });
+
+  it("rejects a malformed approximable-mapping fixture", () => {
+    const malformedDocument = {
+      ...firstDocument(approximableMappingDocuments, "approximable-mapping"),
+      sourceSystemId: "Not a valid identifier",
+    };
+
+    expect(validateApproximableMapping(malformedDocument)).toBe(false);
+    expect(formatErrors(validateApproximableMapping.errors)).toContain(
+      "/sourceSystemId must match pattern",
+    );
+  });
+});
+
+describe("persisted approximable mappings", () => {
+  it("semantically validates and applies exact Boolean negation", () => {
+    expect(
+      validateMapping(
+        flatBooleanSystem,
+        flatBooleanSystem,
+        booleanNegationMapping,
+      ),
+    ).toEqual({ ok: true, checkedConsistentSourceSets: 6 });
+
+    expect(
+      applyMapping(
+        flatBooleanSystem,
+        flatBooleanSystem,
+        booleanNegationMapping,
+        ["delta"],
+      ),
+    ).toEqual({
+      sourceState: ["delta"],
+      targetState: ["delta"],
+      activations: [],
+    });
+
+    expect(
+      applyMapping(
+        flatBooleanSystem,
+        flatBooleanSystem,
+        booleanNegationMapping,
+        ["delta", "false"],
+      ),
+    ).toEqual({
+      sourceState: ["delta", "false"],
+      targetState: ["delta", "true"],
+      activations: [
+        {
+          ruleId: "false-maps-to-true",
+          premises: ["false"],
+          conclusion: "true",
+        },
+      ],
+    });
+
+    expect(
+      applyMapping(
+        flatBooleanSystem,
+        flatBooleanSystem,
+        booleanNegationMapping,
+        ["delta", "true"],
+      ),
+    ).toEqual({
+      sourceState: ["delta", "true"],
+      targetState: ["delta", "false"],
+      activations: [
+        {
+          ruleId: "true-maps-to-false",
+          premises: ["true"],
+          conclusion: "false",
+        },
+      ],
+    });
+  });
+});

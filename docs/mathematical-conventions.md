@@ -2,8 +2,9 @@
 
 > [!NOTE]
 > This is the draft mathematical contract for the first published preview. It
-> covers finite Scott information systems and flat Booleans. Continuous maps
-> and fixed points will extend this document in later milestones.
+> covers finite Scott information systems, flat Booleans, and finite-generator
+> approximable mappings. Fixed points will extend this document in a later
+> milestone.
 
 ScottLab version 1 follows the distinguished-token presentation in Dana S.
 Scott's [“Domains for Denotational Semantics”](references.md#primary-source).
@@ -216,9 +217,85 @@ The interface may label the whole state `{Δ}` as `⊥`, but it must let learner
 inspect the contained `Δ` token and must never present `Δ` and `⊥` as the same
 object.
 
+## Approximable mappings
+
+The version 1
+[mapping schema](../schemas/approximable-mapping.v1.schema.json) persists a
+finite set of positive generator rules from a source system `A` to a target
+system `B`. A rule
+
+```text
+P ⇒ b
+```
+
+states that the finite source observation `P` justifies the target token `b`.
+For a source state `x`, those generators determine the function
+
+```text
+F(x) = closure_B({b | some declared P ⇒ b has P ⊆ x}).
+```
+
+Target `Δ` therefore appears through target closure; a redundant mapping rule
+for it is not required. Empty-premise generators are allowed and contribute a
+target observation already at source bottom.
+
+The semantic validator must check that:
+
+- the persisted source and target IDs name the systems supplied for
+  validation;
+- mapping rule IDs are unique;
+- every premise is a known source token and every conclusion is a known target
+  token;
+- every premise set is consistent in the source system; and
+- every collection of rules that can be activated by one consistent source
+  observation has jointly consistent target conclusions.
+
+The last condition is checked exhaustively only within an explicit validation
+budget. Since target-system validation already proves that entailment preserves
+consistency, closing a jointly consistent set of generated conclusions remains
+consistent.
+
+These generators are monotone in the information order: if `x ⊆ y`, every
+finite premise available in `x` remains available in `y`. Target closure is
+also monotone, so `F(x) ⊆ F(y)`. More generally, a finite premise contained in
+a directed union is contained in one member of that directed family; this is
+the finite-support reason the generated function is Scott continuous. On the
+finite state domains currently executed by ScottLab, monotonicity also implies
+Scott continuity directly.
+
+### Boolean negation
+
+The exact
+[Boolean-negation fixture](../packages/examples/boolean-negation.mapping.json)
+has two nonredundant generators:
+
+```text
+{false} ⇒ true
+{true}  ⇒ false
+```
+
+It acts on the three formal Boolean states as follows:
+
+| Source state | Target state |
+| --- | --- |
+| `{Δ}` | `{Δ}` |
+| `{Δ, false}` | `{Δ, true}` |
+| `{Δ, true}` | `{Δ, false}` |
+
+This is monotone, not order-reversing. The informative Boolean states are
+incomparable: neither `{Δ, false}` nor `{Δ, true}` contains the other. The
+only nontrivial source comparisons begin at bottom, and negation preserves
+both of them.
+
+Mapping traces are deterministic. They identify the target distinguished
+token, every activated mapping generator, and any subsequent target
+entailment. When multiple generators support the same target token, the
+activation list retains all supports even if a canonical derivation step has
+already added the token.
+
 ## Deferred conventions
 
-The first preview does not persist or validate approximable mappings,
-fixed-point traces, infinite-system presentations, or general lesson sessions.
-Those additions must preserve this document's token/state distinction and use
-new schema versions when compatibility would otherwise be ambiguous.
+The first preview does not yet persist fixed-point traces, infinite-system
+presentations, or general lesson sessions. Those additions must preserve this
+document's token/state distinction and use new schema versions when
+compatibility would otherwise be ambiguous.

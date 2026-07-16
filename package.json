@@ -18,11 +18,13 @@
     "dev": "npm run dev --workspace=@scottlab/web",
     "build": "npm run typecheck && npm run build --workspace=@scottlab/web",
     "test": "npm run test --workspaces --if-present",
+    "test:e2e": "playwright test",
     "lint": "oxlint --react-plugin --vitest-plugin --jsx-a11y-plugin --deny-warnings .",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "preview": "npm run preview --workspace=@scottlab/web"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "oxlint": "^1.73.0"
   }
 }

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1",
+  "kind": "approximable-mapping",
+  "id": "boolean-negation",
+  "title": "Boolean Negation",
+  "description": "The exact continuous endomap that exchanges true and false while preserving bottom.",
+  "approximation": {
+    "kind": "exact"
+  },
+  "sourceSystemId": "flat-boolean",
+  "targetSystemId": "flat-boolean",
+  "rules": [
+    {
+      "id": "false-maps-to-true",
+      "premises": [
+        "false"
+      ],
+      "conclusion": "true"
+    },
+    {
+      "id": "true-maps-to-false",
+      "premises": [
+        "true"
+      ],
+      "conclusion": "false"
+    }
+  ]
+}

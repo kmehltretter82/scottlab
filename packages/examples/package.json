@@ -8,12 +8,15 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@scottlab/core": "0.0.0"
   },
   "devDependencies": {
-    "typescript": "~6.0.2"
+    "ajv": "^8.20.0",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.10"
   }
 }

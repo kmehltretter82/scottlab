@@ -2,7 +2,9 @@
 
 > [!IMPORTANT]
 > **ScottLab is under construction.** The guided Boolean preview now reaches
-> its branch-aware challenge; the separate sandbox is not implemented yet.
+> its explicit-`Δ` formalisation, synchronized read-only sandbox, and first
+> rule-driven entailment, state-validation, and continuous-maps lessons.
+> General editing and fixed points are not implemented yet.
 
 **[Open the current interactive preview](https://kmehltretter82.github.io/scottlab/)**
 
@@ -56,11 +58,11 @@ Planned examples include flat Booleans, bounded lazy natural numbers, stream
 prefixes, partial trees, and small rule-driven knowledge systems. Infinite
 objects will always be presented as explicitly bounded finite approximations.
 
-The first implementation slice will be a polished flat-Boolean lesson. It will
-start at the least-defined state, let a learner reveal `true` or `false`, show
-why those observations are incompatible, and visualize the resulting
-three-state information order. Afterward, the learner can open the same example
-in a read-only sandbox preview.
+The first implementation slice is a polished flat-Boolean lesson. It starts at
+the least-defined state, lets a learner reveal `true` or `false`, shows why
+those observations are incompatible, and visualizes the resulting three-state
+information order. Afterward, the learner can inspect the explicit `Δ`
+convention and open the same example in a read-only sandbox preview.
 
 ## Current status
 
@@ -70,7 +72,30 @@ introduction, explains why its first model is a Boolean, then begins at `⊥`
 and opens it as an empty collection before introducing the `true` and `false`
 tokens. It rejects their incompatible combination with a concrete witness and
 turns the result into an interactive three-state information order. A final
-challenge asks the learner to build the Boolean branch not chosen first.
+challenge asks the learner to build the Boolean branch not chosen first. The
+advanced phase then distinguishes `Δ` from `⊥` and opens a hash-addressable,
+four-area read-only sandbox whose diagram, token tray, definition, and closure
+explanation share one selected state.
+
+The framework-independent core validates finite system definitions with
+deterministic counterexamples, computes closure traces, recognizes states, and
+enumerates the information order. The rule-driven access-permissions lesson
+uses that core trace to reveal two causal entailment steps, provides manual
+step and replay controls, and ends with a short transitive-consequence
+challenge. The following Editing Policy lesson classifies arbitrary selections
+as inconsistent, consistent-but-unclosed, or states using one structured core
+inspection result. Learners can inspect concrete witnesses and repair an
+unclosed selection manually.
+
+The next guided lesson applies an exact finite-generator mapping between two
+separately labelled Boolean copies. It reveals the input premise, active
+negation generator, and target closure step by step, then asks the learner to
+produce a `true` output. The accompanying definition explains why swapping the
+incomparable `true` and `false` branches is monotone and Scott continuous, not
+order-reversing. The core validates mapping generators, preserves alternate
+supports, and returns deterministic application traces. All persisted example
+documents are checked against their Draft 2020-12 schemas and semantic
+validation covers the Boolean-negation fixture.
 
 ## Run locally
 
@@ -84,7 +109,10 @@ npm run dev
 
 Open the address printed by Vite, normally <http://localhost:5173>. Other
 root-level checks are `npm test`, `npm run lint`, `npm run typecheck`, and
-`npm run build`. Use `npm run preview` to inspect the static production build.
+`npm run build`. Install the Playwright browsers once with
+`npx playwright install chromium firefox webkit`, then run the Chromium,
+Firefox, and WebKit acceptance matrix with `npm run test:e2e`. Use
+`npm run preview` to inspect the static production build.
 
 ## References
 

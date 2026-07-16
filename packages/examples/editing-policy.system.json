@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1",
+  "kind": "information-system",
+  "convention": "scott-1982-distinguished-token",
+  "id": "editing-policy",
+  "title": "Editing Policy",
+  "description": "An exact policy system with a visible permission rule and a read-only conflict.",
+  "approximation": {
+    "kind": "exact"
+  },
+  "tokens": [
+    {
+      "id": "administrator",
+      "label": "Administrator",
+      "description": "The observation that the account is an administrator."
+    },
+    {
+      "id": "delta",
+      "label": "Always-present token",
+      "symbol": "Δ",
+      "description": "The distinguished token present in every state."
+    },
+    {
+      "id": "may-edit",
+      "label": "May edit",
+      "description": "The observation that the policy permits editing."
+    },
+    {
+      "id": "read-only",
+      "label": "Read only",
+      "description": "The observation that the policy forbids editing."
+    }
+  ],
+  "delta": "delta",
+  "minimalInconsistentSets": [
+    [
+      "administrator",
+      "read-only"
+    ],
+    [
+      "may-edit",
+      "read-only"
+    ]
+  ],
+  "entailmentRules": [
+    {
+      "id": "administrator-entails-may-edit",
+      "premises": [
+        "administrator"
+      ],
+      "conclusion": "may-edit"
+    }
+  ]
+}

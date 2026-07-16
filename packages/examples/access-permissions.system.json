@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1",
+  "kind": "information-system",
+  "convention": "scott-1982-distinguished-token",
+  "id": "access-permissions",
+  "title": "Access Permissions",
+  "description": "An exact rule-driven system in which administrators may edit and editors may view.",
+  "approximation": {
+    "kind": "exact"
+  },
+  "tokens": [
+    {
+      "id": "administrator",
+      "label": "Administrator",
+      "description": "The observation that the user is an administrator."
+    },
+    {
+      "id": "delta",
+      "label": "Always-present token",
+      "symbol": "Δ",
+      "description": "The distinguished token present in every state."
+    },
+    {
+      "id": "may-edit",
+      "label": "May edit",
+      "description": "The observation that the user has permission to edit."
+    },
+    {
+      "id": "may-view",
+      "label": "May view",
+      "description": "The observation that the user has permission to view."
+    }
+  ],
+  "delta": "delta",
+  "minimalInconsistentSets": [],
+  "entailmentRules": [
+    {
+      "id": "administrator-entails-may-edit",
+      "premises": [
+        "administrator"
+      ],
+      "conclusion": "may-edit"
+    },
+    {
+      "id": "may-edit-entails-may-view",
+      "premises": [
+        "may-edit"
+      ],
+      "conclusion": "may-view"
+    }
+  ]
+}

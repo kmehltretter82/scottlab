@@ -54,6 +54,62 @@ async function reachInformationOrder(
   );
 }
 
+async function reachFormalisation(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await reachInformationOrder(user);
+  await user.click(
+    screen.getByRole("button", { name: "Use the explicit convention" }),
+  );
+}
+
+async function reachEntailmentLesson(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await reachFormalisation(user);
+  await user.click(
+    screen.getByRole("button", { name: "Continue to entailment" }),
+  );
+}
+
+async function reachStatesLesson(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await reachEntailmentLesson(user);
+  await user.click(
+    screen.getByRole("button", {
+      name: "Add the administrator premise",
+    }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Show the complete closure" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Choose may view" }));
+  await user.click(
+    screen.getByRole("button", { name: "Continue to states" }),
+  );
+}
+
+async function reachMapsLesson(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await reachStatesLesson(user);
+  await user.click(
+    screen.getByRole("button", {
+      name: "Complete this selection with closure",
+    }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Repair it yourself" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Add may edit token" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Continue to continuous maps" }),
+  );
+}
+
 describe("ScottLab introduction and bottom-first lesson", () => {
   it("introduces Dana Scott and the purpose of information systems", () => {
     render(<App />);
@@ -346,6 +402,730 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       screen.getByText(/Die leere Menge ist verträglich.*Abschluss fügt Δ/),
     ).toBeVisible();
     expect(screen.getAllByRole("row")).toHaveLength(4);
+  });
+
+  it("opens the same Boolean system in a synchronized read-only sandbox", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachFormalisation(user);
+
+    await user.click(
+      screen.getByRole("button", { name: "Open the read-only sandbox" }),
+    );
+
+    expect(window.location.hash).toBe("#/sandbox/flat-boolean");
+    expect(document.title).toBe("ScottLab · Flat Booleans sandbox preview");
+    expect(
+      screen.getByRole("heading", {
+        name: "Explore the same system without the lesson rails.",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("group", {
+        name: "Flat Booleans read-only sandbox workspace",
+      }),
+    ).toBeVisible();
+
+    const diagram = screen.getByRole("region", {
+      name: "Formal information order of the flat-Boolean states",
+    });
+    const falseNode = within(diagram).getByRole("button", {
+      name: "Inspect state {Δ, false}: the Boolean answer is false",
+    });
+    const trueNode = within(diagram).getByRole("button", {
+      name: "Inspect state {Δ, true}: the Boolean answer is true",
+    });
+    expect(falseNode).toHaveAttribute("aria-pressed", "true");
+
+    const bottomNode = within(diagram).getByRole("button", {
+      name: "Inspect state ⊥ = {Δ}: no specific Boolean answer",
+    });
+    bottomNode.focus();
+    await user.keyboard("{ArrowUp}");
+    expect(falseNode).toHaveFocus();
+
+    const tray = screen.getByRole("region", { name: "Experiment tray" });
+    const definition = screen.getByRole("region", {
+      name: "Definition panel",
+    });
+    const explanation = screen.getByRole("region", {
+      name: "Explanation panel",
+    });
+    expect(within(definition).getByText("Locked")).toBeVisible();
+    expect(
+      within(definition).getByText(/Editing arrives in a later milestone/),
+    ).toBeVisible();
+
+    await user.click(
+      within(tray).getByRole("button", { name: "Select state {Δ, true}" }),
+    );
+
+    expect(trueNode).toHaveAttribute("aria-pressed", "true");
+    expect(falseNode).toHaveAttribute("aria-pressed", "false");
+    expect(within(tray).getByLabelText("true token")).toBeVisible();
+    expect(within(definition).getByText("{Δ, true}")).toBeVisible();
+    expect(
+      within(explanation).getByText(/adds the true observation to Δ/),
+    ).toBeVisible();
+    expect(
+      within(explanation).getByText(
+        "The selected observation entails itself: true.",
+      ),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Explanation" }),
+    );
+    expect(explanation).toHaveFocus();
+
+    await user.click(
+      screen.getByRole("button", { name: "Back to the focused lesson" }),
+    );
+    expect(window.location.hash).toBe("#/lesson");
+    expect(
+      screen.getByRole("heading", {
+        name: "Now reveal the complete information system.",
+      }),
+    ).toHaveFocus();
+  });
+
+  it("supports a safe direct link to the sandbox and a lesson restart", async () => {
+    window.history.replaceState(null, "", "#/sandbox/flat-boolean");
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Explore the same system without the lesson rails.",
+      }),
+    ).toHaveFocus();
+    const diagram = screen.getByRole("region", {
+      name: "Formal information order of the flat-Boolean states",
+    });
+    expect(
+      within(diagram).getByRole("button", {
+        name: "Inspect state ⊥ = {Δ}: no specific Boolean answer",
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Restart lesson" }));
+
+    expect(window.location.hash).toBe("#/lesson");
+    expect(
+      screen.getByRole("heading", {
+        name: "Why Dana Scott introduced information systems",
+      }),
+    ).toBeVisible();
+  });
+
+  it("canonicalizes malformed hashes during browser navigation", () => {
+    render(<App />);
+
+    window.history.replaceState(null, "", "#/sandbox/not-supported");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+
+    expect(window.location.hash).toBe("#/lesson");
+    expect(
+      screen.getByRole("heading", {
+        name: "Why Dana Scott introduced information systems",
+      }),
+    ).toBeVisible();
+  });
+
+  it("translates the complete sandbox without losing its selection", async () => {
+    window.history.replaceState(null, "", "#/sandbox/flat-boolean");
+    const user = userEvent.setup();
+    render(<App />);
+    const tray = screen.getByRole("region", { name: "Experiment tray" });
+    await user.click(
+      within(tray).getByRole("button", { name: "Select state {Δ, true}" }),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
+
+    expect(document.title).toBe(
+      "ScottLab · Schreibgeschützte Boolean-Sandbox",
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "Dasselbe System nun ohne den vorgegebenen Lernpfad erkunden.",
+      }),
+    ).toBeVisible();
+    const germanTray = screen.getByRole("region", {
+      name: "Experimentierablage",
+    });
+    expect(
+      within(germanTray).getByRole("button", {
+        name: "Zustand {Δ, true} auswählen",
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByText(/fügt die Beobachtung true zu Δ hinzu/),
+    ).toBeVisible();
+  });
+
+  it("steps through a nontrivial entailment chain and solves its challenge", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachEntailmentLesson(user);
+
+    expect(window.location.hash).toBe("#/lesson/entailment");
+    expect(document.title).toBe("ScottLab · Entailment in action");
+    expect(
+      screen.getByRole("heading", {
+        name: "Watch one observation teach the state more.",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("group", {
+        name: "Interactive access-permissions entailment lesson",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent("{Δ}");
+    const ruleChain = screen.getByRole("list", { name: "Closure trace" });
+    expect(within(ruleChain).getAllByText("Rule pending")).toHaveLength(2);
+    expect(within(ruleChain).getAllByText("not yet in state")).toHaveLength(2);
+    const definition = screen.getByRole("region", {
+      name: "Rule-driven definition",
+    });
+    expect(
+      within(definition).getByText("{administrator} ⊢ may edit"),
+    ).toBeVisible();
+    expect(
+      within(definition).getByText("{may edit} ⊢ may view"),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Add the administrator premise",
+      }),
+    );
+
+    expect(screen.getByText("Trace frame 1 of 6")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "The premise {administrator} is available.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "{administrator, Δ}",
+    );
+
+    const traceControls = screen.getByRole("group", {
+      name: "Closure trace controls",
+    });
+    const nextFrame = within(traceControls).getByRole("button", {
+      name: "Next frame →",
+    });
+    await user.click(nextFrame);
+    expect(
+      screen.getByRole("heading", {
+        name: "Apply “Administrators may edit”.",
+      }),
+    ).toBeVisible();
+    expect(
+      within(
+        screen.getByRole("region", {
+          name: "Apply “Administrators may edit”.",
+        }),
+      ).getByText("{administrator} ⊢ may edit"),
+    ).toBeVisible();
+
+    await user.click(nextFrame);
+    expect(
+      screen.getByRole("heading", {
+        name: "The state learns may edit.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "{administrator, Δ, may edit}",
+    );
+    expect(within(ruleChain).getAllByText("Rule applied")).toHaveLength(1);
+    expect(within(ruleChain).getAllByText("Rule pending")).toHaveLength(1);
+    expect(within(ruleChain).getAllByText("conclusion in state")).toHaveLength(1);
+    expect(within(ruleChain).getAllByText("not yet in state")).toHaveLength(1);
+
+    await user.click(nextFrame);
+    expect(
+      screen.getByRole("heading", {
+        name: "The premise {may edit} is available.",
+      }),
+    ).toBeVisible();
+    await user.click(nextFrame);
+    expect(
+      screen.getByRole("heading", {
+        name: "Apply “Editors may view”.",
+      }),
+    ).toBeVisible();
+    await user.click(nextFrame);
+    expect(
+      screen.getByRole("heading", {
+        name: "The state learns may view.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "{administrator, Δ, may edit, may view}",
+    );
+    await user.click(nextFrame);
+
+    expect(
+      screen.getByRole("heading", { name: "Closure has stabilized." }),
+    ).toBeVisible();
+    expect(within(ruleChain).getAllByText("Rule applied")).toHaveLength(2);
+    expect(within(ruleChain).getAllByText("conclusion in state")).toHaveLength(2);
+    expect(
+      screen.getByRole("heading", {
+        name: "Which token needed both declared rules?",
+      }),
+    ).toBeVisible();
+    await user.click(screen.getByText("Read the complete derivation as text"));
+    expect(
+      screen.getByText(
+        "Step 1: observe administrator. Reflexivity adds it to the closure, producing {administrator, Δ}.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.getByText(
+        "Step 2: {administrator} enables “Administrators may edit”, which entails may edit.",
+      ),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Choose administrator" }),
+    );
+    expect(
+      screen.getByText("That token has a different role in the trace."),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Choose may view" }));
+    expect(
+      screen.getByText("Exactly — that is the two-step consequence."),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/may view needs the administrator-to-edit rule/),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Replay from the premise" }),
+    );
+    expect(screen.getByText("Trace frame 1 of 6")).toBeVisible();
+    expect(
+      screen.queryByRole("heading", {
+        name: "Which token needed both declared rules?",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("direct-links and returns between the entailment lesson and sandbox", async () => {
+    window.history.replaceState(null, "", "#/lesson/entailment");
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Watch one observation teach the state more.",
+      }),
+    ).toHaveFocus();
+    await user.click(
+      screen.getByRole("button", {
+        name: "Add the administrator premise",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Next frame →" }),
+    );
+    expect(screen.getByText("Trace frame 2 of 6")).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Review the Boolean sandbox" }),
+    );
+    expect(window.location.hash).toBe("#/sandbox/flat-boolean");
+
+    await user.click(
+      screen.getByRole("button", { name: "Back to the focused lesson" }),
+    );
+    expect(window.location.hash).toBe("#/lesson/entailment");
+    expect(
+      screen.getByRole("heading", {
+        name: "Watch one observation teach the state more.",
+      }),
+    ).toHaveFocus();
+    expect(screen.getByText("Trace frame 2 of 6")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "Apply “Administrators may edit”.",
+      }),
+    ).toBeVisible();
+  });
+
+  it("moves focus through trace controls and supports previous and skip", async () => {
+    window.history.replaceState(null, "", "#/lesson/entailment");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Add the administrator premise",
+      }),
+    );
+    const next = screen.getByRole("button", { name: "Next frame →" });
+    expect(next).toHaveFocus();
+    expect(
+      screen
+        .getByRole("heading", {
+          name: "The premise {administrator} is available.",
+        })
+        .parentElement,
+    ).toHaveAttribute("aria-live", "polite");
+
+    await user.click(next);
+    await user.click(
+      screen.getByRole("button", { name: "← Previous frame" }),
+    );
+    expect(screen.getByText("Trace frame 1 of 6")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Show the complete closure" }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "Which token needed both declared rules?",
+      }),
+    ).toHaveFocus();
+  });
+
+  it("returns a direct entailment link to a valid formalisation", async () => {
+    window.history.replaceState(null, "", "#/lesson/entailment");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Back to formalisation" }),
+    );
+
+    expect(window.location.hash).toBe("#/lesson");
+    expect(
+      screen.getByRole("heading", {
+        name: "Now reveal the complete information system.",
+      }),
+    ).toHaveFocus();
+    expect(screen.getByText("closure(∅) = {Δ} = ⊥")).toBeVisible();
+  });
+
+  it("repairs an unclosed selection in the states lesson", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachStatesLesson(user);
+
+    expect(window.location.hash).toBe("#/lesson/states");
+    expect(document.title).toBe("ScottLab · What makes a state?");
+    expect(
+      screen.getByRole("heading", {
+        name: "A selection is not automatically a state.",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("group", {
+        name: "Interactive editing-policy states lesson",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Consistent, but not yet a state.",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Missing entailed tokens: {may edit}",
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Complete this selection with closure",
+      }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "This selection is a state." }),
+    ).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "{administrator, Δ, may edit}",
+    );
+    expect(
+      screen.getByRole("button", { name: "Remove administrator token" }),
+    ).toBeDisabled();
+
+    await user.click(
+      screen.getByRole("button", { name: "Repair it yourself" }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "Repair the selection without using automatic closure.",
+      }),
+    ).toHaveFocus();
+
+    await user.click(
+      screen.getByRole("button", { name: "Add read only token" }),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Concrete conflict witness: {administrator, read only}",
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Remove read only token" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Add may edit token" }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "You built a consistent, closed state.",
+      }),
+    ).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "This selection is a state.",
+    );
+  });
+
+  it("handles a valid but off-target state and preserves states progress", async () => {
+    window.history.replaceState(null, "", "#/lesson/states");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Complete this selection with closure",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Repair it yourself" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Remove administrator token" }),
+    );
+    expect(
+      screen.getByText(/That is a state, but it removes the administrator premise/),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "That is a state, but it removes the administrator premise.",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Back to entailment" }));
+    expect(window.location.hash).toBe("#/lesson/entailment");
+    await user.click(
+      screen.getByRole("button", { name: "Continue to states" }),
+    );
+    expect(window.location.hash).toBe("#/lesson/states");
+    expect(
+      screen.getByRole("button", { name: "Add administrator token" }),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("explains a missing distinguished token in the structured state trace", async () => {
+    window.history.replaceState(null, "", "#/lesson/states");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Remove administrator token" }),
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name: "Remove Delta, the always-present token",
+      }),
+    );
+    expect(screen.getByText("No tokens selected")).toBeVisible();
+    await user.click(screen.getByText("Read the core analysis as text"));
+    expect(
+      screen.getByText(
+        "The distinguished-token law adds Δ, producing {Δ}.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("translates a states witness without resetting the selection", async () => {
+    window.history.replaceState(null, "", "#/lesson/states");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Add read only token" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
+
+    expect(document.title).toBe("ScottLab · Was macht einen Zustand aus?");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Konkreter Konfliktbeleg: {Administrator, nur lesen}",
+    );
+    expect(
+      screen.getByRole("button", { name: "Nur-lesen-Token entfernen" }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("computes Boolean negation stepwise and preserves the completed map lesson", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachMapsLesson(user);
+
+    expect(window.location.hash).toBe("#/lesson/maps");
+    expect(document.title).toBe("ScottLab · Continuous maps in action");
+    expect(
+      screen.getByRole("heading", {
+        name: "Refine the input; watch the output learn.",
+      }),
+    ).toHaveFocus();
+    expect(
+      screen.getByRole("group", {
+        name: "Interactive Boolean-negation continuous-maps lesson",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Bottom maps to bottom.",
+    );
+    expect(screen.getByText("not({Δ}) = {Δ}")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: /Refine the input to true/ }),
+    );
+    expect(screen.getByText("Guided mapping frame 1 of 3")).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "The input contains true.",
+    );
+
+    await user.click(screen.getByRole("button", { name: /Next frame/ }));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Activate “true input maps to false output”.",
+    );
+    await user.click(screen.getByRole("button", { name: /Next frame/ }));
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "The target closes to {Δ, false}.",
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: /Begin the challenge/ }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "Which input makes the output true?",
+      }),
+    ).toHaveFocus();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Choose true token as the input observation",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Show this map result" }),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "That input produces the other Boolean branch.",
+    );
+    expect(
+      screen.getByRole("button", { name: /Finish the challenge/ }),
+    ).toBeDisabled();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Choose false token as the input observation",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Show this map result" }),
+    );
+    expect(screen.getByText("Correct finite support")).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: /Finish the challenge/ }),
+    );
+
+    expect(
+      screen.getByText(
+        "You computed Boolean negation from finite support.",
+      ),
+    ).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "{Δ, false} activates one declared generator",
+    );
+    await user.click(
+      screen.getByText("Read the complete mapping derivation as text"),
+    );
+    expect(
+      screen.getByText(/source support \{false\} activates/),
+    ).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "Back to states" }));
+    expect(window.location.hash).toBe("#/lesson/states");
+    await user.click(
+      screen.getByRole("button", { name: "Continue to continuous maps" }),
+    );
+    expect(window.location.hash).toBe("#/lesson/maps");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "You computed Boolean negation from finite support.",
+    );
+  });
+
+  it("opens the maps hash directly and translates an in-progress trace", async () => {
+    window.history.replaceState(null, "", "#/lesson/maps");
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Refine the input; watch the output learn.",
+      }),
+    ).toHaveFocus();
+    await user.click(
+      screen.getByRole("button", { name: /Refine the input to true/ }),
+    );
+    await user.click(screen.getByRole("button", { name: /Next frame/ }));
+    await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
+
+    expect(document.title).toBe(
+      "ScottLab · Stetige Abbildungen in Aktion",
+    );
+    expect(
+      screen.getByText("Geführtes Abbildungsbild 2 von 3"),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "„True-Eingabe wird auf False-Ausgabe abgebildet“ aktivieren.",
+    );
+  });
+
+  it("translates an in-progress entailment trace without resetting it", async () => {
+    window.history.replaceState(null, "", "#/lesson/entailment");
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(
+      screen.getByRole("button", {
+        name: "Add the administrator premise",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Choose Deutsch" }),
+    );
+
+    expect(document.title).toBe("ScottLab · Folgerung in Aktion");
+    expect(screen.getByText("Spurbild 1 von 6")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "Die Prämisse {Administrator} ist vorhanden.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "{Administrator, Δ}",
+    );
+    const germanRuleChain = screen.getByRole("list", {
+      name: "Abschlussspur",
+    });
+    expect(
+      within(germanRuleChain).getAllByText("Regel ausstehend"),
+    ).toHaveLength(2);
+    expect(
+      within(germanRuleChain).getAllByText("noch nicht im Zustand"),
+    ).toHaveLength(2);
+    await user.click(
+      screen.getByText("Vollständige Herleitung als Text lesen"),
+    );
+    expect(
+      screen.getByText(
+        "Schritt 1: Administrator beobachten. Durch Reflexivität kommt das Token zum Abschluss hinzu; es entsteht {Administrator, Δ}.",
+      ),
+    ).toBeVisible();
   });
 
   it("supports inspecting the order with arrow keys", async () => {

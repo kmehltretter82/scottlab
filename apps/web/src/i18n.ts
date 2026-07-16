@@ -1,3 +1,8 @@
+import type { ContinuousMapLessonCopy } from "./ContinuousMapLesson";
+import type { EntailmentLessonCopy } from "./EntailmentLesson";
+import type { SandboxPreviewCopy } from "./SandboxPreview";
+import type { StateLessonCopy } from "./StateLesson";
+
 export const supportedLanguages = [
   { id: "en-GB", label: "English", flag: "🇬🇧" },
   { id: "de-DE", label: "Deutsch", flag: "🇩🇪" },
@@ -162,6 +167,10 @@ export interface LessonMessages {
     readonly restartAction: string;
     readonly footerStage: string;
   };
+  readonly sandboxPreview: SandboxPreviewCopy;
+  readonly entailment: EntailmentLessonCopy;
+  readonly stateLesson: StateLessonCopy;
+  readonly continuousMapLesson: ContinuousMapLessonCopy;
   readonly rejectedToken: (token: string) => string;
   readonly rejectedRole: string;
   readonly rejectedDetail: string;
@@ -382,6 +391,470 @@ const english: LessonMessages = {
     backAction: "Back to the introductory diagram",
     restartAction: "Restart the introduction",
     footerStage: "Explicit Δ",
+  },
+  sandboxPreview: {
+    pageTitle: "ScottLab · Flat Booleans sandbox preview",
+    markerLabel: "Sandbox preview: Flat Booleans",
+    markerName: "Sandbox",
+    eyebrow: "Read-only sandbox · same computed model",
+    title: "Explore the same system without the lesson rails.",
+    lead:
+      "All four areas read one canonical selection. Choose a state in the order or tray and watch its tokens, formal definition, and semantic explanation stay synchronized.",
+    readOnlyBadge: "Read-only preview",
+    workspaceLabel: "Flat Booleans read-only sandbox workspace",
+    sectionNavigationLabel: "Move between sandbox areas",
+    canvasTab: "Order",
+    trayTab: "State",
+    definitionTab: "Definition",
+    explanationTab: "Explanation",
+    canvasHeading: "Visual canvas",
+    canvasIntroduction:
+      "The computed cover relation places states with more information higher.",
+    diagramLabel: "Formal information order of the flat-Boolean states",
+    moreInformation: "more information",
+    bottomSummary: "⊥ = {Δ}: no specific Boolean answer",
+    informedSummary: (state, token) =>
+      `${state}: the Boolean answer is ${token}`,
+    inspectState: (summary) => `Inspect state ${summary}`,
+    selectedState: "Selected state",
+    textViewSummary: "Read the computed order as text",
+    statesHeading: "States",
+    edgesHeading: "Cover edges",
+    edgeDescription: (lower, upper) => `${lower} is directly below ${upper}.`,
+    trayHeading: "Experiment tray",
+    trayIntroduction:
+      "Select any formal state. The tray shows every token that belongs to it.",
+    stateChoicesLabel: "Choose a state to inspect",
+    selectState: (state) => `Select state ${state}`,
+    formalState: "Formal state",
+    observationRole: "specific observation",
+    deltaRole: "always-present token",
+    definitionHeading: "Definition panel",
+    lockedLabel: "Locked",
+    editingLater:
+      "Editing arrives in a later milestone; this view exposes exactly the model used by the lesson.",
+    tokensLabel: "Tokens",
+    consistencyLabel: "Consistency",
+    entailmentLabel: "Entailment",
+    consistencyRule: (set) => `${set} ∉ Con`,
+    entailmentRule: "X ⊢ a ⇔ a = Δ or a ∈ X",
+    explanationHeading: "Explanation panel",
+    plainLanguageLabel:
+      "Plain language and the core derivation for the selected state.",
+    bottomExplanation:
+      "This is bottom: the least state. It contains Δ, but no token that answers whether the Boolean is true or false.",
+    informedExplanation: (token) =>
+      `This state adds the ${token} observation to Δ, so the Boolean answer is known.`,
+    traceHeading: "Core closure trace",
+    deltaTrace: "Every consistent input entails the always-present token Δ.",
+    reflexivityTrace: (token) =>
+      `The selected observation entails itself: ${token}.`,
+    declaredRuleTrace: (ruleId, token) =>
+      `Rule ${ruleId} entails ${token}.`,
+    cutTrace: (token) =>
+      `A transitive chain of entailments derives ${token}.`,
+    openAction: "Open the read-only sandbox",
+    backAction: "Back to the focused lesson",
+    restartAction: "Restart lesson",
+    footerSystem: "Flat Booleans",
+    footerStage: "Read-only sandbox",
+  },
+  entailment: {
+    pageTitle: "ScottLab · Entailment in action",
+    markerLabel: "Lesson 3: Entailment",
+    markerName: "Entailment",
+    footerSystem: "Access Permissions",
+    footerStage: "Closure trace",
+    eyebrow: "Advanced lesson · a rule-driven system",
+    title: "Watch one observation teach the state more.",
+    lead:
+      "This is not another datatype. It is a small access-permissions model whose declared rules turn one observed role into two guaranteed permissions. Step through the closure to see exactly why each token appears.",
+    workspaceLabel: "Interactive access-permissions entailment lesson",
+    tokens: {
+      delta: {
+        label: "always-present token",
+        accessibleName: "Delta, the always-present token",
+        description: "The distinguished token present in every state.",
+      },
+      administrator: {
+        label: "administrator",
+        accessibleName: "administrator token",
+        description: "The observed role assigned to this user.",
+      },
+      "may-edit": {
+        label: "may edit",
+        accessibleName: "may edit token",
+        description: "The user has permission to change content.",
+      },
+      "may-view": {
+        label: "may view",
+        accessibleName: "may view token",
+        description: "The user has permission to read content.",
+      },
+    },
+    rules: {
+      "administrator-entails-may-edit": {
+        label: "Administrators may edit",
+        explanation:
+          "The declared administrator rule guarantees edit permission.",
+      },
+      "may-edit-entails-may-view": {
+        label: "Editors may view",
+        explanation: "The declared edit rule guarantees view permission.",
+      },
+    },
+    bottom: {
+      heading: "Begin with no specific permission information.",
+      explanation:
+        "At bottom, the state contains only Δ. No role or permission has been observed yet.",
+      stateLabel: "Bottom state {Δ}",
+      specificObservations: "No specific permission observations",
+    },
+    state: {
+      heading: "Executable rule chain",
+      introduction:
+        "Solid cards are already in the state. The outlined card or rule is the current causal focus.",
+      currentStateLabel: "Current formal state",
+      alwaysPresentRole: "always present",
+      chosenPremiseRole: "chosen premise",
+      presentConclusionRole: "conclusion in state",
+      pendingConclusionRole: "not yet in state",
+    },
+    trace: {
+      heading: "Closure trace",
+      introduction:
+        "Move through premise, active rule, and conclusion frames. The state changes only when a conclusion is justified.",
+      navigationLabel: "Closure trace controls",
+      progress: (current, total) => `Trace frame ${current} of ${total}`,
+      premiseLabel: "Premise present",
+      pendingRuleLabel: "Rule pending",
+      activeRuleLabel: "Active rule",
+      appliedRuleLabel: "Rule applied",
+      conclusionLabel: "Conclusion learned",
+      premiseHeading: (premises) => `The premise ${premises} is available.`,
+      premiseExplanation: (premises) =>
+        `ScottLab first checks that ${premises} is already contained in the current state.`,
+      activeRuleHeading: (rule) => `Apply “${rule}”.`,
+      activeRuleExplanation: (premises, conclusion) =>
+        `Because ${premises} is present, this declared rule now justifies ${conclusion}.`,
+      conclusionHeading: (conclusion) => `The state learns ${conclusion}.`,
+      conclusionExplanation: (conclusion, state) =>
+        `The conclusion ${conclusion} joins the state, producing ${state}. It can now support another rule.`,
+      completeHeading: "Closure has stabilized.",
+      completeExplanation: (state) =>
+        `No declared rule can add another token. The closed state is ${state}.`,
+      structuredSummary: "Read the complete derivation as text",
+      structuredHeading: "Ordered semantic derivation",
+      structuredInitialState: (state) => `Start at bottom ${state}.`,
+      structuredInputStep: (step, input, state) =>
+        `Step ${step}: observe ${input}. Reflexivity adds it to the closure, producing ${state}.`,
+      structuredStep: (step, premises, rule, conclusion) =>
+        `Step ${step}: ${premises} enables “${rule}”, which entails ${conclusion}.`,
+      structuredFinalState: (state) => `Closure stabilizes at ${state}.`,
+    },
+    definition: {
+      heading: "Rule-driven definition",
+      introduction:
+        "The fixture declares four tokens and two rules. The core supplies reflexivity, Δ, and transitive closure.",
+      tokensHeading: "Token set",
+      consistencyHeading: "Consistency",
+      consistencyValue: "Every finite token set is consistent in this model.",
+      rulesHeading: "Declared rules",
+    },
+    challenge: {
+      eyebrow: "Short challenge",
+      heading: "Which token needed both declared rules?",
+      explanation:
+        "Start from administrator and follow the chain. Select the conclusion that appears only after rule one supplies the premise for rule two.",
+      choiceLegend: "Choose the two-step conclusion",
+      chooseToken: (token) => `Choose ${token}`,
+      correctHeading: "Exactly — that is the two-step consequence.",
+      correctExplanation: (token) =>
+        `${token} needs the administrator-to-edit rule and then the edit-to-view rule.`,
+      incorrectHeading: "That token has a different role in the trace.",
+      incorrectExplanation: (chosenToken, targetToken) =>
+        `${chosenToken} is not the conclusion reached only after both rules. Inspect the chain and try ${targetToken}.`,
+    },
+    actions: {
+      startLesson: "Continue to entailment",
+      addAdministrator: "Add the administrator premise",
+      previous: "Previous frame",
+      next: "Next frame",
+      showCompleteClosure: "Show the complete closure",
+      replay: "Replay from the premise",
+      continueStates: "Continue to states",
+      back: "Back to formalisation",
+      openSandbox: "Review the Boolean sandbox",
+    },
+  },
+  stateLesson: {
+    pageTitle: "ScottLab · What makes a state?",
+    markerLabel: "Lesson 4: States",
+    markerName: "States",
+    footerSystem: "Editing Policy",
+    footerStage: "State inspection",
+    eyebrow: "Advanced lesson · consistency and closure",
+    title: "A selection is not automatically a state.",
+    lead:
+      "A state must pass two independent checks: its tokens must be mutually consistent, and every consequence must already be included. Change this policy selection and let the semantic core explain each verdict.",
+    workspaceLabel: "Interactive editing-policy states lesson",
+    tokens: {
+      administrator: {
+        label: "administrator",
+        accessibleName: "administrator token",
+        description: "The account has the administrator role.",
+      },
+      delta: {
+        label: "always-present token",
+        accessibleName: "Delta, the always-present token",
+        description: "The distinguished token required in every state.",
+      },
+      "may-edit": {
+        label: "may edit",
+        accessibleName: "may edit token",
+        description: "The policy permits editing.",
+      },
+      "read-only": {
+        label: "read only",
+        accessibleName: "read only token",
+        description: "The policy forbids editing.",
+      },
+    },
+    selection: {
+      heading: "Arbitrary token selection",
+      introduction:
+        "Toggle any token. This is a candidate set until both state conditions pass.",
+      selectedLabel: "Selected tokens",
+      toggleLegend: "Change the candidate selection",
+      addToken: (token) => `Add ${token}`,
+      removeToken: (token) => `Remove ${token}`,
+      emptySelection: "No tokens selected",
+    },
+    analysis: {
+      heading: "Two-condition state test",
+      introduction:
+        "The core checks consistency first. Only a consistent selection can be tested for entailment closure.",
+      consistencyCriterion: "Mutually consistent",
+      closureCriterion: "Closed under entailment",
+      stateVerdict: "Is a state",
+      passes: "passes",
+      fails: "fails",
+      notChecked: "not checked",
+      inconsistentHeading: "This selection is inconsistent.",
+      inconsistentExplanation: (witness) =>
+        `${witness} is a declared conflict, so these observations cannot belong to one state.`,
+      notClosedHeading: "Consistent, but not yet a state.",
+      notClosedExplanation: (missing) =>
+        `Closure adds ${missing}. A state must already contain every entailed token.`,
+      stateHeading: "This selection is a state.",
+      stateExplanation: (state) =>
+        `${state} is consistent and unchanged by closure.`,
+      witnessLabel: "Concrete conflict witness",
+      missingLabel: "Missing entailed tokens",
+    },
+    definition: {
+      heading: "Editing-policy definition",
+      introduction:
+        "The declared conflicts and rule below drive every visible verdict.",
+      tokensHeading: "Token set",
+      conflictsHeading: "Minimal conflicts",
+      rulesHeading: "Declared entailment",
+      stateCriterionHeading: "State criterion",
+      stateCriterion:
+        "A state is a consistent token set that is closed under entailment.",
+    },
+    explanation: {
+      heading: "Why the first selection fails",
+      guide:
+        "Administrator is compatible with Δ, but the declared rule also entails may edit. Apply closure to see the smallest state containing the selection.",
+      closedExample:
+        "Closure supplied the missing permission. The result now passes consistency and closure together.",
+      challenge:
+        "Make the starting selection a state yourself. Toggle tokens and use the live witness or missing-token explanation as evidence.",
+      complete: (token) =>
+        `You added ${token}, the consequence required by the administrator rule. The candidate is now a state.`,
+      structuredSummary: "Read the core analysis as text",
+      structuredHeading: "Ordered state analysis",
+      selectedStep: (selection) => `Inspect the candidate ${selection}.`,
+      consistencyPass: "No declared conflict is contained in the candidate.",
+      consistencyFail: (witness) =>
+        `Consistency fails with the concrete witness ${witness}.`,
+      distinguishedStep: (token, state) =>
+        `The distinguished-token law adds ${token}, producing ${state}.`,
+      closureStep: (premises, conclusion, state) =>
+        `${premises} entails ${conclusion}; adding it produces ${state}.`,
+      closureComplete: (state) => `Closure stabilizes at ${state}.`,
+      closureResultLabel: "closure",
+    },
+    challenge: {
+      eyebrow: "Manipulation challenge",
+      heading: "Repair the selection without using automatic closure.",
+      explanation: (selection) =>
+        `Begin again from ${selection}. Add the required consequence while keeping the administrator premise.`,
+      wrongState:
+        "That is a state, but it removes the administrator premise. Keep the premise and repair its closure instead.",
+      successHeading: "You built a consistent, closed state.",
+    },
+    actions: {
+      applyClosure: "Complete this selection with closure",
+      beginChallenge: "Repair it yourself",
+      continueMaps: "Continue to continuous maps",
+      resetSelection: "Reset the selection",
+      replayGuide: "Replay the state test",
+      back: "Back to entailment",
+    },
+  },
+  continuousMapLesson: {
+    pageTitle: "ScottLab · Continuous maps in action",
+    markerLabel: "Lesson 5: Continuous maps",
+    markerName: "Continuous maps",
+    footerSystem: "Flat Boolean negation",
+    footerStage: "Incremental mapping",
+    eyebrow: "Advanced lesson · finite support",
+    title: "Refine the input; watch the output learn.",
+    lead:
+      "A continuous map consumes one state and produces another. Keep the two Boolean copies separate while exact negation turns each finite input observation into justified output information.",
+    workspaceLabel: "Interactive Boolean-negation continuous-maps lesson",
+    tokens: {
+      delta: {
+        label: "always-present token",
+        accessibleName: "Delta, the always-present token",
+        description: "The distinguished token contained in every state.",
+      },
+      false: {
+        label: "false",
+        accessibleName: "false token",
+        description: "The observation that this Boolean is false.",
+      },
+      true: {
+        label: "true",
+        accessibleName: "true token",
+        description: "The observation that this Boolean is true.",
+      },
+    },
+    rules: {
+      "false-maps-to-true": {
+        label: "false input maps to true output",
+        explanation:
+          "A false observation in the source justifies true in the separate target copy.",
+      },
+      "true-maps-to-false": {
+        label: "true input maps to false output",
+        explanation:
+          "A true observation in the source justifies false in the separate target copy.",
+      },
+    },
+    canvas: {
+      heading: "Two copies, one mapping",
+      introduction:
+        "The left state is input. The right state is newly computed output; tokens never move between one shared container.",
+      inputCopyLabel: "Input copy A",
+      outputCopyLabel: "Output copy B",
+      systemName: "Flat Booleans",
+      mappingName: "not",
+      stateLabel: "Formal state",
+      bottomBadge: "bottom · no specific Boolean information",
+      informativeBadge: "informative state",
+      dormantRule: "no informative generator active",
+      pendingRule: "generator ready",
+      activeRule: "generator active",
+      appliedRule: "generator applied",
+      diagramLabel: (inputState, outputState, ruleStatus) =>
+        `Boolean input ${inputState} maps to output ${outputState}; ${ruleStatus}.`,
+    },
+    experiment: {
+      heading: "Refine the source state",
+      introduction:
+        "Begin at bottom, then reveal the causal premise, generator, and output one frame at a time.",
+      inputStateLabel: "Current input",
+      outputStateLabel: "Visible output",
+      navigationLabel: "Mapping trace controls",
+      guideProgress: (current, total) =>
+        `Guided mapping frame ${current} of ${total}`,
+      challengeProgress: (current, total) =>
+        `Challenge frame ${current} of ${total}`,
+    },
+    challenge: {
+      eyebrow: "Short challenge",
+      heading: "Which input makes the output true?",
+      introduction:
+        "Choose one informative source state, inspect its generator, and finish the trace. Remember that input and output are separate Boolean copies.",
+      choiceLegend: "Choose the input observation",
+      chooseInput: (token) => `Choose ${token} as the input observation`,
+      correctBadge: "Correct finite support",
+      incorrectBadge: "Valid map result, different target",
+    },
+    definition: {
+      heading: "Exact finite-generator definition",
+      introduction:
+        "The persisted fixture is exact. Its two positive generators and target closure determine every result shown here.",
+      sourceStatesHeading: "Source states",
+      targetStatesHeading: "Target states",
+      generatorsHeading: "Declared generators",
+      orderHeading: "Information order",
+      orderExplanation:
+        "States are ordered by inclusion: adding a compatible token means learning more.",
+      incomparabilityHeading: "The branches are incomparable",
+      incomparabilityExplanation:
+        "True and false do not lie above one another. Each lies only above bottom.",
+      continuityHeading: "Why this map is continuous",
+      continuityExplanation:
+        "Positive finite premises persist under refinement, and target closure is monotone. On this finite state domain, that monotonicity gives Scott continuity. Negation swaps incomparable branches; it does not reverse their order.",
+    },
+    explanation: {
+      heading: "Causal mapping trace",
+      introduction:
+        "The same structured core computation drives the diagram, narration, and complete text trace.",
+      bottomHeading: "Bottom maps to bottom.",
+      bottomExplanation: (state) =>
+        `With no specific input observation, neither informative generator applies. Target closure still supplies ${state}.`,
+      challengeReadyHeading: "Now make the output true.",
+      challengeReadyExplanation:
+        "Select the source observation whose declared generator concludes true, then inspect all three causal frames.",
+      premiseHeading: (token) => `The input contains ${token}.`,
+      premiseExplanation: (token, state) =>
+        `${token} is present in the source state ${state}, so a generator with that finite premise can activate.`,
+      ruleHeading: (rule) => `Activate “${rule}”.`,
+      ruleExplanation: (rule, inputState, conclusion) =>
+        `The finite support ${inputState} satisfies “${rule}”, which justifies ${conclusion} in the target copy.`,
+      outputHeading: (state) => `The target closes to ${state}.`,
+      outputExplanation: (token, state) =>
+        `The justified ${token} observation joins target Δ, producing the separate output state ${state}.`,
+      incorrectHeading: "That input produces the other Boolean branch.",
+      incorrectExplanation: (input, output, expectedInput) =>
+        `${input} correctly maps to ${output}, but the challenge asks for true output. Choose ${expectedInput} as the source observation.`,
+      completeHeading: "You computed Boolean negation from finite support.",
+      completeExplanation: (inputState, outputState) =>
+        `${inputState} activates one declared generator and target closure produces ${outputState}.`,
+      structuredSummary: "Read the complete mapping derivation as text",
+      structuredHeading: "Ordered semantic mapping derivation",
+      structuredInput: (state) => `Use source state ${state}.`,
+      structuredDeltaStep: (step, token, state) =>
+        `Step ${step}: target closure adds distinguished token ${token}, producing ${state}.`,
+      structuredMappingStep: (
+        step,
+        sourceSupport,
+        rule,
+        conclusion,
+        state,
+      ) =>
+        `Step ${step}: source support ${sourceSupport} activates “${rule}”; add ${conclusion} to produce ${state}.`,
+      structuredEntailmentStep: (step, premises, conclusion, state) =>
+        `Step ${step}: target premises ${premises} entail ${conclusion}, producing ${state}.`,
+      structuredResult: (state) => `Target closure stabilizes at ${state}.`,
+    },
+    actions: {
+      startGuide: "Refine the input to true",
+      previous: "Previous frame",
+      next: "Next frame",
+      skipGuide: "Show the guided result",
+      showResult: "Show this map result",
+      beginChallenge: "Begin the challenge",
+      finishChallenge: "Finish the challenge",
+      replay: "Replay from bottom",
+      back: "Back to states",
+      openSandbox: "Review the Boolean sandbox",
+    },
   },
   rejectedToken: (token) => `Rejected ${token} token`,
   rejectedRole: "not added",
@@ -605,6 +1078,477 @@ const german: LessonMessages = {
     backAction: "Zurück zum einführenden Diagramm",
     restartAction: "Die Einführung neu beginnen",
     footerStage: "Explizites Δ",
+  },
+  sandboxPreview: {
+    pageTitle: "ScottLab · Schreibgeschützte Boolean-Sandbox",
+    markerLabel: "Sandbox-Vorschau: Flache boolesche Werte",
+    markerName: "Sandbox",
+    eyebrow: "Schreibgeschützte Sandbox · dasselbe berechnete Modell",
+    title: "Dasselbe System nun ohne den vorgegebenen Lernpfad erkunden.",
+    lead:
+      "Alle vier Bereiche verwenden dieselbe Auswahl. Wähle einen Zustand in der Ordnung oder Ablage; seine Token, die formale Definition und die semantische Erklärung bleiben synchron.",
+    readOnlyBadge: "Schreibgeschützte Vorschau",
+    workspaceLabel:
+      "Schreibgeschützte Sandbox für flache boolesche Werte",
+    sectionNavigationLabel: "Zwischen den Sandbox-Bereichen wechseln",
+    canvasTab: "Ordnung",
+    trayTab: "Zustand",
+    definitionTab: "Definition",
+    explanationTab: "Erklärung",
+    canvasHeading: "Visuelle Fläche",
+    canvasIntroduction:
+      "Die berechnete Überdeckungsrelation ordnet informativere Zustände weiter oben an.",
+    diagramLabel: "Formale Informationsordnung der booleschen Zustände",
+    moreInformation: "mehr Information",
+    bottomSummary: "⊥ = {Δ}: keine konkrete boolesche Antwort",
+    informedSummary: (state, token) =>
+      `${state}: Die boolesche Antwort ist ${token}`,
+    inspectState: (summary) => `Zustand untersuchen: ${summary}`,
+    selectedState: "Ausgewählter Zustand",
+    textViewSummary: "Berechnete Ordnung als Text lesen",
+    statesHeading: "Zustände",
+    edgesHeading: "Überdeckungskanten",
+    edgeDescription: (lower, upper) => `${lower} liegt direkt unter ${upper}.`,
+    trayHeading: "Experimentierablage",
+    trayIntroduction:
+      "Wähle einen formalen Zustand. Die Ablage zeigt alle Token, die zu ihm gehören.",
+    stateChoicesLabel: "Einen Zustand zur Untersuchung wählen",
+    selectState: (state) => `Zustand ${state} auswählen`,
+    formalState: "Formaler Zustand",
+    observationRole: "konkrete Beobachtung",
+    deltaRole: "stets vorhandenes Token",
+    definitionHeading: "Definitionsbereich",
+    lockedLabel: "Gesperrt",
+    editingLater:
+      "Bearbeitung folgt in einem späteren Meilenstein; diese Ansicht zeigt genau das im Lernpfad verwendete Modell.",
+    tokensLabel: "Token",
+    consistencyLabel: "Verträglichkeit",
+    entailmentLabel: "Folgerung",
+    consistencyRule: (set) => `${set} ∉ Con`,
+    entailmentRule: "X ⊢ a ⇔ a = Δ oder a ∈ X",
+    explanationHeading: "Erklärungsbereich",
+    plainLanguageLabel:
+      "Alltagssprache und die Kernherleitung für den ausgewählten Zustand.",
+    bottomExplanation:
+      "Dies ist Bottom, der kleinste Zustand. Er enthält Δ, aber kein Token, das beantwortet, ob der boolesche Wert true oder false ist.",
+    informedExplanation: (token) =>
+      `Dieser Zustand fügt die Beobachtung ${token} zu Δ hinzu; die boolesche Antwort ist somit bekannt.`,
+    traceHeading: "Abschlussspur aus dem semantischen Kern",
+    deltaTrace:
+      "Jede verträgliche Eingabe impliziert das stets vorhandene Token Δ.",
+    reflexivityTrace: (token) =>
+      `Die ausgewählte Beobachtung impliziert sich selbst: ${token}.`,
+    declaredRuleTrace: (ruleId, token) =>
+      `Die Regel ${ruleId} impliziert ${token}.`,
+    cutTrace: (token) =>
+      `Eine transitive Folgerungskette leitet ${token} her.`,
+    openAction: "Schreibgeschützte Sandbox öffnen",
+    backAction: "Zurück zum geführten Lernpfad",
+    restartAction: "Lernpfad neu starten",
+    footerSystem: "Flache boolesche Werte",
+    footerStage: "Schreibgeschützte Sandbox",
+  },
+  entailment: {
+    pageTitle: "ScottLab · Folgerung in Aktion",
+    markerLabel: "Lektion 3: Folgerung",
+    markerName: "Folgerung",
+    footerSystem: "Zugriffsrechte",
+    footerStage: "Abschlussspur",
+    eyebrow: "Fortgeschrittene Lektion · ein regelbasiertes System",
+    title: "Beobachte, wie der Zustand aus einer Beobachtung mehr lernt.",
+    lead:
+      "Dies ist kein weiterer Datentyp, sondern ein kleines Modell für Zugriffsrechte. Seine festgelegten Regeln machen aus einer beobachteten Rolle zwei garantierte Rechte. Gehe den Abschluss schrittweise durch und sieh genau, warum jedes Token erscheint.",
+    workspaceLabel: "Interaktive Folgerungslektion zu Zugriffsrechten",
+    tokens: {
+      delta: {
+        label: "stets vorhandenes Token",
+        accessibleName: "Delta, das stets vorhandene Token",
+        description: "Das ausgezeichnete Token in jedem Zustand.",
+      },
+      administrator: {
+        label: "Administrator",
+        accessibleName: "Administrator-Token",
+        description: "Die für diesen Benutzer beobachtete Rolle.",
+      },
+      "may-edit": {
+        label: "darf bearbeiten",
+        accessibleName: "Darf-bearbeiten-Token",
+        description: "Der Benutzer darf Inhalte verändern.",
+      },
+      "may-view": {
+        label: "darf ansehen",
+        accessibleName: "Darf-ansehen-Token",
+        description: "Der Benutzer darf Inhalte lesen.",
+      },
+    },
+    rules: {
+      "administrator-entails-may-edit": {
+        label: "Administratoren dürfen bearbeiten",
+        explanation:
+          "Die festgelegte Administratorregel garantiert das Bearbeitungsrecht.",
+      },
+      "may-edit-entails-may-view": {
+        label: "Bearbeiter dürfen ansehen",
+        explanation:
+          "Die festgelegte Bearbeitungsregel garantiert das Leserecht.",
+      },
+    },
+    bottom: {
+      heading: "Beginne ohne konkrete Information über Zugriffsrechte.",
+      explanation:
+        "Bei Bottom enthält der Zustand nur Δ. Es wurde noch keine Rolle und kein Recht beobachtet.",
+      stateLabel: "Bottom-Zustand {Δ}",
+      specificObservations: "Keine konkreten Beobachtungen zu Rechten",
+    },
+    state: {
+      heading: "Ausführbare Regelkette",
+      introduction:
+        "Ausgefüllte Karten gehören bereits zum Zustand. Die umrandete Karte oder Regel ist der aktuelle kausale Fokus.",
+      currentStateLabel: "Aktueller formaler Zustand",
+      alwaysPresentRole: "stets vorhanden",
+      chosenPremiseRole: "gewählte Prämisse",
+      presentConclusionRole: "Konsequenz im Zustand",
+      pendingConclusionRole: "noch nicht im Zustand",
+    },
+    trace: {
+      heading: "Abschlussspur",
+      introduction:
+        "Gehe durch Prämisse, aktive Regel und Konsequenz. Der Zustand ändert sich erst, wenn eine Konsequenz begründet ist.",
+      navigationLabel: "Steuerung der Abschlussspur",
+      progress: (current, total) => `Spurbild ${current} von ${total}`,
+      premiseLabel: "Prämisse vorhanden",
+      pendingRuleLabel: "Regel ausstehend",
+      activeRuleLabel: "Aktive Regel",
+      appliedRuleLabel: "Regel angewendet",
+      conclusionLabel: "Konsequenz gelernt",
+      premiseHeading: (premises) => `Die Prämisse ${premises} ist vorhanden.`,
+      premiseExplanation: (premises) =>
+        `ScottLab prüft zuerst, dass ${premises} bereits im aktuellen Zustand enthalten ist.`,
+      activeRuleHeading: (rule) => `„${rule}“ anwenden.`,
+      activeRuleExplanation: (premises, conclusion) =>
+        `Weil ${premises} vorhanden ist, begründet diese festgelegte Regel nun ${conclusion}.`,
+      conclusionHeading: (conclusion) => `Der Zustand lernt ${conclusion}.`,
+      conclusionExplanation: (conclusion, state) =>
+        `Die Konsequenz ${conclusion} kommt zum Zustand hinzu und erzeugt ${state}. Sie kann nun eine weitere Regel stützen.`,
+      completeHeading: "Der Abschluss hat sich stabilisiert.",
+      completeExplanation: (state) =>
+        `Keine festgelegte Regel kann ein weiteres Token hinzufügen. Der abgeschlossene Zustand ist ${state}.`,
+      structuredSummary: "Vollständige Herleitung als Text lesen",
+      structuredHeading: "Geordnete semantische Herleitung",
+      structuredInitialState: (state) => `Bei Bottom ${state} beginnen.`,
+      structuredInputStep: (step, input, state) =>
+        `Schritt ${step}: ${input} beobachten. Durch Reflexivität kommt das Token zum Abschluss hinzu; es entsteht ${state}.`,
+      structuredStep: (step, premises, rule, conclusion) =>
+        `Schritt ${step}: ${premises} aktiviert „${rule}“; daraus folgt ${conclusion}.`,
+      structuredFinalState: (state) =>
+        `Der Abschluss stabilisiert sich bei ${state}.`,
+    },
+    definition: {
+      heading: "Regelbasierte Definition",
+      introduction:
+        "Die Beispieldatei legt vier Token und zwei Regeln fest. Reflexivität, Δ und den transitiven Abschluss liefert der Kern.",
+      tokensHeading: "Tokenmenge",
+      consistencyHeading: "Verträglichkeit",
+      consistencyValue:
+        "In diesem Modell ist jede endliche Tokenmenge verträglich.",
+      rulesHeading: "Festgelegte Regeln",
+    },
+    challenge: {
+      eyebrow: "Kurze Aufgabe",
+      heading: "Welches Token benötigte beide festgelegten Regeln?",
+      explanation:
+        "Beginne beim Administrator und folge der Kette. Wähle die Konsequenz, die erst erscheint, nachdem Regel eins die Prämisse für Regel zwei geliefert hat.",
+      choiceLegend: "Die Konsequenz nach zwei Schritten wählen",
+      chooseToken: (token) => `${token} wählen`,
+      correctHeading: "Genau – das ist die Konsequenz nach zwei Schritten.",
+      correctExplanation: (token) =>
+        `${token} benötigt zuerst die Administrator-zu-Bearbeiten-Regel und dann die Bearbeiten-zu-Ansehen-Regel.`,
+      incorrectHeading: "Dieses Token hat in der Spur eine andere Rolle.",
+      incorrectExplanation: (chosenToken, targetToken) =>
+        `${chosenToken} ist nicht die Konsequenz, die erst nach beiden Regeln erreicht wird. Untersuche die Kette und versuche ${targetToken}.`,
+    },
+    actions: {
+      startLesson: "Mit der Folgerung fortfahren",
+      addAdministrator: "Die Administrator-Prämisse hinzufügen",
+      previous: "Vorheriges Bild",
+      next: "Nächstes Bild",
+      showCompleteClosure: "Vollständigen Abschluss zeigen",
+      replay: "Bei der Prämisse erneut beginnen",
+      continueStates: "Mit Zuständen fortfahren",
+      back: "Zurück zur Formalisierung",
+      openSandbox: "Boolean-Sandbox erneut ansehen",
+    },
+  },
+  stateLesson: {
+    pageTitle: "ScottLab · Was macht einen Zustand aus?",
+    markerLabel: "Lektion 4: Zustände",
+    markerName: "Zustände",
+    footerSystem: "Bearbeitungsrichtlinie",
+    footerStage: "Zustandsprüfung",
+    eyebrow: "Fortgeschrittene Lektion · Konsistenz und Abschluss",
+    title: "Eine Auswahl ist nicht automatisch ein Zustand.",
+    lead:
+      "Ein Zustand muss zwei unabhängige Prüfungen bestehen: Seine Token müssen miteinander verträglich sein und jede Konsequenz muss bereits enthalten sein. Verändere diese Richtlinienauswahl und lass den semantischen Kern jedes Urteil erklären.",
+    workspaceLabel: "Interaktive Zustandslektion zur Bearbeitungsrichtlinie",
+    tokens: {
+      administrator: {
+        label: "Administrator",
+        accessibleName: "Administrator-Token",
+        description: "Das Konto hat die Administratorrolle.",
+      },
+      delta: {
+        label: "stets vorhandenes Token",
+        accessibleName: "Delta, das stets vorhandene Token",
+        description: "Das ausgezeichnete Token, das jeder Zustand benötigt.",
+      },
+      "may-edit": {
+        label: "darf bearbeiten",
+        accessibleName: "Darf-bearbeiten-Token",
+        description: "Die Richtlinie erlaubt das Bearbeiten.",
+      },
+      "read-only": {
+        label: "nur lesen",
+        accessibleName: "Nur-lesen-Token",
+        description: "Die Richtlinie verbietet das Bearbeiten.",
+      },
+    },
+    selection: {
+      heading: "Beliebige Token-Auswahl",
+      introduction:
+        "Schalte beliebige Token um. Dies bleibt eine Kandidatenmenge, bis beide Zustandsbedingungen erfüllt sind.",
+      selectedLabel: "Ausgewählte Token",
+      toggleLegend: "Kandidatenauswahl verändern",
+      addToken: (token) => `${token} hinzufügen`,
+      removeToken: (token) => `${token} entfernen`,
+      emptySelection: "Keine Token ausgewählt",
+    },
+    analysis: {
+      heading: "Zustandstest mit zwei Bedingungen",
+      introduction:
+        "Der Kern prüft zuerst die Verträglichkeit. Nur eine verträgliche Auswahl kann auf Folgerungsabschluss geprüft werden.",
+      consistencyCriterion: "Miteinander verträglich",
+      closureCriterion: "Unter Folgerung abgeschlossen",
+      stateVerdict: "Ist ein Zustand",
+      passes: "erfüllt",
+      fails: "nicht erfüllt",
+      notChecked: "nicht geprüft",
+      inconsistentHeading: "Diese Auswahl ist unverträglich.",
+      inconsistentExplanation: (witness) =>
+        `${witness} ist als Konflikt festgelegt; diese Beobachtungen können daher nicht zu einem Zustand gehören.`,
+      notClosedHeading: "Verträglich, aber noch kein Zustand.",
+      notClosedExplanation: (missing) =>
+        `Der Abschluss fügt ${missing} hinzu. Ein Zustand muss jedes gefolgerte Token bereits enthalten.`,
+      stateHeading: "Diese Auswahl ist ein Zustand.",
+      stateExplanation: (state) =>
+        `${state} ist verträglich und bleibt durch Abschluss unverändert.`,
+      witnessLabel: "Konkreter Konfliktbeleg",
+      missingLabel: "Fehlende gefolgerte Token",
+    },
+    definition: {
+      heading: "Definition der Bearbeitungsrichtlinie",
+      introduction:
+        "Die festgelegten Konflikte und die Regel bestimmen jedes sichtbare Urteil.",
+      tokensHeading: "Token-Menge",
+      conflictsHeading: "Minimale Konflikte",
+      rulesHeading: "Festgelegte Folgerung",
+      stateCriterionHeading: "Zustandskriterium",
+      stateCriterion:
+        "Ein Zustand ist eine verträgliche und unter Folgerung abgeschlossene Token-Menge.",
+    },
+    explanation: {
+      heading: "Warum die erste Auswahl scheitert",
+      guide:
+        "Administrator ist mit Δ verträglich, aber die festgelegte Regel folgert außerdem darf bearbeiten. Wende den Abschluss an, um den kleinsten Zustand über der Auswahl zu sehen.",
+      closedExample:
+        "Der Abschluss hat das fehlende Recht ergänzt. Das Ergebnis erfüllt nun Verträglichkeit und Abschluss zugleich.",
+      challenge:
+        "Mache die Startauswahl selbst zu einem Zustand. Schalte Token um und nutze den aktuellen Beleg oder die Erklärung der fehlenden Token.",
+      complete: (token) =>
+        `Du hast ${token} hinzugefügt, die von der Administratorregel geforderte Konsequenz. Der Kandidat ist nun ein Zustand.`,
+      structuredSummary: "Kernanalyse als Text lesen",
+      structuredHeading: "Geordnete Zustandsanalyse",
+      selectedStep: (selection) => `Den Kandidaten ${selection} prüfen.`,
+      consistencyPass: "Der Kandidat enthält keinen festgelegten Konflikt.",
+      consistencyFail: (witness) =>
+        `Die Verträglichkeit scheitert am konkreten Beleg ${witness}.`,
+      distinguishedStep: (token, state) =>
+        `Das Gesetz des ausgezeichneten Tokens fügt ${token} hinzu; es entsteht ${state}.`,
+      closureStep: (premises, conclusion, state) =>
+        `${premises} folgert ${conclusion}; durch Hinzufügen entsteht ${state}.`,
+      closureComplete: (state) => `Der Abschluss stabilisiert sich bei ${state}.`,
+      closureResultLabel: "Abschluss",
+    },
+    challenge: {
+      eyebrow: "Manipulationsaufgabe",
+      heading: "Repariere die Auswahl ohne automatischen Abschluss.",
+      explanation: (selection) =>
+        `Beginne erneut bei ${selection}. Ergänze die nötige Konsequenz und behalte die Administrator-Prämisse.`,
+      wrongState:
+        "Das ist ein Zustand, aber die Administrator-Prämisse fehlt. Behalte sie und repariere stattdessen ihren Abschluss.",
+      successHeading: "Du hast einen verträglichen, abgeschlossenen Zustand gebaut.",
+    },
+    actions: {
+      applyClosure: "Auswahl durch Abschluss vervollständigen",
+      beginChallenge: "Selbst reparieren",
+      continueMaps: "Mit stetigen Abbildungen fortfahren",
+      resetSelection: "Auswahl zurücksetzen",
+      replayGuide: "Zustandstest wiederholen",
+      back: "Zurück zur Folgerung",
+    },
+  },
+  continuousMapLesson: {
+    pageTitle: "ScottLab · Stetige Abbildungen in Aktion",
+    markerLabel: "Lektion 5: Stetige Abbildungen",
+    markerName: "Stetige Abbildungen",
+    footerSystem: "Negation flacher Booleans",
+    footerStage: "Schrittweise Abbildung",
+    eyebrow: "Fortgeschrittene Lektion · endliche Stütze",
+    title: "Verfeinere die Eingabe und sieh der Ausgabe beim Lernen zu.",
+    lead:
+      "Eine stetige Abbildung verarbeitet einen Zustand und erzeugt einen anderen. Halte die beiden Boolean-Kopien getrennt, während die exakte Negation jede endliche Eingabebeobachtung in begründete Ausgabeinformation verwandelt.",
+    workspaceLabel: "Interaktive Lektion zur stetigen Boolean-Negation",
+    tokens: {
+      delta: {
+        label: "stets vorhandenes Token",
+        accessibleName: "Delta, das stets vorhandene Token",
+        description: "Das ausgezeichnete Token, das jeder Zustand enthält.",
+      },
+      false: {
+        label: "false",
+        accessibleName: "False-Token",
+        description: "Die Beobachtung, dass dieser Boolean falsch ist.",
+      },
+      true: {
+        label: "true",
+        accessibleName: "True-Token",
+        description: "Die Beobachtung, dass dieser Boolean wahr ist.",
+      },
+    },
+    rules: {
+      "false-maps-to-true": {
+        label: "False-Eingabe wird auf True-Ausgabe abgebildet",
+        explanation:
+          "Eine False-Beobachtung in der Quelle begründet True in der getrennten Zielkopie.",
+      },
+      "true-maps-to-false": {
+        label: "True-Eingabe wird auf False-Ausgabe abgebildet",
+        explanation:
+          "Eine True-Beobachtung in der Quelle begründet False in der getrennten Zielkopie.",
+      },
+    },
+    canvas: {
+      heading: "Zwei Kopien, eine Abbildung",
+      introduction:
+        "Links steht der Eingabezustand. Rechts wird die Ausgabe neu berechnet; Token wandern nicht in einem gemeinsamen Behälter.",
+      inputCopyLabel: "Eingabekopie A",
+      outputCopyLabel: "Ausgabekopie B",
+      systemName: "Flache Booleans",
+      mappingName: "nicht",
+      stateLabel: "Formaler Zustand",
+      bottomBadge: "Bottom · keine bestimmte Boolean-Information",
+      informativeBadge: "informativer Zustand",
+      dormantRule: "keine informative Erzeugerregel aktiv",
+      pendingRule: "Erzeugerregel bereit",
+      activeRule: "Erzeugerregel aktiv",
+      appliedRule: "Erzeugerregel angewendet",
+      diagramLabel: (inputState, outputState, ruleStatus) =>
+        `Boolean-Eingabe ${inputState} wird auf Ausgabe ${outputState} abgebildet; ${ruleStatus}.`,
+    },
+    experiment: {
+      heading: "Den Quellzustand verfeinern",
+      introduction:
+        "Beginne bei Bottom und decke dann Prämisse, Erzeugerregel und Ausgabe Bild für Bild auf.",
+      inputStateLabel: "Aktuelle Eingabe",
+      outputStateLabel: "Sichtbare Ausgabe",
+      navigationLabel: "Steuerung der Abbildungsspur",
+      guideProgress: (current, total) =>
+        `Geführtes Abbildungsbild ${current} von ${total}`,
+      challengeProgress: (current, total) =>
+        `Aufgabenbild ${current} von ${total}`,
+    },
+    challenge: {
+      eyebrow: "Kurze Aufgabe",
+      heading: "Welche Eingabe macht die Ausgabe true?",
+      introduction:
+        "Wähle einen informativen Quellzustand, untersuche seine Erzeugerregel und beende die Spur. Eingabe und Ausgabe sind getrennte Boolean-Kopien.",
+      choiceLegend: "Eingabebeobachtung wählen",
+      chooseInput: (token) => `${token} als Eingabebeobachtung wählen`,
+      correctBadge: "Korrekte endliche Stütze",
+      incorrectBadge: "Gültiges Ergebnis, aber anderer Zielzweig",
+    },
+    definition: {
+      heading: "Exakte Definition durch endliche Erzeuger",
+      introduction:
+        "Die gespeicherte Beispieldatei ist exakt. Ihre zwei positiven Erzeugerregeln und der Zielabschluss bestimmen jedes hier gezeigte Ergebnis.",
+      sourceStatesHeading: "Quellzustände",
+      targetStatesHeading: "Zielzustände",
+      generatorsHeading: "Festgelegte Erzeugerregeln",
+      orderHeading: "Informationsordnung",
+      orderExplanation:
+        "Zustände sind durch Inklusion geordnet: Ein verträgliches Token hinzuzufügen bedeutet, mehr zu lernen.",
+      incomparabilityHeading: "Die Zweige sind unvergleichbar",
+      incomparabilityExplanation:
+        "True und False liegen nicht übereinander. Beide liegen ausschließlich über Bottom.",
+      continuityHeading: "Warum diese Abbildung stetig ist",
+      continuityExplanation:
+        "Positive endliche Prämissen bleiben bei Verfeinerung erhalten, und der Zielabschluss ist monoton. Auf diesem endlichen Zustandsbereich folgt daraus Scott-Stetigkeit. Die Negation vertauscht unvergleichbare Zweige; sie kehrt ihre Ordnung nicht um.",
+    },
+    explanation: {
+      heading: "Kausale Abbildungsspur",
+      introduction:
+        "Dieselbe strukturierte Kernberechnung steuert Diagramm, Erzählung und vollständige Textspur.",
+      bottomHeading: "Bottom wird auf Bottom abgebildet.",
+      bottomExplanation: (state) =>
+        `Ohne bestimmte Eingabebeobachtung gilt keine informative Erzeugerregel. Der Zielabschluss liefert dennoch ${state}.`,
+      challengeReadyHeading: "Erzeuge nun die Ausgabe true.",
+      challengeReadyExplanation:
+        "Wähle die Quellbeobachtung, deren festgelegte Erzeugerregel True folgert, und untersuche alle drei kausalen Bilder.",
+      premiseHeading: (token) => `Die Eingabe enthält ${token}.`,
+      premiseExplanation: (token, state) =>
+        `${token} ist im Quellzustand ${state} vorhanden. Eine Erzeugerregel mit dieser endlichen Prämisse kann daher aktiv werden.`,
+      ruleHeading: (rule) => `„${rule}“ aktivieren.`,
+      ruleExplanation: (rule, inputState, conclusion) =>
+        `Die endliche Stütze ${inputState} erfüllt „${rule}“ und begründet dadurch ${conclusion} in der Zielkopie.`,
+      outputHeading: (state) => `Der Zielabschluss ergibt ${state}.`,
+      outputExplanation: (token, state) =>
+        `Die begründete Beobachtung ${token} kommt zum Ziel-Δ hinzu und erzeugt den getrennten Ausgabezustand ${state}.`,
+      incorrectHeading: "Diese Eingabe erzeugt den anderen Boolean-Zweig.",
+      incorrectExplanation: (input, output, expectedInput) =>
+        `${input} wird korrekt auf ${output} abgebildet, aber die Aufgabe verlangt die Ausgabe True. Wähle ${expectedInput} als Quellbeobachtung.`,
+      completeHeading:
+        "Du hast die Boolean-Negation aus endlicher Stütze berechnet.",
+      completeExplanation: (inputState, outputState) =>
+        `${inputState} aktiviert eine festgelegte Erzeugerregel; der Zielabschluss erzeugt ${outputState}.`,
+      structuredSummary: "Vollständige Abbildungsherleitung als Text lesen",
+      structuredHeading: "Geordnete semantische Abbildungsherleitung",
+      structuredInput: (state) => `Quellzustand ${state} verwenden.`,
+      structuredDeltaStep: (step, token, state) =>
+        `Schritt ${step}: Der Zielabschluss fügt das ausgezeichnete Token ${token} hinzu; es entsteht ${state}.`,
+      structuredMappingStep: (
+        step,
+        sourceSupport,
+        rule,
+        conclusion,
+        state,
+      ) =>
+        `Schritt ${step}: Die Quellstütze ${sourceSupport} aktiviert „${rule}“; ${conclusion} wird hinzugefügt und erzeugt ${state}.`,
+      structuredEntailmentStep: (step, premises, conclusion, state) =>
+        `Schritt ${step}: Die Zielprämissen ${premises} folgern ${conclusion}; es entsteht ${state}.`,
+      structuredResult: (state) =>
+        `Der Zielabschluss stabilisiert sich bei ${state}.`,
+    },
+    actions: {
+      startGuide: "Eingabe zu true verfeinern",
+      previous: "Vorheriges Bild",
+      next: "Nächstes Bild",
+      skipGuide: "Geführtes Ergebnis zeigen",
+      showResult: "Dieses Abbildungsergebnis zeigen",
+      beginChallenge: "Aufgabe beginnen",
+      finishChallenge: "Aufgabe abschließen",
+      replay: "Bei Bottom erneut beginnen",
+      back: "Zurück zu Zuständen",
+      openSandbox: "Boolean-Sandbox erneut ansehen",
+    },
   },
   rejectedToken: (token) => `Abgelehntes ${token}-Token`,
   rejectedRole: "nicht hinzugefügt",

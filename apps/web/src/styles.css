@@ -74,6 +74,7 @@ button:focus-visible {
 .site-header {
   display: flex;
   width: min(100% - 64px, 1120px);
+  min-width: 0;
   align-items: center;
   justify-content: space-between;
   margin: 0 auto;
@@ -163,27 +164,65 @@ button:focus-visible {
   line-height: 1;
 }
 
-.lesson-marker {
-  display: grid;
-  grid-template-columns: auto auto;
-  align-items: center;
-  color: #48635f;
-  font-size: 0.76rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.trail-map {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 18px;
+  overflow-x: auto;
 }
 
-.lesson-number {
-  padding-right: 11px;
+.trail-map ol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trail-station {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  border: 1px solid rgb(23 60 58 / 13%);
+  border-radius: 999px;
+  color: #48635f;
+  background: rgb(255 253 246 / 58%);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.trail-station:hover {
+  border-color: rgb(23 60 58 / 32%);
+  color: #173c3a;
+}
+
+.trail-station[aria-current="step"] {
+  border-color: #173c3a;
+  color: #fdf8ec;
+  background: #173c3a;
+}
+
+.trail-station .trail-number {
   color: #9a6036;
   font-variant-numeric: tabular-nums;
   font-weight: 750;
 }
 
-.lesson-name {
-  padding-left: 11px;
-  border-left: 1px solid rgb(23 60 58 / 20%);
-  font-weight: 650;
+.trail-station[aria-current="step"] .trail-number {
+  color: #f6c783;
+}
+
+.introduction-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
 .lesson-main {
@@ -2007,7 +2046,18 @@ button:focus-visible {
 
   .site-header {
     align-items: flex-start;
+    flex-wrap: wrap;
     padding-top: 20px;
+  }
+
+  .trail-map {
+    order: 3;
+    flex-basis: 100%;
+    margin: 10px 0 0;
+  }
+
+  .trail-map ol {
+    justify-content: flex-start;
   }
 
   .header-controls {
@@ -2259,9 +2309,8 @@ button:focus-visible {
     flex-direction: column-reverse;
   }
 
-  .lesson-name,
-  .lesson-number {
-    font-size: 0.68rem;
+  .trail-station {
+    font-size: 0.66rem;
   }
 
   .brand {

@@ -37,11 +37,13 @@ export interface LessonMessages {
     readonly history: string;
     readonly purpose: string;
     readonly startAction: string;
+    readonly backToLessonAction: string;
     readonly sourcesLabel: string;
     readonly scottLink: string;
     readonly paperLink: string;
     readonly footerStage: string;
   };
+  readonly trailMapLabel: string;
   readonly exampleIntroduction: {
     readonly pageTitle: string;
     readonly markerLabel: string;
@@ -202,6 +204,7 @@ export interface LessonMessages {
     readonly startChallenge: string;
     readonly retryChallenge: string;
     readonly startOver: string;
+    readonly showOrigins: string;
   };
   readonly footerSystem: string;
   readonly footerStage: string;
@@ -218,6 +221,7 @@ const english: LessonMessages = {
   footerNavigationLabel: "Lesson location",
   openSystem: (system) => `Restart ${system}`,
   currentStageLabel: "Current step",
+  trailMapLabel: "Lesson trail",
   introduction: {
     pageTitle: "ScottLab · Why information systems?",
     markerLabel: "Introduction: Dana Scott",
@@ -231,6 +235,7 @@ const english: LessonMessages = {
     purpose:
       "The new presentation was intended to make domains easier to construct, more visible, and more useful in applications.",
     startAction: "Explore a first example",
+    backToLessonAction: "Back to the lesson",
     sourcesLabel: "Learn from the source",
     scottLink: "Dana Scott at CMU",
     paperLink: "Domains for Denotational Semantics (1982)",
@@ -883,6 +888,7 @@ const english: LessonMessages = {
   tryTokenRole: "try this token",
   actions: {
     lookInside: "Look inside",
+    showOrigins: "Where does this idea come from?",
     addInformation: "Meet the tokens",
     closeState: "Close the state",
     back: "Back",
@@ -908,6 +914,7 @@ const german: LessonMessages = {
   footerNavigationLabel: "Position im Lernpfad",
   openSystem: (system) => `${system} neu starten`,
   currentStageLabel: "Aktueller Schritt",
+  trailMapLabel: "Lektionspfad",
   introduction: {
     pageTitle: "ScottLab · Warum Informationssysteme?",
     markerLabel: "Einführung: Dana Scott",
@@ -921,6 +928,7 @@ const german: LessonMessages = {
     purpose:
       "Die neue Darstellung sollte Domänen leichter konstruierbar, sichtbarer und für Anwendungen besser nutzbar machen.",
     startAction: "Ein erstes Beispiel ansehen",
+    backToLessonAction: "Zurück zur Lektion",
     sourcesLabel: "Mehr aus den Quellen",
     scottLink: "Dana Scott an der CMU",
     paperLink: "Domains for Denotational Semantics (1982)",
@@ -1581,6 +1589,7 @@ const german: LessonMessages = {
   tryTokenRole: "dieses Token testen",
   actions: {
     lookInside: "Hineinschauen",
+    showOrigins: "Woher stammt diese Idee?",
     addInformation: "Die Token kennenlernen",
     closeState: "Zustand schließen",
     back: "Zurück",

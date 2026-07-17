@@ -47,6 +47,11 @@ import {
   initialEntailmentLessonProgress,
   type EntailmentLessonProgress,
 } from "./EntailmentLesson";
+import {
+  loadPersistedProgress,
+  savePersistedProgress,
+  type PersistedLessonPosition,
+} from "./persistence";
 import { SandboxPreview } from "./SandboxPreview";
 import {
   initialStateLessonProgress,
@@ -144,6 +149,185 @@ interface TokenCardProps {
   readonly text: TokenText;
   readonly roleLabel: string;
   readonly informative?: boolean;
+}
+
+function projectLessonState(state: LessonState): PersistedLessonPosition {
+  switch (state.step) {
+    case "intro":
+    case "example":
+    case "bottom":
+    case "inside":
+    case "choose":
+      return { step: state.step };
+    case "informed":
+      return { step: state.step, selectedTokenId: state.selectedTokenId };
+    case "conflict":
+      return {
+        step: state.step,
+        selectedTokenId: state.selectedTokenId,
+        attemptedTokenId: state.attemptedTokenId,
+      };
+    case "order":
+    case "formal":
+      return {
+        step: state.step,
+        selectedTokenId: state.selectedTokenId,
+        attemptedTokenId: state.attemptedTokenId,
+        inspectedState: state.inspectedState,
+        completedChallengeTokenId: state.completedChallengeTokenId,
+        ...(state.step === "formal"
+          ? { formalisationPage: state.formalisationPage }
+          : {}),
+      };
+    case "challenge":
+    case "challengeAttempt":
+      return {
+        step: state.step,
+        selectedTokenId: state.selectedTokenId,
+        attemptedTokenId: state.attemptedTokenId,
+        targetTokenId: state.targetTokenId,
+        ...(state.step === "challengeAttempt"
+          ? { challengeTokenId: state.challengeTokenId }
+          : {}),
+      };
+  }
+}
+
+interface ReconstructedRejection {
+  readonly closure: ClosureComputation;
+  readonly rejection: RejectedObservation;
+}
+
+function reconstructRejection(
+  selectedTokenId: TokenId,
+  attemptedTokenId: TokenId,
+): ReconstructedRejection | undefined {
+  const closure = computeClosure(flatBooleanSystem, [selectedTokenId]);
+  const rejection = tryAddObservation(
+    flatBooleanSystem,
+    closure.state,
+    attemptedTokenId,
+  );
+  return rejection.ok ? undefined : { closure, rejection };
+}
+
+function isEnumeratedState(candidate: readonly TokenId[]): boolean {
+  const key = stateKey(candidate);
+  return enumeratedStates.some((state) => stateKey(state) === key);
+}
+
+/**
+ * Rebuild the introductory lesson state from a persisted position.
+ *
+ * Every derived mathematical object is recomputed through the core; a
+ * position that cannot be reconstructed falls back to the hands-on start.
+ */
+function reconstructLessonState(
+  position: PersistedLessonPosition | undefined,
+): LessonState {
+  const fallback: LessonState = { step: "bottom" };
+  if (position === undefined) {
+    return fallback;
+  }
+
+  switch (position.step) {
+    case "intro":
+    case "example":
+    case "bottom":
+    case "inside":
+    case "choose":
+      return { step: position.step };
+    case "informed": {
+      if (position.selectedTokenId === undefined) {
+        return fallback;
+      }
+      return {
+        step: "informed",
+        selectedTokenId: position.selectedTokenId,
+        closure: computeClosure(flatBooleanSystem, [position.selectedTokenId]),
+      };
+    }
+    case "conflict":
+    case "order":
+    case "formal":
+    case "challenge":
+    case "challengeAttempt": {
+      if (
+        position.selectedTokenId === undefined ||
+        position.attemptedTokenId === undefined
+      ) {
+        return fallback;
+      }
+      const rejected = reconstructRejection(
+        position.selectedTokenId,
+        position.attemptedTokenId,
+      );
+      if (rejected === undefined) {
+        return fallback;
+      }
+      const base = {
+        selectedTokenId: position.selectedTokenId,
+        attemptedTokenId: position.attemptedTokenId,
+        closure: rejected.closure,
+        rejection: rejected.rejection,
+      };
+
+      if (position.step === "conflict") {
+        return { step: "conflict", ...base };
+      }
+      if (position.step === "order" || position.step === "formal") {
+        if (
+          position.completedChallengeTokenId === undefined ||
+          position.inspectedState === undefined ||
+          !isEnumeratedState(position.inspectedState)
+        ) {
+          return fallback;
+        }
+        const completed = {
+          ...base,
+          inspectedState: position.inspectedState,
+          completedChallengeTokenId: position.completedChallengeTokenId,
+        };
+        if (position.step === "order") {
+          return { step: "order", ...completed };
+        }
+        const formalisationPage = position.formalisationPage;
+        if (
+          formalisationPage !== "distinction" &&
+          formalisationPage !== "ingredients" &&
+          formalisationPage !== "closure" &&
+          formalisationPage !== "states"
+        ) {
+          return fallback;
+        }
+        return { step: "formal", formalisationPage, ...completed };
+      }
+      if (position.targetTokenId === undefined) {
+        return fallback;
+      }
+      if (position.step === "challenge") {
+        return {
+          step: "challenge",
+          ...base,
+          targetTokenId: position.targetTokenId,
+        };
+      }
+      if (position.challengeTokenId === undefined) {
+        return fallback;
+      }
+      return {
+        step: "challengeAttempt",
+        ...base,
+        targetTokenId: position.targetTokenId,
+        challengeTokenId: position.challengeTokenId,
+        challengeClosure: computeClosure(flatBooleanSystem, [
+          position.challengeTokenId,
+        ]),
+      };
+    }
+    default:
+      return fallback;
+  }
 }
 
 function initialLanguage(): Language {
@@ -781,24 +965,31 @@ export function App() {
   const [route, setRoute] = useState<AppRoute>(() =>
     parseHashRoute(window.location.hash),
   );
-  const [lessonState, setLessonState] = useState<LessonState>({
-    step: "intro",
-  });
+  const [storedProgress] = useState(loadPersistedProgress);
+  const [lessonState, setLessonState] = useState<LessonState>(() =>
+    reconstructLessonState(storedProgress?.lesson),
+  );
   const [entailmentProgress, setEntailmentProgress] =
-    useState<EntailmentLessonProgress>(initialEntailmentLessonProgress);
+    useState<EntailmentLessonProgress>(
+      storedProgress?.entailment ?? initialEntailmentLessonProgress,
+    );
   const [stateLessonProgress, setStateLessonProgress] =
-    useState<StateLessonProgress>(initialStateLessonProgress);
+    useState<StateLessonProgress>(
+      storedProgress?.states ?? initialStateLessonProgress,
+    );
   const [continuousMapProgress, setContinuousMapProgress] =
     useState<ContinuousMapLessonProgress>(
-      initialContinuousMapLessonProgress,
+      storedProgress?.maps ?? initialContinuousMapLessonProgress,
     );
   const [statesUnlocked, setStatesUnlocked] = useState(
-    () => parseHashRoute(window.location.hash).kind === "states",
+    () =>
+      (storedProgress?.statesUnlocked ?? false) ||
+      parseHashRoute(window.location.hash).kind === "states",
   );
   const insideActionRef = useRef<HTMLButtonElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
   const introductionHeadingRef = useRef<HTMLHeadingElement>(null);
-  const shouldFocusIntroductionRef = useRef(false);
+  const hasRenderedLessonStepRef = useRef(false);
   const exampleHeadingRef = useRef<HTMLHeadingElement>(null);
   const formalHeadingRef = useRef<HTMLHeadingElement>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -1007,12 +1198,31 @@ export function App() {
   }, [isStates]);
 
   useEffect(() => {
-    if (
-      lessonState.step === "intro" &&
-      shouldFocusIntroductionRef.current
-    ) {
+    savePersistedProgress({
+      version: 1,
+      lesson: projectLessonState(lessonState),
+      entailment: entailmentProgress,
+      states: stateLessonProgress,
+      maps: continuousMapProgress,
+      statesUnlocked,
+    });
+  }, [
+    continuousMapProgress,
+    entailmentProgress,
+    lessonState,
+    stateLessonProgress,
+    statesUnlocked,
+  ]);
+
+  useEffect(() => {
+    // Never steal focus while the page is loading; only user-driven step
+    // changes move it afterwards.
+    if (!hasRenderedLessonStepRef.current) {
+      hasRenderedLessonStepRef.current = true;
+      return;
+    }
+    if (lessonState.step === "intro") {
       introductionHeadingRef.current?.focus();
-      shouldFocusIntroductionRef.current = false;
     }
     if (lessonState.step === "example") {
       exampleHeadingRef.current?.focus();
@@ -1073,14 +1283,29 @@ export function App() {
     navigateTo(flatBooleanSandboxRoute);
   }
 
+  function openIntroductoryLesson(): void {
+    if (formalState !== undefined) {
+      // Formalisation is its own station: step back to the completed order.
+      setLessonState({ ...formalState, step: "order" });
+    } else if (isIntroduction || isExampleIntroduction) {
+      setLessonState({ step: "bottom" });
+    }
+    navigateTo(lessonRoute);
+  }
+
+  function openFormalisation(): void {
+    if (!isFormalisation) {
+      setLessonState(createDirectFormalLessonState());
+    }
+    navigateTo(lessonRoute);
+  }
+
   function returnFromSandbox(): void {
     navigateTo(routeBeforeSandboxRef.current);
   }
 
   function returnHome(): void {
-    shouldFocusIntroductionRef.current =
-      lessonState.step !== "intro" || route.kind !== "lesson";
-    setLessonState({ step: "intro" });
+    setLessonState({ step: "bottom" });
     setEntailmentProgress(initialEntailmentLessonProgress);
     setStateLessonProgress(initialStateLessonProgress);
     setContinuousMapProgress(initialContinuousMapLessonProgress);
@@ -1096,7 +1321,7 @@ export function App() {
     if (isSandbox) {
       // The sandbox previews the flat-Boolean system: restart that lesson
       // without discarding the progress of the other focused lessons.
-      setLessonState({ step: "example" });
+      setLessonState({ step: "bottom" });
       navigateTo(lessonRoute);
       return;
     }
@@ -1116,7 +1341,7 @@ export function App() {
       return;
     }
 
-    setLessonState({ step: "example" });
+    setLessonState({ step: "bottom" });
     setEntailmentProgress(initialEntailmentLessonProgress);
     setStateLessonProgress(initialStateLessonProgress);
     setContinuousMapProgress(initialContinuousMapLessonProgress);
@@ -1482,6 +1707,76 @@ export function App() {
           <span>ScottLab</span>
         </button>
 
+        <nav className="trail-map" aria-label={copy.trailMapLabel}>
+          <ol>
+            {[
+              {
+                id: "lesson",
+                number: "01",
+                name: copy.lessonName,
+                label: copy.lessonMarkerLabel,
+                isCurrent: route.kind === "lesson" && !isFormalisation,
+                onSelect: openIntroductoryLesson,
+              },
+              {
+                id: "formal",
+                number: "02",
+                name: copy.formalisation.markerName,
+                label: copy.formalisation.markerLabel,
+                isCurrent: route.kind === "lesson" && isFormalisation,
+                onSelect: openFormalisation,
+              },
+              {
+                id: "entailment",
+                number: "03",
+                name: copy.entailment.markerName,
+                label: copy.entailment.markerLabel,
+                isCurrent: isEntailment,
+                onSelect: openEntailmentLesson,
+              },
+              {
+                id: "states",
+                number: "04",
+                name: copy.stateLesson.markerName,
+                label: copy.stateLesson.markerLabel,
+                isCurrent: isStates,
+                onSelect: openStatesLesson,
+              },
+              {
+                id: "maps",
+                number: "05",
+                name: copy.continuousMapLesson.markerName,
+                label: copy.continuousMapLesson.markerLabel,
+                isCurrent: isMaps,
+                onSelect: openMapsLesson,
+              },
+              {
+                id: "sandbox",
+                number: "S",
+                name: copy.sandboxPreview.markerName,
+                label: copy.sandboxPreview.markerLabel,
+                isCurrent: isSandbox,
+                onSelect: openSandbox,
+              },
+            ].map((station) => (
+              <li key={station.id}>
+                <button
+                  className="trail-station"
+                  type="button"
+                  aria-label={station.label}
+                  aria-current={station.isCurrent ? "step" : undefined}
+                  onClick={station.onSelect}
+                >
+                  <span className="trail-number" aria-hidden="true">
+                    {station.number}
+                  </span>
+                  <span className="trail-name">{station.name}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </nav>
+
         <div className="header-controls">
           <fieldset className="language-switcher">
             <legend className="visually-hidden">
@@ -1504,59 +1799,6 @@ export function App() {
             ))}
           </fieldset>
 
-          <div
-            className="lesson-marker"
-            aria-label={
-              isSandbox
-                ? copy.sandboxPreview.markerLabel
-                : isMaps
-                  ? copy.continuousMapLesson.markerLabel
-                  : isStates
-                    ? copy.stateLesson.markerLabel
-                    : isEntailment
-                      ? copy.entailment.markerLabel
-                      : isFormalisation
-                        ? copy.formalisation.markerLabel
-                        : isIntroduction
-                          ? copy.introduction.markerLabel
-                          : isExampleIntroduction
-                            ? copy.exampleIntroduction.markerLabel
-                            : copy.lessonMarkerLabel
-            }
-          >
-            <span className="lesson-number">
-              {isSandbox
-                ? "S"
-                : isMaps
-                  ? "05"
-                  : isStates
-                    ? "04"
-                    : isEntailment
-                      ? "03"
-                      : isFormalisation
-                        ? "02"
-                        : isIntroduction || isExampleIntroduction
-                          ? "00"
-                          : "01"}
-            </span>
-            <span className="lesson-name">
-              {isSandbox
-                ? copy.sandboxPreview.markerName
-                : isMaps
-                  ? copy.continuousMapLesson.markerName
-                  : isStates
-                    ? copy.stateLesson.markerName
-                    : isEntailment
-                      ? copy.entailment.markerName
-                      : isFormalisation
-                        ? copy.formalisation.markerName
-                        : isIntroduction
-                          ? copy.introduction.markerName
-                          : isExampleIntroduction
-                            ? copy.exampleIntroduction.markerName
-                            : copy.lessonName}
-            </span>
-          </div>
         </div>
       </header>
 
@@ -1627,16 +1869,25 @@ export function App() {
                 {copy.introduction.purpose}
               </p>
 
-              <button
-                className="primary-action introduction-action"
-                type="button"
-                onClick={() => setLessonState({ step: "example" })}
-              >
-                <span>{copy.introduction.startAction}</span>
-                <span className="button-arrow" aria-hidden="true">
-                  ↗
-                </span>
-              </button>
+              <div className="introduction-actions">
+                <button
+                  className="primary-action introduction-action"
+                  type="button"
+                  onClick={() => setLessonState({ step: "example" })}
+                >
+                  <span>{copy.introduction.startAction}</span>
+                  <span className="button-arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </button>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={() => setLessonState({ step: "bottom" })}
+                >
+                  {copy.introduction.backToLessonAction}
+                </button>
+              </div>
 
               <nav
                 className="introduction-sources"
@@ -1961,18 +2212,27 @@ export function App() {
 
           <div className="lesson-actions">
             {lessonState.step === "bottom" ? (
-              <button
-                className="primary-action"
-                type="button"
-                aria-controls="current-state"
-                aria-expanded="false"
-                onClick={() => setLessonState({ step: "inside" })}
-              >
-                <span>{copy.actions.lookInside}</span>
-                <span className="button-arrow" aria-hidden="true">
-                  ↗
-                </span>
-              </button>
+              <>
+                <button
+                  className="primary-action"
+                  type="button"
+                  aria-controls="current-state"
+                  aria-expanded="false"
+                  onClick={() => setLessonState({ step: "inside" })}
+                >
+                  <span>{copy.actions.lookInside}</span>
+                  <span className="button-arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </button>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={() => setLessonState({ step: "intro" })}
+                >
+                  {copy.actions.showOrigins}
+                </button>
+              </>
             ) : null}
 
             {lessonState.step === "inside" ? (

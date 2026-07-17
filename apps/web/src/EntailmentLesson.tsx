@@ -184,6 +184,9 @@ if (traceFrames.length === 0 || finalDeclaredStep === undefined) {
 
 const challengeTargetId = finalDeclaredStep.conclusion;
 
+/** The number of manual trace frames, for progress validation. */
+export const entailmentTraceFrameCount = traceFrames.length;
+
 function requireRuleId(step: ClosureStep): string {
   if (step.reason.kind !== "declaredRule") {
     throw new Error("The entailment lesson can display only declared rules.");

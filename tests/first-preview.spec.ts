@@ -8,8 +8,8 @@ import {
 const directRoutes = [
   {
     hash: "#/lesson",
-    heading: "Why Dana Scott introduced information systems",
-    title: "ScottLab · Why information systems?",
+    heading: "We do not know the Boolean value yet.",
+    title: "ScottLab · Begin at bottom",
   },
   {
     hash: "#/lesson/entailment",
@@ -69,7 +69,7 @@ test.describe("shareable hash routes", () => {
 
     expect(response?.ok()).toBe(true);
     await expect(page).toHaveURL(/\/scottlab\/#\/lesson$/);
-    await expect(page).toHaveTitle("ScottLab · Why information systems?");
+    await expect(page).toHaveTitle("ScottLab · Begin at bottom");
 
     const loadedAssets = await page
       .locator('script[src], link[rel="stylesheet"][href]')
@@ -111,10 +111,30 @@ test.describe("shareable hash routes", () => {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "Why Dana Scott introduced information systems",
+        name: "We do not know the Boolean value yet.",
       }),
     ).toBeVisible();
   });
+});
+
+test("restores lesson progress after a reload", async ({ page }) => {
+  await page.goto("#/lesson");
+  for (const action of ["Look inside", "Meet the tokens", "Add true token"]) {
+    await page.getByRole("button", { name: action, exact: true }).click();
+  }
+  await expect(
+    page.getByRole("heading", {
+      name: "Now the Boolean value is known as true.",
+    }),
+  ).toBeVisible();
+
+  await page.reload();
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Now the Boolean value is known as true.",
+    }),
+  ).toBeVisible();
 });
 
 test("completes the essential Boolean path using only the keyboard", async ({
@@ -124,8 +144,6 @@ test("completes the essential Boolean path using only the keyboard", async ({
   await page.goto("#/lesson");
   const tabKey = browserName === "webkit" ? "Alt+Tab" : "Tab";
 
-  await pressButton(page, "Explore a first example", tabKey);
-  await pressButton(page, "Begin the Boolean model at ⊥", tabKey);
   await pressButton(page, "Look inside", tabKey);
   await pressButton(page, "Meet the tokens", tabKey);
   await pressButton(page, "Add true token", tabKey);

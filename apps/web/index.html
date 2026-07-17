@@ -5,14 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Explore partial information through Scott information systems."
+      content="ScottLab is an interactive playground for Scott information systems: learn partial information, consistency, entailment closure, states, the information order, and continuous maps by direct manipulation."
     />
     <meta name="theme-color" content="#f3efe4" />
+    <meta
+      property="og:title"
+      content="ScottLab — an interactive Scott information systems playground"
+    />
+    <meta
+      property="og:description"
+      content="Learn domain theory by hand: reveal partial information from ⊥, watch entailment closure run, explore the information order, and apply continuous maps. Free, browser-based, keyboard-accessible."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://kmehltretter82.github.io/scottlab/"
+    />
+    <meta name="twitter:card" content="summary" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <title>ScottLab · Begin at bottom</title>
+    <link
+      rel="canonical"
+      href="https://kmehltretter82.github.io/scottlab/"
+    />
+    <title>ScottLab — an interactive Scott information systems playground</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Static shell for readers and crawlers without JavaScript.
+        React replaces this content when the application mounts.
+      -->
+      <main>
+        <h1>ScottLab — an interactive Scott information systems playground</h1>
+        <p>
+          ScottLab teaches Scott information systems — the constructive
+          presentation of domain theory from Dana S. Scott's
+          <a href="https://doi.org/10.1007/BFb0012801"
+            >“Domains for Denotational Semantics” (1982)</a
+          >
+          — through short, hands-on browser lessons. It answers questions
+          such as: what does a program mean before it finishes? How can a
+          computation work with an answer it only partly knows? Why does
+          <code>take 3</code> work on an infinite list?
+        </p>
+        <h2>The guided lessons</h2>
+        <ol>
+          <li>
+            <strong>Bottom.</strong> Meet ⊥, the state with no specific
+            information yet — and learn why it is not an error, a
+            contradiction, or Boolean false.
+          </li>
+          <li>
+            <strong>Tokens.</strong> Look inside ⊥ and meet finite
+            observations: a token is one piece of information, a state is a
+            consistent collection of them.
+          </li>
+          <li>
+            <strong>Consistency.</strong> Try to combine incompatible
+            observations and inspect the concrete conflict witness.
+          </li>
+          <li>
+            <strong>The information order.</strong> Move through the states
+            of a flat Boolean, ordered by how much they know.
+          </li>
+          <li>
+            <strong>Formalisation.</strong> Meet the explicit distinguished
+            token Δ and the tuple A = (T, Δ, Con, ⊢), and derive
+            closure(∅) = {Δ} = ⊥.
+          </li>
+          <li>
+            <strong>Entailment.</strong> Watch rule-driven entailment
+            closure run step by step with an inspectable derivation trace.
+          </li>
+          <li>
+            <strong>States.</strong> Learn what separates an arbitrary
+            selection of tokens from a consistent, entailment-closed state.
+          </li>
+          <li>
+            <strong>Continuous maps.</strong> Apply a finite-generator
+            approximable mapping and see why it is monotone and Scott
+            continuous.
+          </li>
+        </ol>
+        <p>
+          A read-only sandbox lets you explore the same systems freely, with
+          a synchronized state diagram, token tray, definition, and closure
+          explanation. Everything works with mouse, touch, or keyboard,
+          respects reduced motion, and is available in English and German.
+        </p>
+        <p>
+          ScottLab is free and open source under the Apache-2.0 license:
+          <a href="https://github.com/kmehltretter82/scottlab"
+            >source repository</a
+          >. This page is an interactive application — enable JavaScript to
+          start the lessons.
+        </p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -42,6 +42,18 @@ where:
 - `Con` is a collection of finite consistent subsets of `T`; and
 - `⊢` relates a consistent finite token set to a token.
 
+> [!NOTE]
+> **Bridge to the Δ-free literature.** ScottLab follows Scott's original
+> 1982 presentation, which includes the distinguished token `Δ`. Most
+> later treatments — Larsen and Winskel (1984), Winskel's *The Formal
+> Semantics of Programming Languages* (1993, chapter 12), and the Munich
+> school's coherent information systems — drop `Δ` and present an
+> information system as the triple `(T, Con, ⊢)`. The two presentations
+> generate isomorphic domains (Larsen–Winskel, UCAM-CL-TR-51, remark
+> after Definition 1.1); in the Δ-free form the least state is
+> `{a | ∅ ⊢ a}` instead of `closure({Δ})`. When reading modern texts,
+> expect the triple; everything ScottLab teaches carries over unchanged.
+
 Write `X ⊢ Y` when `X ⊢ b` for every token `b ∈ Y`.
 
 For all finite token sets `X` and `Y`, and every token `a`, the following laws

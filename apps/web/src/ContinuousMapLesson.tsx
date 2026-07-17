@@ -187,6 +187,9 @@ const narrativeFrames: readonly NarrativeFrameKind[] = [
   "mappingRule",
   "output",
 ];
+
+/** The number of narrative frames, for progress validation. */
+export const continuousMapFrameCount = narrativeFrames.length;
 const guideInput: ContinuousMapLessonInput = "true";
 const challengeInput: ContinuousMapLessonInput = "false";
 const informativeInputs: readonly ContinuousMapLessonInput[] = [

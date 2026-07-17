@@ -4,14 +4,11 @@ import { describe, expect, it } from "vitest";
 
 import { App } from "./App";
 
-async function beginLesson(
+async function openOrigins(
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> {
   await user.click(
-    screen.getByRole("button", { name: "Explore a first example" }),
-  );
-  await user.click(
-    screen.getByRole("button", { name: "Begin the Boolean model at ⊥" }),
+    screen.getByRole("button", { name: "Where does this idea come from?" }),
   );
 }
 
@@ -19,7 +16,6 @@ async function reachConflict(
   user: ReturnType<typeof userEvent.setup>,
   firstToken = "true",
 ): Promise<void> {
-  await beginLesson(user);
   await user.click(screen.getByRole("button", { name: "Look inside" }));
   await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
   await user.click(
@@ -120,8 +116,10 @@ async function reachMapsLesson(
 }
 
 describe("ScottLab introduction and bottom-first lesson", () => {
-  it("introduces Dana Scott and the purpose of information systems", () => {
+  it("introduces Dana Scott and the purpose of information systems", async () => {
+    const user = userEvent.setup();
     render(<App />);
+    await openOrigins(user);
 
     expect(
       screen.getByRole("heading", {
@@ -143,7 +141,38 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByRole("button", { name: "Explore a first example" }),
     ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Back to the lesson" }),
+    ).toBeVisible();
     expect(screen.queryByRole("figure")).not.toBeInTheDocument();
+  });
+
+  it("lands hands-on at bottom with the origins one step away", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "We do not know the Boolean value yet.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Look inside" })).toBeVisible();
+
+    await openOrigins(user);
+    expect(
+      screen.getByRole("heading", {
+        name: "Why Dana Scott introduced information systems",
+      }),
+    ).toHaveFocus();
+
+    await user.click(
+      screen.getByRole("button", { name: "Back to the lesson" }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "We do not know the Boolean value yet.",
+      }),
+    ).toHaveFocus();
   });
 
   it("uses the brand and footer as explicit lesson navigation", async () => {
@@ -158,33 +187,38 @@ describe("ScottLab introduction and bottom-first lesson", () => {
         name: "Restart Flat Booleans",
       }),
     ).toBeVisible();
-    expect(lessonLocation).toHaveTextContent("Current step: Introduction");
-
-    await user.click(
-      screen.getByRole("button", { name: "Explore a first example" }),
+    expect(lessonLocation).toHaveTextContent(
+      "Current step: First observation",
     );
+
+    await openOrigins(user);
+    expect(lessonLocation).toHaveTextContent("Current step: Introduction");
     await user.click(
       screen.getByRole("button", { name: "Return to the ScottLab start" }),
     );
     expect(
       screen.getByRole("heading", {
-        name: "Why Dana Scott introduced information systems",
+        name: "We do not know the Boolean value yet.",
       }),
     ).toHaveFocus();
 
+    await openOrigins(user);
     await user.click(
       within(lessonLocation).getByRole("button", {
         name: "Restart Flat Booleans",
       }),
     );
     expect(
-      screen.getByRole("heading", { name: "Let’s make the idea concrete." }),
+      screen.getByRole("heading", {
+        name: "We do not know the Boolean value yet.",
+      }),
     ).toHaveFocus();
   });
 
   it("bridges from Scott's general idea to a Boolean example", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await openOrigins(user);
 
     await user.click(
       screen.getByRole("button", { name: "Explore a first example" }),
@@ -210,11 +244,8 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(screen.queryByRole("figure")).not.toBeInTheDocument();
   });
 
-  it("begins the lesson with bottom before introducing tokens", async () => {
-    const user = userEvent.setup();
+  it("begins the lesson with bottom before introducing tokens", () => {
     render(<App />);
-    await beginLesson(user);
-
     expect(
       screen.getByRole("heading", {
         name: "We do not know the Boolean value yet.",
@@ -248,8 +279,6 @@ describe("ScottLab introduction and bottom-first lesson", () => {
   it("opens bottom as an empty collection of observations", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await beginLesson(user);
-
     await user.click(screen.getByRole("button", { name: "Look inside" }));
 
     expect(
@@ -283,8 +312,6 @@ describe("ScottLab introduction and bottom-first lesson", () => {
   it("reveals the model rule and its derived states progressively", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await beginLesson(user);
-
     await user.click(screen.getByRole("button", { name: "Look inside" }));
     await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
     await user.click(screen.getByRole("button", { name: "Add true token" }));
@@ -592,7 +619,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(window.location.hash).toBe("#/lesson");
     expect(
       screen.getByRole("heading", {
-        name: "Why Dana Scott introduced information systems",
+        name: "We do not know the Boolean value yet.",
       }),
     ).toBeVisible();
   });
@@ -606,9 +633,74 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(window.location.hash).toBe("#/lesson");
     expect(
       screen.getByRole("heading", {
-        name: "Why Dana Scott introduced information systems",
+        name: "We do not know the Boolean value yet.",
       }),
     ).toBeVisible();
+  });
+
+  it("restores lesson progress after a reload", async () => {
+    const user = userEvent.setup();
+    const rendered = render(<App />);
+    await reachInformationOrder(user);
+    expect(
+      screen.getByRole("heading", { name: "Good — that was correct." }),
+    ).toBeVisible();
+
+    rendered.unmount();
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", { name: "Good — that was correct." }),
+    ).toBeVisible();
+    const order = screen.getByRole("region", {
+      name: "Information order of the three Boolean states",
+    });
+    expect(
+      within(order).getByRole("button", {
+        name: "Inspect state {false}: the Boolean answer is false",
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("ignores malformed stored progress and starts at bottom", () => {
+    window.localStorage.setItem(
+      "scottlab.progress.v1",
+      '{"version":1,"lesson":{"step":"nonsense"}}',
+    );
+    render(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "We do not know the Boolean value yet.",
+      }),
+    ).toBeVisible();
+  });
+
+  it("navigates between stations through the lesson trail", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    const trail = screen.getByRole("navigation", { name: "Lesson trail" });
+    expect(
+      within(trail).getByRole("button", { name: "Lesson 1: Bottom" }),
+    ).toHaveAttribute("aria-current", "step");
+
+    await user.click(
+      within(trail).getByRole("button", { name: "Lesson 4: States" }),
+    );
+    expect(window.location.hash).toBe("#/lesson/states");
+    expect(
+      within(trail).getByRole("button", { name: "Lesson 4: States" }),
+    ).toHaveAttribute("aria-current", "step");
+
+    await user.click(
+      within(trail).getByRole("button", { name: "Lesson 2: Formalisation" }),
+    );
+    expect(window.location.hash).toBe("#/lesson");
+    expect(document.title).toBe("ScottLab · The formal Boolean system");
+    expect(
+      within(trail).getByRole("button", { name: "Lesson 2: Formalisation" }),
+    ).toHaveAttribute("aria-current", "step");
   });
 
   it("translates the complete sandbox without losing its selection", async () => {
@@ -1434,8 +1526,6 @@ describe("ScottLab introduction and bottom-first lesson", () => {
   it("explains the Boolean tokens before asking for a choice", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await beginLesson(user);
-
     await user.click(screen.getByRole("button", { name: "Look inside" }));
     await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
 
@@ -1470,8 +1560,25 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     await user.click(screen.getByRole("button", { name: "Choose Deutsch" }));
 
     expect(document.documentElement).toHaveAttribute("lang", "de-DE");
-    expect(document.title).toBe("ScottLab · Warum Informationssysteme?");
+    expect(document.title).toBe("ScottLab · Beim Bottom beginnen");
     expect(window.localStorage.getItem("scottlab-language")).toBe("de-DE");
+    expect(
+      screen.getByRole("heading", {
+        name: "Wir kennen den booleschen Wert noch nicht.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByText(/Das Symbol ⊥ spricht man hier „Bottom“ aus/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("complementary", { name: "Entworfenes Modell" }),
+    ).toHaveTextContent("einen gewöhnlichen booleschen Wert");
+
+    await user.click(
+      screen.getByRole("button", { name: "Woher stammt diese Idee?" }),
+    );
+
+    expect(document.title).toBe("ScottLab · Warum Informationssysteme?");
     expect(
       screen.getByRole("heading", {
         name: "Warum Dana Scott Informationssysteme einführte",
@@ -1497,17 +1604,6 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     );
 
     expect(document.title).toBe("ScottLab · Beim Bottom beginnen");
-    expect(
-      screen.getByRole("heading", {
-        name: "Wir kennen den booleschen Wert noch nicht.",
-      }),
-    ).toBeVisible();
-    expect(
-      screen.getByText(/Das Symbol ⊥ spricht man hier „Bottom“ aus/),
-    ).toBeVisible();
-    expect(
-      screen.getByRole("complementary", { name: "Entworfenes Modell" }),
-    ).toHaveTextContent("einen gewöhnlichen booleschen Wert");
 
     await user.click(screen.getByRole("button", { name: "Hineinschauen" }));
     expect(
@@ -1530,9 +1626,10 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByRole("button", { name: "Deutsch wählen" }),
     ).toHaveAttribute("aria-pressed", "true");
+    // The persisted progress restores the reopened state as well.
     expect(
       screen.getByRole("heading", {
-        name: "Warum Dana Scott Informationssysteme einführte",
+        name: "Dieser Zustand enthält keine Beobachtungen.",
       }),
     ).toBeVisible();
   });
@@ -1545,30 +1642,25 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByRole("button", { name: "Return to the ScottLab start" }),
     ).toHaveFocus();
+
+    await user.tab();
+    expect(
+      screen.getByRole("button", { name: "Lesson 1: Bottom" }),
+    ).toHaveFocus();
+    for (let station = 1; station < 6; station += 1) {
+      await user.tab();
+    }
+    expect(
+      screen.getByRole("button", {
+        name: "Sandbox preview: Flat Booleans",
+      }),
+    ).toHaveFocus();
+
     await user.tab();
     expect(screen.getByRole("button", { name: "Choose English" })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "Choose Deutsch" })).toHaveFocus();
-    await user.tab();
-    expect(
-      screen.getByRole("button", { name: "Explore a first example" }),
-    ).toHaveFocus();
-    await user.keyboard("{Enter}");
 
-    expect(
-      screen.getByRole("heading", { name: "Let’s make the idea concrete." }),
-    ).toHaveFocus();
-    await user.tab();
-    expect(
-      screen.getByRole("button", { name: "Begin the Boolean model at ⊥" }),
-    ).toHaveFocus();
-    await user.keyboard("{Enter}");
-
-    expect(
-      screen.getByRole("heading", {
-        name: "We do not know the Boolean value yet.",
-      }),
-    ).toHaveFocus();
     await user.tab();
     expect(screen.getByRole("button", { name: "Look inside" })).toHaveFocus();
     await user.keyboard("{Enter}");
@@ -1614,9 +1706,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     async (tokenLabel) => {
       const user = userEvent.setup();
       render(<App />);
-      await beginLesson(user);
-
-      await user.click(screen.getByRole("button", { name: "Look inside" }));
+        await user.click(screen.getByRole("button", { name: "Look inside" }));
       await user.click(screen.getByRole("button", { name: "Meet the tokens" }));
       await user.click(
         screen.getByRole("button", { name: `Add ${tokenLabel} token` }),

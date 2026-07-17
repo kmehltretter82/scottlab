@@ -33,8 +33,6 @@ async function expectPageFitsViewport(page: Page): Promise<void> {
 async function reachFormalisation(page: Page): Promise<void> {
   await page.goto("#/lesson");
   for (const action of [
-    "Explore a first example",
-    "Begin the Boolean model at ⊥",
     "Look inside",
     "Meet the tokens",
     "Add true token",

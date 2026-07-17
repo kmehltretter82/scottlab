@@ -30,6 +30,7 @@ import {
   entailmentLessonRoute,
   fixedPointsLessonRoute,
   flatBooleanSandboxRoute,
+  gamesLessonRoute,
   formatHashRoute,
   lessonRoute,
   mapsLessonRoute,
@@ -53,6 +54,11 @@ import {
   initialFixedPointLessonProgress,
   type FixedPointLessonProgress,
 } from "./FixedPointLesson";
+import {
+  GameLesson,
+  initialGameLessonProgress,
+  type GameLessonProgress,
+} from "./GameLesson";
 import {
   loadPersistedProgress,
   savePersistedProgress,
@@ -991,6 +997,9 @@ export function App() {
     useState<FixedPointLessonProgress>(
       storedProgress?.fixedPoints ?? initialFixedPointLessonProgress,
     );
+  const [gameProgress, setGameProgress] = useState<GameLessonProgress>(
+    storedProgress?.games ?? initialGameLessonProgress,
+  );
   const [statesUnlocked, setStatesUnlocked] = useState(
     () =>
       (storedProgress?.statesUnlocked ?? false) ||
@@ -1008,6 +1017,7 @@ export function App() {
   const statesHeadingRef = useRef<HTMLHeadingElement>(null);
   const continuousMapHeadingRef = useRef<HTMLHeadingElement>(null);
   const fixedPointHeadingRef = useRef<HTMLHeadingElement>(null);
+  const gameHeadingRef = useRef<HTMLHeadingElement>(null);
   const routeBeforeSandboxRef = useRef<AppRoute>(lessonRoute);
   const copy = messages[language];
   const isSandbox = route.kind === "sandbox";
@@ -1015,6 +1025,7 @@ export function App() {
   const isStates = route.kind === "states";
   const isMaps = route.kind === "maps";
   const isFixedPoints = route.kind === "fixedPoints";
+  const isGames = route.kind === "games";
   const isIntroduction = lessonState.step === "intro";
   const isExampleIntroduction = lessonState.step === "example";
   const isFormalisation = lessonState.step === "formal";
@@ -1155,7 +1166,9 @@ export function App() {
     document.documentElement.lang = language;
     document.title = isSandbox
       ? copy.sandboxPreview.pageTitle
-      : isFixedPoints
+      : isGames
+        ? copy.gameLesson.pageTitle
+        : isFixedPoints
         ? copy.fixedPointLesson.pageTitle
         : isMaps
           ? copy.continuousMapLesson.pageTitle
@@ -1174,9 +1187,11 @@ export function App() {
       .querySelector<HTMLMetaElement>('meta[name="description"]')
       ?.setAttribute(
         "content",
-        isFixedPoints
-          ? copy.fixedPointLesson.pageDescription
-          : copy.pageDescription,
+        isGames
+          ? copy.gameLesson.pageDescription
+          : isFixedPoints
+            ? copy.fixedPointLesson.pageDescription
+            : copy.pageDescription,
       );
 
     try {
@@ -1189,6 +1204,7 @@ export function App() {
     isExampleIntroduction,
     isFixedPoints,
     isFormalisation,
+    isGames,
     isIntroduction,
     isEntailment,
     isMaps,
@@ -1200,6 +1216,8 @@ export function App() {
   useEffect(() => {
     if (isSandbox) {
       sandboxHeadingRef.current?.focus();
+    } else if (isGames) {
+      gameHeadingRef.current?.focus();
     } else if (isFixedPoints) {
       fixedPointHeadingRef.current?.focus();
     } else if (isMaps) {
@@ -1214,6 +1232,7 @@ export function App() {
   }, [
     isEntailment,
     isFixedPoints,
+    isGames,
     isMaps,
     isSandbox,
     isStates,
@@ -1234,12 +1253,14 @@ export function App() {
       states: stateLessonProgress,
       maps: continuousMapProgress,
       fixedPoints: fixedPointProgress,
+      games: gameProgress,
       statesUnlocked,
     });
   }, [
     continuousMapProgress,
     entailmentProgress,
     fixedPointProgress,
+    gameProgress,
     lessonState,
     stateLessonProgress,
     statesUnlocked,
@@ -1356,6 +1377,11 @@ export function App() {
       navigateTo(lessonRoute);
       return;
     }
+    if (isGames) {
+      setGameProgress(initialGameLessonProgress);
+      navigateTo(gamesLessonRoute);
+      return;
+    }
     if (isFixedPoints) {
       setFixedPointProgress(initialFixedPointLessonProgress);
       navigateTo(fixedPointsLessonRoute);
@@ -1419,6 +1445,14 @@ export function App() {
 
   function returnFromFixedPointsLesson(): void {
     navigateTo(mapsLessonRoute);
+  }
+
+  function openGamesLesson(): void {
+    navigateTo(gamesLessonRoute);
+  }
+
+  function returnFromGamesLesson(): void {
+    navigateTo(fixedPointsLessonRoute);
   }
 
   function selectObservation(tokenId: TokenId): void {
@@ -1654,7 +1688,9 @@ export function App() {
         : copy.footerStage;
   const footerSystem = isSandbox
     ? copy.sandboxPreview.footerSystem
-    : isFixedPoints
+    : isGames
+      ? copy.gameLesson.footerSystem
+      : isFixedPoints
       ? copy.fixedPointLesson.footerSystem
       : isMaps
         ? copy.continuousMapLesson.footerSystem
@@ -1665,7 +1701,9 @@ export function App() {
             : copy.footerSystem;
   const footerStage = isSandbox
     ? copy.sandboxPreview.footerStage
-    : isFixedPoints
+    : isGames
+      ? copy.gameLesson.footerStage
+      : isFixedPoints
       ? copy.fixedPointLesson.footerStage
       : isMaps
         ? copy.continuousMapLesson.footerStage
@@ -1807,6 +1845,14 @@ export function App() {
                 onSelect: openFixedPointsLesson,
               },
               {
+                id: "games",
+                number: "07",
+                name: copy.gameLesson.markerName,
+                label: copy.gameLesson.markerLabel,
+                isCurrent: isGames,
+                onSelect: openGamesLesson,
+              },
+              {
                 id: "sandbox",
                 number: "S",
                 name: copy.sandboxPreview.markerName,
@@ -1867,6 +1913,15 @@ export function App() {
           onRestart={restartFromSandbox}
           tokenTextById={copy.tokens}
         />
+      ) : isGames ? (
+        <GameLesson
+          copy={copy.gameLesson}
+          headingRef={gameHeadingRef}
+          progress={gameProgress}
+          onProgressChange={setGameProgress}
+          onBack={returnFromGamesLesson}
+          onOpenSandbox={openSandbox}
+        />
       ) : isFixedPoints ? (
         <FixedPointLesson
           copy={copy.fixedPointLesson}
@@ -1875,6 +1930,7 @@ export function App() {
           onProgressChange={setFixedPointProgress}
           onBack={returnFromFixedPointsLesson}
           onOpenSandbox={openSandbox}
+          onContinueGames={openGamesLesson}
         />
       ) : isMaps ? (
         <ContinuousMapLesson

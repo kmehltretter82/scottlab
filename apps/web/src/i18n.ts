@@ -1,6 +1,7 @@
 import type { ContinuousMapLessonCopy } from "./ContinuousMapLesson";
 import type { EntailmentLessonCopy } from "./EntailmentLesson";
 import type { FixedPointLessonCopy } from "./FixedPointLesson";
+import type { GameLessonCopy } from "./GameLesson";
 import type { SandboxPreviewCopy } from "./SandboxPreview";
 import type { StateLessonCopy } from "./StateLesson";
 
@@ -184,6 +185,7 @@ export interface LessonMessages {
   readonly stateLesson: StateLessonCopy;
   readonly continuousMapLesson: ContinuousMapLessonCopy;
   readonly fixedPointLesson: FixedPointLessonCopy;
+  readonly gameLesson: GameLessonCopy;
   readonly rejectedToken: (token: string) => string;
   readonly rejectedRole: string;
   readonly rejectedDetail: string;
@@ -581,6 +583,14 @@ const english: LessonMessages = {
       consistencyValue: "Every finite token set is consistent in this model.",
       rulesHeading: "Declared rules",
     },
+    datalog: {
+      eyebrow: "You already know this engine",
+      heading: "This trace is bottom-up Datalog.",
+      explanation:
+        "What you just stepped through — apply every rule whose premises are present, add the conclusions, repeat until nothing changes — is exactly naive evaluation in Datalog, the engine inside CodeQL, Datomic, and Soufflé. Tokens are ground facts, entailment rules are Datalog rules, and the stabilized closure is the minimal model.",
+      limits:
+        "Honesty limits: rules with variables must first be grounded to a finite token set, and negation-as-failure is out of scope — entailment closure only ever adds information.",
+    },
     nonFlat: {
       heading: "Entailment reshapes the whole order.",
       introduction:
@@ -872,6 +882,21 @@ const english: LessonMessages = {
         `Step ${step}: target premises ${premises} entail ${conclusion}, producing ${state}.`,
       structuredResult: (state) => `Target closure stabilizes at ${state}.`,
     },
+    functionSpace: {
+      heading: "The maps you built are themselves states.",
+      introduction:
+        "Every monotone map between the flat-Boolean domains is a state of the function-space information system [Bool → Bool]. There are exactly eleven, ordered pointwise. Your negation map is one of its four maximal points.",
+      diagramLabel:
+        "Information order of the eleven continuous maps from Booleans to Booleans",
+      mapName: (index) => `f${index}`,
+      negationBadge: "your negation map",
+      selectMap: (name) => `Inspect map ${name}`,
+      selectedMapLabel: "Selected map",
+      imageLine: (input, output) => `f(${input}) = ${output}`,
+      maximalNote:
+        "The four maximal maps are the four total Boolean functions: the two constants, identity, and negation. Everything below them is a partial stage of one of those.",
+      textViewSummary: "Read all eleven maps as text",
+    },
     actions: {
       startGuide: "Refine the input to true",
       previous: "Previous frame",
@@ -1049,6 +1074,217 @@ const english: LessonMessages = {
       back: "Back to continuous maps",
       openSandbox: "Review the Boolean sandbox",
       replay: "Replay the iteration",
+      continueGames: "Continue to winning games",
+    },
+  },
+  gameLesson: {
+    pageTitle: "ScottLab · Winning is entailment",
+    pageDescription:
+      "Solve a small take-away game by iterated retrograde analysis: win and loss labels grow monotonically to a least fixed point.",
+    markerLabel: "Lesson 7: Games",
+    markerName: "Games",
+    footerSystem: "Take-away game",
+    footerStage: "Retrograde analysis",
+    eyebrow: "Connection lesson · Games",
+    title: "Winning is entailment.",
+    lead:
+      "Take turns removing 1 or 2 stones from a pile; whoever cannot move loses. Which pile sizes are winning? Backward induction answers by growing knowledge monotonically — which makes it a fixed-point iteration in an information system.",
+    workspaceLabel: "Interactive game-analysis lesson",
+    tokens: {
+      delta: {
+        label: "always-present token",
+        accessibleName: "Delta, the always-present token",
+        description: "The distinguished token present in every state.",
+      },
+      "loss-0": {
+        label: "0 is a loss",
+        accessibleName: "0 is a loss token",
+        description: "With 0 stones, the player to move loses.",
+      },
+      "loss-1": {
+        label: "1 is a loss",
+        accessibleName: "1 is a loss token",
+        description: "With 1 stone, the player to move loses.",
+      },
+      "loss-2": {
+        label: "2 is a loss",
+        accessibleName: "2 is a loss token",
+        description: "With 2 stones, the player to move loses.",
+      },
+      "loss-3": {
+        label: "3 is a loss",
+        accessibleName: "3 is a loss token",
+        description: "With 3 stones, the player to move loses.",
+      },
+      "loss-4": {
+        label: "4 is a loss",
+        accessibleName: "4 is a loss token",
+        description: "With 4 stones, the player to move loses.",
+      },
+      "win-0": {
+        label: "0 is a win",
+        accessibleName: "0 is a win token",
+        description: "With 0 stones, the player to move wins.",
+      },
+      "win-1": {
+        label: "1 is a win",
+        accessibleName: "1 is a win token",
+        description: "With 1 stone, the player to move wins.",
+      },
+      "win-2": {
+        label: "2 is a win",
+        accessibleName: "2 is a win token",
+        description: "With 2 stones, the player to move wins.",
+      },
+      "win-3": {
+        label: "3 is a win",
+        accessibleName: "3 is a win token",
+        description: "With 3 stones, the player to move wins.",
+      },
+      "win-4": {
+        label: "4 is a win",
+        accessibleName: "4 is a win token",
+        description: "With 4 stones, the player to move wins.",
+      },
+    },
+    rules: {
+      "zero-stones-lose": {
+        label: "no stones, no move",
+        explanation: "With nothing to take, the player to move has lost.",
+      },
+      "win-1-taking-1": {
+        label: "from 1, take 1",
+        explanation: "Taking 1 stone hands the opponent the losing pile 0.",
+      },
+      "win-2-taking-2": {
+        label: "from 2, take 2",
+        explanation: "Taking 2 stones hands the opponent the losing pile 0.",
+      },
+      "win-2-taking-1": {
+        label: "from 2, take 1",
+        explanation: "Taking 1 stone would hand the opponent pile 1.",
+      },
+      "win-3-taking-1": {
+        label: "from 3, take 1",
+        explanation: "Taking 1 stone would hand the opponent pile 2.",
+      },
+      "win-3-taking-2": {
+        label: "from 3, take 2",
+        explanation: "Taking 2 stones would hand the opponent pile 1.",
+      },
+      "win-4-taking-1": {
+        label: "from 4, take 1",
+        explanation: "Taking 1 stone hands the opponent the losing pile 3.",
+      },
+      "win-4-taking-2": {
+        label: "from 4, take 2",
+        explanation: "Taking 2 stones would hand the opponent pile 2.",
+      },
+      "loss-1-all-moves-win": {
+        label: "1 loses if every move wins",
+        explanation: "Pile 1 is a loss only when its one successor wins.",
+      },
+      "loss-2-all-moves-win": {
+        label: "2 loses if every move wins",
+        explanation: "Pile 2 is a loss only when piles 0 and 1 both win.",
+      },
+      "loss-3-all-moves-win": {
+        label: "3 loses if every move wins",
+        explanation: "Pile 3 is a loss only when piles 1 and 2 both win.",
+      },
+      "loss-4-all-moves-win": {
+        label: "4 loses if every move wins",
+        explanation: "Pile 4 is a loss only when piles 2 and 3 both win.",
+      },
+    },
+    intro: {
+      heading: "Label the positions without guessing.",
+      explanation:
+        "Tokens are claims: “pile n is a win for the player to move” or “pile n is a loss.” No pile can be both — those are the declared conflicts. The endomap below performs one step of backward induction.",
+      rulesExplanation:
+        "Read each generator as game logic: a pile wins if some move hands the opponent a losing pile; it loses if every move hands the opponent a winning pile. Note the multi-premise loss rules — they need all successors decided.",
+      startAction: "Start the analysis at ⊥",
+    },
+    analysis: {
+      heading: "Backward induction as Kleene iteration",
+      introduction:
+        "Apply the analysis step by step. Each application labels every position it can justify from what is already known — knowledge only ever grows.",
+      chainLabel: "Analysis chain",
+      iterateName: (index) => `Iterate ${index}`,
+      bottomIterateName: "Bottom",
+      currentStateLabel: "Known so far",
+      progress: (applied, total) => `Application ${applied} of ${total}`,
+      applyAction: "Apply the analysis",
+      stepBackAction: "Step back",
+      startHeading: "At ⊥, no position is labeled.",
+      startExplanation:
+        "Before any analysis, we know nothing about any pile. Apply the analysis once and see which claim needs no knowledge at all.",
+      appliedHeading: (newTokens) => `The analysis proves ${newTokens}.`,
+      appliedExplanation: (before, after) =>
+        `From ${before}, the active rules justify new labels; the state grows to ${after}.`,
+      stabilizedHeading: "Every provable label is proved.",
+      stabilizedExplanation: (state) =>
+        `Another application adds nothing: ${state} is the least fixed point of the analysis. Pile 3 is the losing pile to be handed to your opponent.`,
+      silenceNote:
+        "Just as important is what the fixed point does not contain: W3, L4, and W0 are absent because those claims are false — the least fixed point asserts exactly what backward induction can prove.",
+      activationsLabel: "Active rules",
+      newTokensLabel: "Newly proved",
+      nothingNew: "nothing — the analysis is complete",
+      continueChallengeAction: "Play the winning move",
+    },
+    challenge: {
+      eyebrow: "Short challenge",
+      heading: "You face 4 stones. How many do you take?",
+      explanation:
+        "Use the fixed point you just computed: hand your opponent a losing pile.",
+      choiceLegend: "Choose your move",
+      takeOne: "Take 1 stone",
+      takeTwo: "Take 2 stones",
+      chooseMove: (move) => `${move}`,
+      correctHeading: "Right — leave 3 stones.",
+      correctExplanation:
+        "L3 is in the fixed point: pile 3 is a loss for the player to move, so your opponent is stuck. Taking 2 would leave pile 2, and W2 says they would win.",
+      incorrectHeading: "That hands your opponent a win.",
+      incorrectExplanation:
+        "Taking 2 leaves pile 2, and W2 is in the fixed point — the player to move on 2 wins. Leave a pile whose loss label the analysis proved.",
+      finishAction: "Finish the lesson",
+    },
+    seeAlso: {
+      heading: "The same mathematics, elsewhere",
+      introduction:
+        "Monotone knowledge growing to a least fixed point is a pattern with many names. If this lesson series spoke to you, these are the neighboring formalisms worth knowing.",
+      entries: [
+        {
+          name: "Coherent information systems (Minlog, TCF)",
+          note: "The Munich school's presentation determines consistency pairwise. ScottLab's n-ary conflict sets are strictly more general; with only binary conflicts you are in the coherent world used by the Minlog proof assistant.",
+        },
+        {
+          name: "Coherence spaces and linear logic",
+          note: "Girard's coherence spaces are the binary-conflict cousins of information systems; studying maps between them led directly to linear logic.",
+        },
+        {
+          name: "Formal topology",
+          note: "Scott's consistency predicate directly inspired the positivity predicate of Sambin's formal topology, and approximable mappings inspired its continuous relations.",
+        },
+        {
+          name: "Event structures",
+          note: "Winskel's concurrency-flavored sibling: configurations of events with conflict and causality also form these domains.",
+        },
+        {
+          name: "Formal concept analysis",
+          note: "Concept lattices from object–attribute tables are closure systems too; an implication basis plays the role of the entailment rules.",
+        },
+      ],
+    },
+    complete: {
+      heading: "You solved a game with a least fixed point.",
+      explanation:
+        "Retrograde analysis, Datalog evaluation, entailment closure, and lazy streams are all one construction: monotone rules applied from ⊥ until nothing new appears. That construction is what this whole playground is about.",
+    },
+    actions: {
+      back: "Back to fixed points",
+      openSandbox: "Review the Boolean sandbox",
+      replay: "Replay the analysis",
     },
   },
   rejectedToken: (token) => `Rejected ${token} token`,
@@ -1455,6 +1691,14 @@ const german: LessonMessages = {
         "In diesem Modell ist jede endliche Tokenmenge verträglich.",
       rulesHeading: "Festgelegte Regeln",
     },
+    datalog: {
+      eyebrow: "Diese Maschine kennst du schon",
+      heading: "Diese Spur ist Bottom-up-Datalog.",
+      explanation:
+        "Was du gerade durchgegangen bist — jede Regel anwenden, deren Prämissen vorliegen, die Konsequenzen hinzufügen, wiederholen, bis sich nichts mehr ändert — ist genau die naive Auswertung in Datalog, der Maschine hinter CodeQL, Datomic und Soufflé. Tokens sind Grundfakten, Folgerungsregeln sind Datalog-Regeln, und der stabilisierte Abschluss ist das minimale Modell.",
+      limits:
+        "Ehrlichkeitsgrenzen: Regeln mit Variablen müssen zuerst auf eine endliche Tokenmenge geerdet werden, und Negation-als-Fehlschlag liegt außerhalb — der Folgerungsabschluss fügt immer nur Information hinzu.",
+    },
     nonFlat: {
       heading: "Folgerung formt die gesamte Ordnung um.",
       introduction:
@@ -1748,6 +1992,21 @@ const german: LessonMessages = {
       structuredResult: (state) =>
         `Der Zielabschluss stabilisiert sich bei ${state}.`,
     },
+    functionSpace: {
+      heading: "Die gebauten Abbildungen sind selbst Zustände.",
+      introduction:
+        "Jede monotone Abbildung zwischen den flachen Boolean-Domänen ist ein Zustand des Funktionenraum-Informationssystems [Bool → Bool]. Es gibt genau elf, punktweise geordnet. Deine Negationsabbildung ist einer seiner vier maximalen Punkte.",
+      diagramLabel:
+        "Informationsordnung der elf stetigen Abbildungen von Booleans nach Booleans",
+      mapName: (index) => `f${index}`,
+      negationBadge: "deine Negationsabbildung",
+      selectMap: (name) => `Abbildung ${name} untersuchen`,
+      selectedMapLabel: "Gewählte Abbildung",
+      imageLine: (input, output) => `f(${input}) = ${output}`,
+      maximalNote:
+        "Die vier maximalen Abbildungen sind die vier totalen booleschen Funktionen: die beiden Konstanten, die Identität und die Negation. Alles darunter ist eine partielle Stufe einer dieser vier.",
+      textViewSummary: "Alle elf Abbildungen als Text lesen",
+    },
     actions: {
       startGuide: "Eingabe zu true verfeinern",
       previous: "Vorheriges Bild",
@@ -1926,6 +2185,224 @@ const german: LessonMessages = {
       back: "Zurück zu stetigen Abbildungen",
       openSandbox: "Boolean-Sandbox erneut ansehen",
       replay: "Iteration erneut abspielen",
+      continueGames: "Weiter zu Gewinnstrategien",
+    },
+  },
+  gameLesson: {
+    pageTitle: "ScottLab · Gewinnen ist Folgerung",
+    pageDescription:
+      "Ein kleines Wegnahmespiel durch iterierte Rückwärtsanalyse lösen: Gewinn- und Verlustmarken wachsen monoton zu einem kleinsten Fixpunkt.",
+    markerLabel: "Lektion 7: Spiele",
+    markerName: "Spiele",
+    footerSystem: "Wegnahmespiel",
+    footerStage: "Rückwärtsanalyse",
+    eyebrow: "Verbindungslektion · Spiele",
+    title: "Gewinnen ist Folgerung.",
+    lead:
+      "Abwechselnd 1 oder 2 Steine vom Haufen nehmen; wer nicht ziehen kann, verliert. Welche Haufengrößen sind Gewinnpositionen? Rückwärtsinduktion antwortet durch monoton wachsendes Wissen — und ist damit eine Fixpunkt-Iteration in einem Informationssystem.",
+    workspaceLabel: "Interaktive Spielanalyse-Lektion",
+    tokens: {
+      delta: {
+        label: "immer vorhandenes Token",
+        accessibleName: "Delta, das immer vorhandene Token",
+        description: "Das ausgezeichnete Token, das in jedem Zustand liegt.",
+      },
+      "loss-0": {
+        label: "0 ist verloren",
+        accessibleName: "Token „0 ist verloren“",
+        description: "Bei 0 Steinen verliert, wer am Zug ist.",
+      },
+      "loss-1": {
+        label: "1 ist verloren",
+        accessibleName: "Token „1 ist verloren“",
+        description: "Bei 1 Stein verliert, wer am Zug ist.",
+      },
+      "loss-2": {
+        label: "2 ist verloren",
+        accessibleName: "Token „2 ist verloren“",
+        description: "Bei 2 Steinen verliert, wer am Zug ist.",
+      },
+      "loss-3": {
+        label: "3 ist verloren",
+        accessibleName: "Token „3 ist verloren“",
+        description: "Bei 3 Steinen verliert, wer am Zug ist.",
+      },
+      "loss-4": {
+        label: "4 ist verloren",
+        accessibleName: "Token „4 ist verloren“",
+        description: "Bei 4 Steinen verliert, wer am Zug ist.",
+      },
+      "win-0": {
+        label: "0 ist gewonnen",
+        accessibleName: "Token „0 ist gewonnen“",
+        description: "Bei 0 Steinen gewinnt, wer am Zug ist.",
+      },
+      "win-1": {
+        label: "1 ist gewonnen",
+        accessibleName: "Token „1 ist gewonnen“",
+        description: "Bei 1 Stein gewinnt, wer am Zug ist.",
+      },
+      "win-2": {
+        label: "2 ist gewonnen",
+        accessibleName: "Token „2 ist gewonnen“",
+        description: "Bei 2 Steinen gewinnt, wer am Zug ist.",
+      },
+      "win-3": {
+        label: "3 ist gewonnen",
+        accessibleName: "Token „3 ist gewonnen“",
+        description: "Bei 3 Steinen gewinnt, wer am Zug ist.",
+      },
+      "win-4": {
+        label: "4 ist gewonnen",
+        accessibleName: "Token „4 ist gewonnen“",
+        description: "Bei 4 Steinen gewinnt, wer am Zug ist.",
+      },
+    },
+    rules: {
+      "zero-stones-lose": {
+        label: "keine Steine, kein Zug",
+        explanation: "Ohne etwas zu nehmen hat verloren, wer am Zug ist.",
+      },
+      "win-1-taking-1": {
+        label: "aus 1 einen nehmen",
+        explanation:
+          "Einen Stein zu nehmen übergibt dem Gegner den Verlusthaufen 0.",
+      },
+      "win-2-taking-2": {
+        label: "aus 2 zwei nehmen",
+        explanation:
+          "Zwei Steine zu nehmen übergibt dem Gegner den Verlusthaufen 0.",
+      },
+      "win-2-taking-1": {
+        label: "aus 2 einen nehmen",
+        explanation: "Einen Stein zu nehmen übergäbe dem Gegner Haufen 1.",
+      },
+      "win-3-taking-1": {
+        label: "aus 3 einen nehmen",
+        explanation: "Einen Stein zu nehmen übergäbe dem Gegner Haufen 2.",
+      },
+      "win-3-taking-2": {
+        label: "aus 3 zwei nehmen",
+        explanation: "Zwei Steine zu nehmen übergäbe dem Gegner Haufen 1.",
+      },
+      "win-4-taking-1": {
+        label: "aus 4 einen nehmen",
+        explanation:
+          "Einen Stein zu nehmen übergibt dem Gegner den Verlusthaufen 3.",
+      },
+      "win-4-taking-2": {
+        label: "aus 4 zwei nehmen",
+        explanation: "Zwei Steine zu nehmen übergäbe dem Gegner Haufen 2.",
+      },
+      "loss-1-all-moves-win": {
+        label: "1 verliert, wenn jeder Zug gewinnt",
+        explanation:
+          "Haufen 1 ist nur verloren, wenn sein einziger Nachfolger gewinnt.",
+      },
+      "loss-2-all-moves-win": {
+        label: "2 verliert, wenn jeder Zug gewinnt",
+        explanation:
+          "Haufen 2 ist nur verloren, wenn Haufen 0 und 1 beide gewinnen.",
+      },
+      "loss-3-all-moves-win": {
+        label: "3 verliert, wenn jeder Zug gewinnt",
+        explanation:
+          "Haufen 3 ist nur verloren, wenn Haufen 1 und 2 beide gewinnen.",
+      },
+      "loss-4-all-moves-win": {
+        label: "4 verliert, wenn jeder Zug gewinnt",
+        explanation:
+          "Haufen 4 ist nur verloren, wenn Haufen 2 und 3 beide gewinnen.",
+      },
+    },
+    intro: {
+      heading: "Die Positionen ohne Raten beschriften.",
+      explanation:
+        "Tokens sind Behauptungen: „Haufen n ist für den Ziehenden gewonnen“ oder „Haufen n ist verloren.“ Kein Haufen kann beides sein — das sind die festgelegten Konflikte. Die Endoabbildung unten führt einen Schritt Rückwärtsinduktion aus.",
+      rulesExplanation:
+        "Lies jeden Generator als Spiellogik: Ein Haufen gewinnt, wenn irgendein Zug dem Gegner einen Verlusthaufen übergibt; er verliert, wenn jeder Zug dem Gegner einen Gewinnhaufen übergibt. Beachte die Verlustregeln mit mehreren Prämissen — sie brauchen alle Nachfolger entschieden.",
+      startAction: "Analyse bei ⊥ beginnen",
+    },
+    analysis: {
+      heading: "Rückwärtsinduktion als Kleene-Iteration",
+      introduction:
+        "Wende die Analyse Schritt für Schritt an. Jede Anwendung beschriftet jede Position, die sich aus dem bereits Bekannten begründen lässt — Wissen wächst nur.",
+      chainLabel: "Analysekette",
+      iterateName: (index) => `Iteration ${index}`,
+      bottomIterateName: "Bottom",
+      currentStateLabel: "Bisher bekannt",
+      progress: (applied, total) => `Anwendung ${applied} von ${total}`,
+      applyAction: "Analyse anwenden",
+      stepBackAction: "Schritt zurück",
+      startHeading: "Bei ⊥ ist keine Position beschriftet.",
+      startExplanation:
+        "Vor jeder Analyse wissen wir über keinen Haufen etwas. Wende die Analyse einmal an und sieh, welche Behauptung gar kein Wissen braucht.",
+      appliedHeading: (newTokens) => `Die Analyse beweist ${newTokens}.`,
+      appliedExplanation: (before, after) =>
+        `Aus ${before} begründen die aktiven Regeln neue Marken; der Zustand wächst zu ${after}.`,
+      stabilizedHeading: "Jede beweisbare Marke ist bewiesen.",
+      stabilizedExplanation: (state) =>
+        `Eine weitere Anwendung fügt nichts hinzu: ${state} ist der kleinste Fixpunkt der Analyse. Haufen 3 ist der Verlusthaufen, den man dem Gegner übergibt.`,
+      silenceNote:
+        "Ebenso wichtig ist, was der Fixpunkt nicht enthält: W3, L4 und W0 fehlen, weil diese Behauptungen falsch sind — der kleinste Fixpunkt behauptet genau das, was die Rückwärtsinduktion beweisen kann.",
+      activationsLabel: "Aktive Regeln",
+      newTokensLabel: "Neu bewiesen",
+      nothingNew: "nichts — die Analyse ist vollständig",
+      continueChallengeAction: "Den Gewinnzug spielen",
+    },
+    challenge: {
+      eyebrow: "Kurze Aufgabe",
+      heading: "Vor dir liegen 4 Steine. Wie viele nimmst du?",
+      explanation:
+        "Nutze den gerade berechneten Fixpunkt: Übergib deinem Gegner einen Verlusthaufen.",
+      choiceLegend: "Wähle deinen Zug",
+      takeOne: "1 Stein nehmen",
+      takeTwo: "2 Steine nehmen",
+      chooseMove: (move) => `${move}`,
+      correctHeading: "Richtig — lass 3 Steine übrig.",
+      correctExplanation:
+        "L3 liegt im Fixpunkt: Haufen 3 ist für den Ziehenden verloren, dein Gegner sitzt fest. Zwei zu nehmen ließe Haufen 2 übrig, und W2 sagt, dass er dann gewinnt.",
+      incorrectHeading: "Das übergibt deinem Gegner einen Gewinn.",
+      incorrectExplanation:
+        "Zwei zu nehmen lässt Haufen 2 übrig, und W2 liegt im Fixpunkt — wer bei 2 am Zug ist, gewinnt. Übergib einen Haufen, dessen Verlustmarke die Analyse bewiesen hat.",
+      finishAction: "Lektion abschließen",
+    },
+    seeAlso: {
+      heading: "Dieselbe Mathematik, anderswo",
+      introduction:
+        "Monoton wachsendes Wissen bis zu einem kleinsten Fixpunkt ist ein Muster mit vielen Namen. Wenn dich diese Lektionsreihe angesprochen hat, lohnen sich diese Nachbarformalismen.",
+      entries: [
+        {
+          name: "Kohärente Informationssysteme (Minlog, TCF)",
+          note: "Die Darstellung der Münchner Schule bestimmt Verträglichkeit paarweise. ScottLabs n-stellige Konfliktmengen sind strikt allgemeiner; mit nur binären Konflikten ist man in der kohärenten Welt des Beweisassistenten Minlog.",
+        },
+        {
+          name: "Kohärenzräume und lineare Logik",
+          note: "Girards Kohärenzräume sind die Verwandten der Informationssysteme mit binären Konflikten; das Studium ihrer Abbildungen führte direkt zur linearen Logik.",
+        },
+        {
+          name: "Formale Topologie",
+          note: "Scotts Verträglichkeitsprädikat inspirierte direkt das Positivitätsprädikat von Sambins formaler Topologie, und approximierbare Abbildungen inspirierten ihre stetigen Relationen.",
+        },
+        {
+          name: "Ereignisstrukturen",
+          note: "Winskels nebenläufigkeitsnahes Geschwister: Konfigurationen von Ereignissen mit Konflikt und Kausalität bilden ebenfalls diese Domänen.",
+        },
+        {
+          name: "Formale Begriffsanalyse",
+          note: "Begriffsverbände aus Objekt-Merkmal-Tabellen sind ebenfalls Abschlusssysteme; eine Implikationsbasis übernimmt die Rolle der Folgerungsregeln.",
+        },
+      ],
+    },
+    complete: {
+      heading: "Du hast ein Spiel mit einem kleinsten Fixpunkt gelöst.",
+      explanation:
+        "Rückwärtsanalyse, Datalog-Auswertung, Folgerungsabschluss und lazy Ströme sind eine einzige Konstruktion: monotone Regeln, ab ⊥ angewendet, bis nichts Neues mehr erscheint. Genau um diese Konstruktion geht es in diesem ganzen Spielplatz.",
+    },
+    actions: {
+      back: "Zurück zu Fixpunkten",
+      openSandbox: "Boolean-Sandbox erneut ansehen",
+      replay: "Analyse erneut abspielen",
     },
   },
   rejectedToken: (token) => `Abgelehntes ${token}-Token`,

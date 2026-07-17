@@ -10,6 +10,7 @@ import {
   computeBottom,
   computeClosure,
   computeCoverRelation,
+  enumerateContinuousMaps,
   enumerateStates,
   estimateMappingValidation,
   explainEntailment,
@@ -1761,6 +1762,78 @@ describe("tryAddObservation", () => {
       "minimalInconsistentSet",
       ["false", "true"],
     );
+  });
+});
+
+describe("enumerateContinuousMaps", () => {
+  it("draws the eleven-state function space of the flat Booleans", () => {
+    const enumeration = enumerateContinuousMaps(flatBoolean, flatBoolean);
+
+    expect(enumeration.sourceStates).toEqual([
+      ["delta"],
+      ["delta", "false"],
+      ["delta", "true"],
+    ]);
+    expect(enumeration.maps).toHaveLength(11);
+
+    const bottomMap = enumeration.maps[0];
+    expect(bottomMap?.images).toEqual([["delta"], ["delta"], ["delta"]]);
+
+    const negation = enumeration.maps.find(
+      ({ images }) =>
+        JSON.stringify(images) ===
+        JSON.stringify([["delta"], ["delta", "true"], ["delta", "false"]]),
+    );
+    const identity = enumeration.maps.find(
+      ({ images }) =>
+        JSON.stringify(images) ===
+        JSON.stringify([["delta"], ["delta", "false"], ["delta", "true"]]),
+    );
+    expect(negation).toBeDefined();
+    expect(identity).toBeDefined();
+
+    const coversOfBottom = enumeration.edges.filter(
+      ({ lowerIndex }) => lowerIndex === bottomMap?.index,
+    );
+    expect(coversOfBottom).toHaveLength(4);
+
+    // The maximal points of [Bool → Bool] are the four total functions:
+    // identity, negation, and the two constants.
+    const maximalMaps = enumeration.maps.filter(
+      ({ index }) =>
+        !enumeration.edges.some(({ lowerIndex }) => lowerIndex === index),
+    );
+    expect(
+      maximalMaps.map(({ images }) => images.map((image) => image.join("|"))),
+    ).toEqual([
+      ["delta", "delta|false", "delta|true"],
+      ["delta", "delta|true", "delta|false"],
+      ["delta|false", "delta|false", "delta|false"],
+      ["delta|true", "delta|true", "delta|true"],
+    ]);
+  });
+
+  it("enumerates the chain of maps out of the one-point domain", () => {
+    const onePoint: InformationSystemDefinition = {
+      tokens: [
+        {
+          id: "delta",
+          label: "Always-present token",
+          symbol: "Δ",
+          description: "The distinguished token present in every state.",
+        },
+      ],
+      delta: "delta",
+      minimalInconsistentSets: [],
+      entailmentRules: [],
+    };
+
+    const enumeration = enumerateContinuousMaps(onePoint, flatBoolean);
+    expect(enumeration.maps).toHaveLength(3);
+    expect(enumeration.edges).toEqual([
+      { lowerIndex: 0, upperIndex: 1 },
+      { lowerIndex: 0, upperIndex: 2 },
+    ]);
   });
 });
 

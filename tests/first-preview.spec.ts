@@ -32,6 +32,11 @@ const directRoutes = [
     title: "ScottLab · Least fixed points",
   },
   {
+    hash: "#/lesson/games",
+    heading: "Winning is entailment.",
+    title: "ScottLab · Winning is entailment",
+  },
+  {
     hash: "#/sandbox/flat-boolean",
     heading: "Explore the same system without the lesson rails.",
     title: "ScottLab · Flat Booleans sandbox preview",

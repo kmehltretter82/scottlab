@@ -139,6 +139,27 @@ export interface FixedPointIterationStep {
   readonly activations: readonly MappingRuleActivation[];
 }
 
+export interface EnumeratedContinuousMap {
+  /** Deterministic index of this map within the enumeration. */
+  readonly index: number;
+  /** Image states, aligned with the enumeration's `sourceStates`. */
+  readonly images: readonly (readonly TokenId[])[];
+}
+
+export interface ContinuousMapEnumerationEdge {
+  readonly lowerIndex: number;
+  readonly upperIndex: number;
+}
+
+export interface ContinuousMapEnumeration {
+  readonly sourceStates: readonly (readonly TokenId[])[];
+  readonly targetStates: readonly (readonly TokenId[])[];
+  /** Every monotone (hence continuous) map between the finite domains. */
+  readonly maps: readonly EnumeratedContinuousMap[];
+  /** Cover edges of the pointwise order on the maps. */
+  readonly edges: readonly ContinuousMapEnumerationEdge[];
+}
+
 export interface FixedPointComputation {
   /** The ascending Kleene chain ⊥ = x₀ ⊂ x₁ ⊂ … ⊂ xₙ of distinct iterates. */
   readonly iterates: readonly (readonly TokenId[])[];
@@ -1391,6 +1412,131 @@ export function iterateFromBottom(
   throw new Error(
     "Fixed-point iteration exceeded the height of the finite system.",
   );
+}
+
+/**
+ * Enumerate the function space between two finite systems as states.
+ *
+ * Larsen–Winskel (Proposition 4.20): the states of the function-space
+ * information system A → B are exactly the approximable mappings from A to
+ * B, and on finite domains those are exactly the monotone functions between
+ * the state sets. The enumeration lists every monotone map together with
+ * the cover edges of their pointwise information order, so the function
+ * space itself can be drawn as a Hasse diagram.
+ *
+ * The construction is exhaustive; both systems must be teaching-sized.
+ */
+export function enumerateContinuousMaps(
+  source: InformationSystemDefinition,
+  target: InformationSystemDefinition,
+): ContinuousMapEnumeration {
+  const sourceStates = enumerateStates(source).states;
+  const targetStates = enumerateStates(target).states;
+
+  // Pointwise assignment with backtracking: sourceStates are ordered by
+  // size, so every proper subset of a state precedes it and monotonicity
+  // can be checked against already-assigned images only.
+  const assignment: number[] = [];
+  const maps: EnumeratedContinuousMap[] = [];
+
+  function assign(position: number): void {
+    if (position === sourceStates.length) {
+      maps.push({
+        index: maps.length,
+        images: assignment.map((targetIndex) => {
+          const state = targetStates[targetIndex];
+          if (state === undefined) {
+            throw new Error("Function-space enumeration lost a target state.");
+          }
+          return state;
+        }),
+      });
+      return;
+    }
+
+    const state = sourceStates[position];
+    if (state === undefined) {
+      throw new Error("Function-space enumeration lost a source state.");
+    }
+
+    for (
+      let targetIndex = 0;
+      targetIndex < targetStates.length;
+      targetIndex += 1
+    ) {
+      const image = targetStates[targetIndex];
+      if (image === undefined) {
+        throw new Error("Function-space enumeration lost a target state.");
+      }
+
+      let monotone = true;
+      for (let earlier = 0; earlier < position; earlier += 1) {
+        const earlierState = sourceStates[earlier];
+        const earlierImageIndex = assignment[earlier];
+        const earlierImage =
+          earlierImageIndex === undefined
+            ? undefined
+            : targetStates[earlierImageIndex];
+        if (earlierState === undefined || earlierImage === undefined) {
+          throw new Error("Function-space enumeration lost an assignment.");
+        }
+        if (isSubset(earlierState, state) && !isSubset(earlierImage, image)) {
+          monotone = false;
+          break;
+        }
+        if (isSubset(state, earlierState) && !isSubset(image, earlierImage)) {
+          monotone = false;
+          break;
+        }
+      }
+
+      if (monotone) {
+        assignment.push(targetIndex);
+        assign(position + 1);
+        assignment.pop();
+      }
+    }
+  }
+
+  assign(0);
+
+  function mapBelow(
+    lower: EnumeratedContinuousMap,
+    upper: EnumeratedContinuousMap,
+  ): boolean {
+    return lower.images.every((image, position) => {
+      const upperImage = upper.images[position];
+      return upperImage !== undefined && isSubset(image, upperImage);
+    });
+  }
+
+  const edges: ContinuousMapEnumerationEdge[] = [];
+  for (const lower of maps) {
+    for (const upper of maps) {
+      if (
+        lower === upper ||
+        !mapBelow(lower, upper) ||
+        mapBelow(upper, lower)
+      ) {
+        continue;
+      }
+
+      const hasIntermediate = maps.some(
+        (intermediate) =>
+          intermediate !== lower &&
+          intermediate !== upper &&
+          mapBelow(lower, intermediate) &&
+          mapBelow(intermediate, upper) &&
+          !mapBelow(intermediate, lower) &&
+          !mapBelow(upper, intermediate),
+      );
+      if (!hasIntermediate) {
+        edges.push({ lowerIndex: lower.index, upperIndex: upper.index });
+      }
+    }
+  }
+
+  return { sourceStates, targetStates, maps, edges };
 }
 
 function requireKnownCandidateTokens(

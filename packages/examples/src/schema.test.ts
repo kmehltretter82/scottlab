@@ -21,7 +21,9 @@ import {
   editingPolicySystem,
   flatBooleanSystem,
   oneMoreStepMapping,
+  retrogradeAnalysisMapping,
   streamPrefixesSystem,
+  takeAwayGameSystem,
 } from "./index";
 
 const informationSystemDocuments = import.meta.glob("../*.system.json", {
@@ -142,6 +144,7 @@ describe("persisted information systems", () => {
     expect(validateSystem(boundedLazyNaturalsSystem).ok).toBe(true);
     expect(validateSystem(streamPrefixesSystem).ok).toBe(true);
     expect(validateSystem(coquandSystem).ok).toBe(true);
+    expect(validateSystem(takeAwayGameSystem).ok).toBe(true);
   });
 
   it("derives the seven non-flat states of the Coquand system", () => {
@@ -208,6 +211,34 @@ describe("persisted fixed-point endomaps", () => {
       ["delta", "starts-0"],
     );
     expect(zeroInput.targetState).toEqual(["delta", "starts-1"]);
+  });
+
+  it("solves the take-away game by iterated retrograde analysis", () => {
+    expect(
+      validateMapping(
+        takeAwayGameSystem,
+        takeAwayGameSystem,
+        retrogradeAnalysisMapping,
+      ).ok,
+    ).toBe(true);
+
+    const computation = iterateFromBottom(
+      takeAwayGameSystem,
+      retrogradeAnalysisMapping,
+    );
+    expect(computation.iterates).toEqual([
+      ["delta"],
+      ["delta", "loss-0"],
+      ["delta", "loss-0", "win-1", "win-2"],
+      ["delta", "loss-0", "loss-3", "win-1", "win-2"],
+      ["delta", "loss-0", "loss-3", "win-1", "win-2", "win-4"],
+    ]);
+    expect(computation.stabilizedAfter).toBe(4);
+
+    // The false claims stay outside the least fixed point.
+    expect(computation.fixedPoint).not.toContain("win-3");
+    expect(computation.fixedPoint).not.toContain("loss-4");
+    expect(computation.fixedPoint).not.toContain("win-0");
   });
 });
 

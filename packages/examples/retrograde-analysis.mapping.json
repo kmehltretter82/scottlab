@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1",
+  "kind": "approximable-mapping",
+  "id": "retrograde-analysis",
+  "title": "Retrograde analysis",
+  "description": "One backward-induction step: label a position from what is already known about its successors.",
+  "approximation": {
+    "kind": "bounded",
+    "bound": "4"
+  },
+  "sourceSystemId": "take-away-game",
+  "targetSystemId": "take-away-game",
+  "rules": [
+    {
+      "id": "zero-stones-lose",
+      "premises": [],
+      "conclusion": "loss-0"
+    },
+    {
+      "id": "win-1-taking-1",
+      "premises": ["loss-0"],
+      "conclusion": "win-1"
+    },
+    {
+      "id": "win-2-taking-2",
+      "premises": ["loss-0"],
+      "conclusion": "win-2"
+    },
+    {
+      "id": "win-2-taking-1",
+      "premises": ["loss-1"],
+      "conclusion": "win-2"
+    },
+    {
+      "id": "win-3-taking-1",
+      "premises": ["loss-2"],
+      "conclusion": "win-3"
+    },
+    {
+      "id": "win-3-taking-2",
+      "premises": ["loss-1"],
+      "conclusion": "win-3"
+    },
+    {
+      "id": "win-4-taking-1",
+      "premises": ["loss-3"],
+      "conclusion": "win-4"
+    },
+    {
+      "id": "win-4-taking-2",
+      "premises": ["loss-2"],
+      "conclusion": "win-4"
+    },
+    {
+      "id": "loss-1-all-moves-win",
+      "premises": ["win-0"],
+      "conclusion": "loss-1"
+    },
+    {
+      "id": "loss-2-all-moves-win",
+      "premises": ["win-0", "win-1"],
+      "conclusion": "loss-2"
+    },
+    {
+      "id": "loss-3-all-moves-win",
+      "premises": ["win-1", "win-2"],
+      "conclusion": "loss-3"
+    },
+    {
+      "id": "loss-4-all-moves-win",
+      "premises": ["win-2", "win-3"],
+      "conclusion": "loss-4"
+    }
+  ]
+}

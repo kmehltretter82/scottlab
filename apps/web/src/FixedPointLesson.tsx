@@ -106,6 +106,7 @@ export interface FixedPointLessonCopy {
     readonly back: string;
     readonly openSandbox: string;
     readonly replay: string;
+    readonly continueGames: string;
   };
 }
 
@@ -189,6 +190,7 @@ export interface FixedPointLessonProps {
   readonly onProgressChange: (progress: FixedPointLessonProgress) => void;
   readonly onBack: () => void;
   readonly onOpenSandbox: () => void;
+  readonly onContinueGames: () => void;
 }
 
 export function FixedPointLesson({
@@ -198,6 +200,7 @@ export function FixedPointLesson({
   onProgressChange,
   onBack,
   onOpenSandbox,
+  onContinueGames,
 }: FixedPointLessonProps) {
   const applyButtonRef = useRef<HTMLButtonElement>(null);
   const stageHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -638,13 +641,22 @@ export function FixedPointLesson({
               <h3>{copy.counterpoint.heading}</h3>
               <p>{copy.counterpoint.explanation}</p>
               <code>{copy.counterpoint.formal}</code>
-              <button
-                className="secondary-action"
-                type="button"
-                onClick={replay}
-              >
-                {copy.actions.replay}
-              </button>
+              <div className="fixed-point-complete-actions">
+                <button
+                  className="primary-action"
+                  type="button"
+                  onClick={onContinueGames}
+                >
+                  {copy.actions.continueGames}
+                </button>
+                <button
+                  className="secondary-action"
+                  type="button"
+                  onClick={replay}
+                >
+                  {copy.actions.replay}
+                </button>
+              </div>
             </div>
           ) : null}
 

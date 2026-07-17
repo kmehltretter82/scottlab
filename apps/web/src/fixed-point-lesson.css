@@ -391,3 +391,11 @@
     transition: none !important;
   }
 }
+
+.fixed-point-complete-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  gap: 14px;
+}

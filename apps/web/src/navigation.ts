@@ -4,6 +4,7 @@ export type AppRoute =
   | { readonly kind: "states" }
   | { readonly kind: "maps" }
   | { readonly kind: "fixedPoints" }
+  | { readonly kind: "games" }
   | {
       readonly kind: "sandbox";
       readonly systemId: "flat-boolean";
@@ -27,6 +28,10 @@ export const fixedPointsLessonRoute = {
   kind: "fixedPoints",
 } as const satisfies AppRoute;
 
+export const gamesLessonRoute = {
+  kind: "games",
+} as const satisfies AppRoute;
+
 export const flatBooleanSandboxRoute = {
   kind: "sandbox",
   systemId: "flat-boolean",
@@ -37,6 +42,7 @@ const entailmentLessonHash = "#/lesson/entailment";
 const statesLessonHash = "#/lesson/states";
 const mapsLessonHash = "#/lesson/maps";
 const fixedPointsLessonHash = "#/lesson/fixed-points";
+const gamesLessonHash = "#/lesson/games";
 const flatBooleanSandboxHash = "#/sandbox/flat-boolean";
 
 /** Parse only routes ScottLab currently supports. */
@@ -55,6 +61,9 @@ export function parseHashRoute(hash: string): AppRoute {
   }
   if (hash === fixedPointsLessonHash) {
     return fixedPointsLessonRoute;
+  }
+  if (hash === gamesLessonHash) {
+    return gamesLessonRoute;
   }
 
   return lessonRoute;
@@ -76,6 +85,9 @@ export function formatHashRoute(route: AppRoute): string {
   }
   if (route.kind === "fixedPoints") {
     return fixedPointsLessonHash;
+  }
+  if (route.kind === "games") {
+    return gamesLessonHash;
   }
 
   return lessonHash;

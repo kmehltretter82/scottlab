@@ -4,6 +4,7 @@ import {
   entailmentLessonRoute,
   fixedPointsLessonRoute,
   flatBooleanSandboxRoute,
+  gamesLessonRoute,
   formatHashRoute,
   lessonRoute,
   mapsLessonRoute,
@@ -28,6 +29,7 @@ describe("parseHashRoute", () => {
     expect(parseHashRoute("#/lesson/fixed-points")).toEqual(
       fixedPointsLessonRoute,
     );
+    expect(parseHashRoute("#/lesson/games")).toEqual(gamesLessonRoute);
     expect(parseHashRoute("#/sandbox/flat-boolean")).toEqual(
       flatBooleanSandboxRoute,
     );
@@ -45,6 +47,7 @@ describe("parseHashRoute", () => {
     "#/lesson/maps/",
     "#/lesson/fixed-points/",
     "#/lesson/Fixed-Points",
+    "#/lesson/games/",
     "#/sandbox",
     "#/sandbox/flat-boolean/",
     "#/sandbox/flat-boolean?editing=true",
@@ -67,6 +70,7 @@ describe("formatHashRoute", () => {
     expect(formatHashRoute(fixedPointsLessonRoute)).toBe(
       "#/lesson/fixed-points",
     );
+    expect(formatHashRoute(gamesLessonRoute)).toBe("#/lesson/games");
     expect(formatHashRoute(flatBooleanSandboxRoute)).toBe(
       "#/sandbox/flat-boolean",
     );
@@ -81,6 +85,7 @@ describe("formatHashRoute", () => {
     statesLessonRoute,
     mapsLessonRoute,
     fixedPointsLessonRoute,
+    gamesLessonRoute,
     flatBooleanSandboxRoute,
   ])(
     "round-trips $kind",

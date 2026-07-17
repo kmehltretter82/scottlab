@@ -11,7 +11,9 @@ import coquandDocument from "../coquand.system.json";
 import editingPolicyDocument from "../editing-policy.system.json";
 import flatBooleanDocument from "../flat-boolean.system.json";
 import oneMoreStepDocument from "../one-more-step.mapping.json";
+import retrogradeAnalysisDocument from "../retrograde-analysis.mapping.json";
 import streamPrefixesDocument from "../stream-prefixes.system.json";
+import takeAwayGameDocument from "../take-away-game.system.json";
 
 export const accessPermissionsSystem =
   accessPermissionsDocument as PersistedInformationSystemDefinition;
@@ -37,5 +39,11 @@ export const flatBooleanSystem =
 export const oneMoreStepMapping =
   oneMoreStepDocument as PersistedApproximableMappingDefinition;
 
+export const retrogradeAnalysisMapping =
+  retrogradeAnalysisDocument as PersistedApproximableMappingDefinition;
+
 export const streamPrefixesSystem =
   streamPrefixesDocument as PersistedInformationSystemDefinition;
+
+export const takeAwayGameSystem =
+  takeAwayGameDocument as PersistedInformationSystemDefinition;

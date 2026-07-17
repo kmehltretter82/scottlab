@@ -1,6 +1,9 @@
 import {
+  applyCompiledMapping,
   applyCompiledMappingSteps,
   compileMapping,
+  enumerateContinuousMaps,
+  type EnumeratedContinuousMap,
   type MappingStepsComputation,
   type TokenId,
 } from "@scottlab/core";
@@ -8,7 +11,7 @@ import {
   booleanNegationMapping,
   flatBooleanSystem,
 } from "@scottlab/examples";
-import { useEffect, useRef, type Ref } from "react";
+import { useEffect, useRef, useState, type Ref } from "react";
 
 import "./continuous-map-lesson.css";
 
@@ -137,6 +140,18 @@ export interface ContinuousMapLessonCopy {
     ) => string;
     readonly structuredResult: (state: string) => string;
   };
+  readonly functionSpace: {
+    readonly heading: string;
+    readonly introduction: string;
+    readonly diagramLabel: string;
+    readonly mapName: (index: number) => string;
+    readonly negationBadge: string;
+    readonly selectMap: (name: string) => string;
+    readonly selectedMapLabel: string;
+    readonly imageLine: (input: string, output: string) => string;
+    readonly maximalNote: string;
+    readonly textViewSummary: string;
+  };
   readonly actions: {
     readonly startGuide: string;
     readonly previous: string;
@@ -254,6 +269,68 @@ function computationForInput(
   return bottomComputation;
 }
 
+const functionSpace = enumerateContinuousMaps(
+  flatBooleanSystem,
+  flatBooleanSystem,
+);
+const negationImages = functionSpace.sourceStates.map(
+  (state) => applyCompiledMapping(compiledBooleanNegation, state).targetState,
+);
+const negationMapIndex = functionSpace.maps.findIndex(({ images }) =>
+  images.every(
+    (image, position) =>
+      image.join("\0") === negationImages[position]?.join("\0"),
+  ),
+);
+
+if (functionSpace.maps.length !== 11 || negationMapIndex < 0) {
+  throw new Error(
+    "The continuous-maps capstone requires the eleven-map Boolean function space.",
+  );
+}
+
+function functionSpaceRank(map: EnumeratedContinuousMap): number {
+  return map.images.reduce((total, image) => total + image.length - 1, 0);
+}
+
+interface PositionedFunctionSpaceMap {
+  readonly map: EnumeratedContinuousMap;
+  readonly x: number;
+  readonly y: number;
+}
+
+const positionedFunctionSpaceMaps: readonly PositionedFunctionSpaceMap[] =
+  (() => {
+    const byRank = new Map<number, EnumeratedContinuousMap[]>();
+    for (const map of functionSpace.maps) {
+      const rank = functionSpaceRank(map);
+      const rankMaps = byRank.get(rank) ?? [];
+      rankMaps.push(map);
+      byRank.set(rank, rankMaps);
+    }
+
+    const ranks = [...byRank.keys()].sort((left, right) => left - right);
+    return ranks.flatMap((rank, rankIndex) => {
+      const rankMaps = byRank.get(rank) ?? [];
+      const y =
+        ranks.length === 1
+          ? 50
+          : 84 - (rankIndex / (ranks.length - 1)) * 68;
+      return rankMaps.map((map, mapIndex) => ({
+        map,
+        x: ((mapIndex + 0.5) / rankMaps.length) * 100,
+        y,
+      }));
+    });
+  })();
+
+const functionSpacePositionByIndex = new Map(
+  positionedFunctionSpaceMaps.map((positioned) => [
+    positioned.map.index,
+    positioned,
+  ]),
+);
+
 function stageFrameIndex(stage: ContinuousMapLessonStage): number | undefined {
   if (stage.kind === "guide") {
     return stage.frameIndex;
@@ -276,6 +353,7 @@ export function ContinuousMapLesson({
   const nextButtonRef = useRef<HTMLButtonElement>(null);
   const challengeHeadingRef = useRef<HTMLHeadingElement>(null);
   const narrationHeadingRef = useRef<HTMLHeadingElement>(null);
+  const [selectedMapIndex, setSelectedMapIndex] = useState(negationMapIndex);
   const { stage } = progress;
   const stageInput =
     stage.kind === "guide"
@@ -953,6 +1031,132 @@ export function ContinuousMapLesson({
           </details>
         </section>
       </fieldset>
+
+      {stage.kind === "complete" ? (
+        <section
+          className="function-space"
+          aria-labelledby="function-space-title"
+        >
+          <header className="continuous-map-area-heading">
+            <span>05</span>
+            <div>
+              <h2 id="function-space-title">{copy.functionSpace.heading}</h2>
+              <p>{copy.functionSpace.introduction}</p>
+            </div>
+          </header>
+
+          <div className="function-space-layout">
+            <fieldset
+              className="function-space-plot"
+              aria-label={copy.functionSpace.diagramLabel}
+            >
+              <svg
+                className="function-space-lines"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {functionSpace.edges.map((edge) => {
+                  const lower = functionSpacePositionByIndex.get(
+                    edge.lowerIndex,
+                  );
+                  const upper = functionSpacePositionByIndex.get(
+                    edge.upperIndex,
+                  );
+                  return lower === undefined || upper === undefined ? null : (
+                    <line
+                      key={`${edge.lowerIndex}-${edge.upperIndex}`}
+                      x1={lower.x}
+                      y1={lower.y - 6}
+                      x2={upper.x}
+                      y2={upper.y + 6}
+                    />
+                  );
+                })}
+              </svg>
+              {positionedFunctionSpaceMaps.map(({ map, x, y }) => {
+                const name = copy.functionSpace.mapName(map.index);
+                const isNegation = map.index === negationMapIndex;
+                return (
+                  <button
+                    key={map.index}
+                    className={`function-space-node${
+                      isNegation ? " is-negation" : ""
+                    }`}
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                    type="button"
+                    aria-label={copy.functionSpace.selectMap(name)}
+                    aria-pressed={map.index === selectedMapIndex}
+                    onClick={() => setSelectedMapIndex(map.index)}
+                  >
+                    <code>{name}</code>
+                  </button>
+                );
+              })}
+            </fieldset>
+
+            <div
+              className="function-space-detail"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span className="function-space-detail-label">
+                {copy.functionSpace.selectedMapLabel}
+              </span>
+              <strong>
+                {copy.functionSpace.mapName(selectedMapIndex)}
+                {selectedMapIndex === negationMapIndex ? (
+                  <span className="function-space-badge">
+                    {copy.functionSpace.negationBadge}
+                  </span>
+                ) : null}
+              </strong>
+              <ul>
+                {functionSpace.maps[selectedMapIndex]?.images.map(
+                  (image, position) => {
+                    const input = functionSpace.sourceStates[position];
+                    return input === undefined ? null : (
+                      <li key={position}>
+                        <code>
+                          {copy.functionSpace.imageLine(
+                            formatSet(input),
+                            formatSet(image),
+                          )}
+                        </code>
+                      </li>
+                    );
+                  },
+                )}
+              </ul>
+              <p>{copy.functionSpace.maximalNote}</p>
+            </div>
+          </div>
+
+          <details className="function-space-text-view">
+            <summary>{copy.functionSpace.textViewSummary}</summary>
+            <ol>
+              {functionSpace.maps.map((map) => (
+                <li key={map.index}>
+                  <code>
+                    {copy.functionSpace.mapName(map.index)}:{" "}
+                    {map.images
+                      .map((image, position) => {
+                        const input = functionSpace.sourceStates[position];
+                        return input === undefined
+                          ? ""
+                          : copy.functionSpace.imageLine(
+                              formatSet(input),
+                              formatSet(image),
+                            );
+                      })
+                      .join("; ")}
+                  </code>
+                </li>
+              ))}
+            </ol>
+          </details>
+        </section>
+      ) : null}
 
       <div className="continuous-map-actions">
         <button className="secondary-action" type="button" onClick={onBack}>

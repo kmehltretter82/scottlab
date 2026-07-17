@@ -99,6 +99,12 @@ export interface EntailmentLessonCopy {
     readonly statesLabel: string;
     readonly conclusion: string;
   };
+  readonly datalog: {
+    readonly eyebrow: string;
+    readonly heading: string;
+    readonly explanation: string;
+    readonly limits: string;
+  };
   readonly challenge: {
     readonly eyebrow: string;
     readonly heading: string;
@@ -690,6 +696,18 @@ export function EntailmentLesson({
             </ol>
           </section>
         </details>
+      ) : null}
+
+      {stage.kind === "complete" ? (
+        <aside
+          className="entailment-datalog"
+          aria-labelledby="entailment-datalog-title"
+        >
+          <p className="entailment-datalog-eyebrow">{copy.datalog.eyebrow}</p>
+          <h2 id="entailment-datalog-title">{copy.datalog.heading}</h2>
+          <p>{copy.datalog.explanation}</p>
+          <p className="entailment-datalog-limits">{copy.datalog.limits}</p>
+        </aside>
       ) : null}
 
       {stage.kind === "complete" ? (

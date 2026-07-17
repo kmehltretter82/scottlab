@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1",
+  "kind": "approximable-mapping",
+  "id": "one-more-step",
+  "title": "One more step",
+  "description": "Prove one further lower bound with each application.",
+  "approximation": {
+    "kind": "bounded",
+    "bound": "3"
+  },
+  "sourceSystemId": "bounded-lazy-naturals",
+  "targetSystemId": "bounded-lazy-naturals",
+  "rules": [
+    {
+      "id": "always-at-least-1",
+      "premises": [],
+      "conclusion": "at-least-1"
+    },
+    {
+      "id": "at-least-1-to-at-least-2",
+      "premises": ["at-least-1"],
+      "conclusion": "at-least-2"
+    },
+    {
+      "id": "at-least-2-to-at-least-3",
+      "premises": ["at-least-2"],
+      "conclusion": "at-least-3"
+    }
+  ]
+}

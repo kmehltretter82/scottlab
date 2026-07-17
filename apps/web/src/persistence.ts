@@ -13,6 +13,11 @@ import {
   entailmentTraceFrameCount,
   type EntailmentLessonProgress,
 } from "./EntailmentLesson";
+import {
+  fixedPointApplicationCounts,
+  initialFixedPointLessonProgress,
+  type FixedPointLessonProgress,
+} from "./FixedPointLesson";
 import type { StateLessonProgress } from "./StateLesson";
 
 /**
@@ -39,6 +44,7 @@ export interface PersistedProgress {
   readonly entailment: EntailmentLessonProgress;
   readonly states: StateLessonProgress;
   readonly maps: ContinuousMapLessonProgress;
+  readonly fixedPoints: FixedPointLessonProgress;
   readonly statesUnlocked: boolean;
 }
 
@@ -252,6 +258,51 @@ function validateContinuousMapProgress(
   return undefined;
 }
 
+const streamTokenIds = new Set<TokenId>([
+  "starts-0",
+  "starts-1",
+  "starts-11",
+  "starts-111",
+]);
+
+function validateFixedPointProgress(
+  value: unknown,
+): FixedPointLessonProgress | undefined {
+  if (value === undefined) {
+    // Progress stored before the fixed-point lesson existed.
+    return initialFixedPointLessonProgress;
+  }
+  if (!isRecord(value) || !isRecord(value.stage)) {
+    return undefined;
+  }
+  const { stage } = value;
+  if (stage.kind === "intro" || stage.kind === "complete") {
+    return { stage: { kind: stage.kind } };
+  }
+  if (
+    (stage.kind === "naturals" || stage.kind === "streams") &&
+    typeof stage.applied === "number" &&
+    Number.isInteger(stage.applied) &&
+    stage.applied >= 0 &&
+    stage.applied <= fixedPointApplicationCounts[stage.kind]
+  ) {
+    return { stage: { kind: stage.kind, applied: stage.applied } };
+  }
+  if (
+    stage.kind === "challenge" &&
+    (stage.answer === undefined ||
+      (typeof stage.answer === "string" && streamTokenIds.has(stage.answer)))
+  ) {
+    return {
+      stage: {
+        kind: "challenge",
+        ...(stage.answer === undefined ? {} : { answer: stage.answer }),
+      },
+    };
+  }
+  return undefined;
+}
+
 /** Load and validate stored progress; anything malformed is discarded. */
 export function loadPersistedProgress(): PersistedProgress | undefined {
   try {
@@ -269,11 +320,13 @@ export function loadPersistedProgress(): PersistedProgress | undefined {
     const entailment = validateEntailmentProgress(parsed.entailment);
     const states = validateStateLessonProgress(parsed.states);
     const maps = validateContinuousMapProgress(parsed.maps);
+    const fixedPoints = validateFixedPointProgress(parsed.fixedPoints);
     if (
       lesson === undefined ||
       entailment === undefined ||
       states === undefined ||
       maps === undefined ||
+      fixedPoints === undefined ||
       typeof parsed.statesUnlocked !== "boolean"
     ) {
       return undefined;
@@ -285,6 +338,7 @@ export function loadPersistedProgress(): PersistedProgress | undefined {
       entailment,
       states,
       maps,
+      fixedPoints,
       statesUnlocked: parsed.statesUnlocked,
     };
   } catch {

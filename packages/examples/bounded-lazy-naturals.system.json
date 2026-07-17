@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "1",
+  "kind": "information-system",
+  "convention": "scott-1982-distinguished-token",
+  "id": "bounded-lazy-naturals",
+  "title": "Bounded lazy naturals",
+  "description": "Lower-bound observations of a lazy natural number, bounded at depth 3.",
+  "approximation": {
+    "kind": "bounded",
+    "bound": "3"
+  },
+  "tokens": [
+    {
+      "id": "at-least-1",
+      "label": "at least 1",
+      "symbol": "≥1",
+      "description": "The observation that the number is at least 1."
+    },
+    {
+      "id": "at-least-2",
+      "label": "at least 2",
+      "symbol": "≥2",
+      "description": "The observation that the number is at least 2."
+    },
+    {
+      "id": "at-least-3",
+      "label": "at least 3",
+      "symbol": "≥3",
+      "description": "The observation that the number is at least 3."
+    },
+    {
+      "id": "delta",
+      "label": "Always-present token",
+      "symbol": "Δ",
+      "description": "The distinguished token present in every state."
+    }
+  ],
+  "delta": "delta",
+  "minimalInconsistentSets": [],
+  "entailmentRules": [
+    {
+      "id": "at-least-2-entails-at-least-1",
+      "premises": ["at-least-2"],
+      "conclusion": "at-least-1"
+    },
+    {
+      "id": "at-least-3-entails-at-least-2",
+      "premises": ["at-least-3"],
+      "conclusion": "at-least-2"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import type { ContinuousMapLessonCopy } from "./ContinuousMapLesson";
 import type { EntailmentLessonCopy } from "./EntailmentLesson";
+import type { FixedPointLessonCopy } from "./FixedPointLesson";
 import type { SandboxPreviewCopy } from "./SandboxPreview";
 import type { StateLessonCopy } from "./StateLesson";
 
@@ -182,6 +183,7 @@ export interface LessonMessages {
   readonly entailment: EntailmentLessonCopy;
   readonly stateLesson: StateLessonCopy;
   readonly continuousMapLesson: ContinuousMapLessonCopy;
+  readonly fixedPointLesson: FixedPointLessonCopy;
   readonly rejectedToken: (token: string) => string;
   readonly rejectedRole: string;
   readonly rejectedDetail: string;
@@ -579,6 +581,15 @@ const english: LessonMessages = {
       consistencyValue: "Every finite token set is consistent in this model.",
       rulesHeading: "Declared rules",
     },
+    nonFlat: {
+      heading: "Entailment reshapes the whole order.",
+      introduction:
+        "In the Coquand system — a classroom example from the Munich school — two independent observations l and r jointly entail a third, ε. One multi-premise rule is enough to bend the information order.",
+      ruleLabel: "The one declared rule",
+      statesLabel: "All seven states",
+      conclusion:
+        "Unlike the flat Boolean order, this order has chains of length greater than one: {Δ} ⊑ {Δ, l} ⊑ {Δ, ε, l} ⊑ {Δ, ε, l, r}. Entailment removed the would-be state {Δ, l, r} because it must already contain ε.",
+    },
     challenge: {
       eyebrow: "Short challenge",
       heading: "Which token needed both declared rules?",
@@ -872,6 +883,172 @@ const english: LessonMessages = {
       replay: "Replay from bottom",
       back: "Back to states",
       openSandbox: "Review the Boolean sandbox",
+      continueFixedPoints: "Continue to fixed points",
+    },
+  },
+  fixedPointLesson: {
+    pageTitle: "ScottLab · Least fixed points",
+    pageDescription:
+      "Iterate an approximable endomap from bottom and watch it stabilize at its least fixed point.",
+    markerLabel: "Lesson 6: Fixed points",
+    markerName: "Fixed points",
+    footerSystem: "Bounded lazy naturals",
+    footerStage: "Fixed-point iteration",
+    eyebrow: "Guided lesson · Fixed points",
+    title: "Recursion is repeated application from ⊥.",
+    lead:
+      "A recursive definition names a value in terms of itself. Domain theory reads it as the least fixed point of a continuous map: start at bottom, apply the map again and again, and collect everything it ever justifies.",
+    workspaceLabel: "Interactive fixed-point lesson",
+    tokens: {
+      delta: {
+        label: "always-present token",
+        accessibleName: "Delta, the always-present token",
+        description: "The distinguished token present in every state.",
+      },
+      "at-least-1": {
+        label: "at least 1",
+        accessibleName: "at least 1 token",
+        description: "The number is at least 1.",
+      },
+      "at-least-2": {
+        label: "at least 2",
+        accessibleName: "at least 2 token",
+        description: "The number is at least 2.",
+      },
+      "at-least-3": {
+        label: "at least 3",
+        accessibleName: "at least 3 token",
+        description: "The number is at least 3.",
+      },
+      "starts-0": {
+        label: "starts with 0",
+        accessibleName: "starts with 0 token",
+        description: "The stream begins with 0.",
+      },
+      "starts-1": {
+        label: "starts with 1",
+        accessibleName: "starts with 1 token",
+        description: "The stream begins with 1.",
+      },
+      "starts-11": {
+        label: "starts with 11",
+        accessibleName: "starts with 11 token",
+        description: "The stream begins with 1, 1.",
+      },
+      "starts-111": {
+        label: "starts with 111",
+        accessibleName: "starts with 111 token",
+        description: "The stream begins with 1, 1, 1.",
+      },
+    },
+    rules: {
+      "always-at-least-1": {
+        label: "the result is at least 1",
+        explanation: "Without reading any input, one application proves ≥1.",
+      },
+      "at-least-1-to-at-least-2": {
+        label: "≥1 justifies ≥2",
+        explanation:
+          "If the previous iterate reached ≥1, this application proves ≥2.",
+      },
+      "at-least-2-to-at-least-3": {
+        label: "≥2 justifies ≥3",
+        explanation:
+          "If the previous iterate reached ≥2, this application proves ≥3.",
+      },
+      "always-starts-1": {
+        label: "the output starts with 1",
+        explanation:
+          "cons 1 places a 1 in front before reading anything at all.",
+      },
+      "starts-1-to-starts-11": {
+        label: "1… becomes 11…",
+        explanation:
+          "One known input element yields two known output elements.",
+      },
+      "starts-11-to-starts-111": {
+        label: "11… becomes 111…",
+        explanation:
+          "Two known input elements yield three known output elements.",
+      },
+    },
+    intro: {
+      heading: "What can repeated application build?",
+      explanation:
+        "Take the bounded lazy naturals: the tokens are the lower bounds ≥1, ≥2, and ≥3. The endomap F proves one further bound with each application.",
+      mapExplanation:
+        "These are F's finite generators. Applying F to a state activates every generator whose premises the state contains, then closes the result under entailment.",
+      startAction: "Start at ⊥ and iterate",
+    },
+    naturalsPhase: {
+      heading: "Phase 1 · Bounded lazy naturals",
+      introduction:
+        "Apply F step by step. Each application may use everything the previous one established — watch the chain ⊥ ⊑ F(⊥) ⊑ F²(⊥) ⊑ … grow.",
+      systemName: "Bounded lazy naturals",
+      mapName: "F",
+    },
+    streamsPhase: {
+      heading: "Phase 2 · Streams: ones = 1 : ones",
+      introduction:
+        "The same iteration computes an infinite object. cons1 places a 1 in front of a stream, so its least fixed point is the stream of ones. Iterate and watch the known prefix grow.",
+      systemName: "Stream prefixes",
+      mapName: "cons1",
+    },
+    iteration: {
+      chainLabel: "Kleene chain",
+      iterateName: (index) => `Iterate ${index}`,
+      bottomIterateName: "Bottom",
+      currentStateLabel: "Current iterate",
+      progress: (applied, total) => `Application ${applied} of ${total}`,
+      applyAction: "Apply the map",
+      stepBackAction: "Step back",
+      startHeading: "Everything starts at ⊥.",
+      startExplanation: (state) =>
+        `The least state ${state} contains no specific information yet. Apply the map to see what a single application already justifies.`,
+      appliedHeading: (newTokens) => `The state learns ${newTokens}.`,
+      appliedExplanation: (before, after) =>
+        `Applied to ${before}, the active generators justify new observations; closure produces ${after}.`,
+      stabilizedHeading: "Nothing new: the iteration has stabilized.",
+      stabilizedExplanation: (state, applications) =>
+        `Applying the map to ${state} returns ${state} itself. After ${applications} growing applications, this first repeated state is the least fixed point.`,
+      boundNote: (bound) =>
+        `This system is a bounded approximation (depth ${bound}). The unbounded object would keep growing; every state shown here is a genuine finite iterate.`,
+      activationsLabel: "Active generators",
+      newTokensLabel: "Newly justified",
+      nothingNew: "nothing — the state repeats",
+      continueStreamsAction: "Continue to streams",
+      continueChallengeAction: "Try the take 3 challenge",
+    },
+    challenge: {
+      eyebrow: "Short challenge",
+      heading: "Why does take 3 work on an infinite list?",
+      explanation:
+        "In a lazy language, ones = 1 : ones names an infinite stream, yet take 3 ones answers [1, 1, 1] immediately. Which single observation must the state contain before take 3 is fully answered?",
+      choiceLegend: "Choose the observation take 3 needs",
+      chooseToken: (token) => `Choose the ${token}`,
+      correctHeading: "Right — three tokens of information suffice.",
+      correctExplanation:
+        "take 3 only needs the prefix of length three. The third iterate already contains it, so the answer is ready after finitely many steps. That finite appetite is exactly Scott continuity.",
+      incorrectHeading: "Not quite.",
+      incorrectExplanation: (token) =>
+        `${token} pins down less than the first three elements, so take 3 could not answer from it alone. Pick the observation that fixes all three.`,
+      finishAction: "Finish the lesson",
+    },
+    counterpoint: {
+      heading: "Not every map climbs.",
+      explanation:
+        "Iterate Boolean negation from ⊥ and it stabilizes immediately: no generator fires at bottom, so the least fixed point of not is ⊥ itself. A least fixed point can be as small as bottom.",
+      formal: "not(⊥) = ⊥",
+    },
+    complete: {
+      heading: "You computed two least fixed points.",
+      explanation:
+        "Kleene iteration from ⊥ climbed the bounded lazy naturals and built the bounded stream of ones — and take 3 needed only three tokens of it. This is how recursive definitions get their meaning.",
+    },
+    actions: {
+      back: "Back to continuous maps",
+      openSandbox: "Review the Boolean sandbox",
+      replay: "Replay the iteration",
     },
   },
   rejectedToken: (token) => `Rejected ${token} token`,
@@ -1278,6 +1455,15 @@ const german: LessonMessages = {
         "In diesem Modell ist jede endliche Tokenmenge verträglich.",
       rulesHeading: "Festgelegte Regeln",
     },
+    nonFlat: {
+      heading: "Folgerung formt die gesamte Ordnung um.",
+      introduction:
+        "Im Coquand-System — einem Lehrbeispiel der Münchner Schule — folgern zwei unabhängige Beobachtungen l und r gemeinsam eine dritte, ε. Eine einzige Regel mit mehreren Prämissen genügt, um die Informationsordnung zu verbiegen.",
+      ruleLabel: "Die eine festgelegte Regel",
+      statesLabel: "Alle sieben Zustände",
+      conclusion:
+        "Anders als die flache boolesche Ordnung hat diese Ordnung Ketten mit einer Länge größer als eins: {Δ} ⊑ {Δ, l} ⊑ {Δ, ε, l} ⊑ {Δ, ε, l, r}. Die Folgerung hat den vermeintlichen Zustand {Δ, l, r} entfernt, weil er ε bereits enthalten muss.",
+    },
     challenge: {
       eyebrow: "Kurze Aufgabe",
       heading: "Welches Token benötigte beide festgelegten Regeln?",
@@ -1573,6 +1759,173 @@ const german: LessonMessages = {
       replay: "Bei Bottom erneut beginnen",
       back: "Zurück zu Zuständen",
       openSandbox: "Boolean-Sandbox erneut ansehen",
+      continueFixedPoints: "Weiter zu Fixpunkten",
+    },
+  },
+  fixedPointLesson: {
+    pageTitle: "ScottLab · Kleinste Fixpunkte",
+    pageDescription:
+      "Eine approximierbare Endoabbildung von Bottom aus iterieren und beobachten, wie sie sich bei ihrem kleinsten Fixpunkt stabilisiert.",
+    markerLabel: "Lektion 6: Fixpunkte",
+    markerName: "Fixpunkte",
+    footerSystem: "Beschränkte lazy Naturals",
+    footerStage: "Fixpunkt-Iteration",
+    eyebrow: "Geführte Lektion · Fixpunkte",
+    title: "Rekursion ist wiederholtes Anwenden ab ⊥.",
+    lead:
+      "Eine rekursive Definition benennt einen Wert durch sich selbst. Die Domänentheorie liest sie als kleinsten Fixpunkt einer stetigen Abbildung: Bei Bottom beginnen, die Abbildung immer wieder anwenden und alles sammeln, was sie jemals begründet.",
+    workspaceLabel: "Interaktive Fixpunkt-Lektion",
+    tokens: {
+      delta: {
+        label: "immer vorhandenes Token",
+        accessibleName: "Delta, das immer vorhandene Token",
+        description: "Das ausgezeichnete Token, das in jedem Zustand liegt.",
+      },
+      "at-least-1": {
+        label: "mindestens 1",
+        accessibleName: "Token „mindestens 1“",
+        description: "Die Zahl ist mindestens 1.",
+      },
+      "at-least-2": {
+        label: "mindestens 2",
+        accessibleName: "Token „mindestens 2“",
+        description: "Die Zahl ist mindestens 2.",
+      },
+      "at-least-3": {
+        label: "mindestens 3",
+        accessibleName: "Token „mindestens 3“",
+        description: "Die Zahl ist mindestens 3.",
+      },
+      "starts-0": {
+        label: "beginnt mit 0",
+        accessibleName: "Token „beginnt mit 0“",
+        description: "Der Strom beginnt mit 0.",
+      },
+      "starts-1": {
+        label: "beginnt mit 1",
+        accessibleName: "Token „beginnt mit 1“",
+        description: "Der Strom beginnt mit 1.",
+      },
+      "starts-11": {
+        label: "beginnt mit 11",
+        accessibleName: "Token „beginnt mit 11“",
+        description: "Der Strom beginnt mit 1, 1.",
+      },
+      "starts-111": {
+        label: "beginnt mit 111",
+        accessibleName: "Token „beginnt mit 111“",
+        description: "Der Strom beginnt mit 1, 1, 1.",
+      },
+    },
+    rules: {
+      "always-at-least-1": {
+        label: "das Ergebnis ist mindestens 1",
+        explanation:
+          "Ohne irgendeine Eingabe zu lesen, beweist eine Anwendung ≥1.",
+      },
+      "at-least-1-to-at-least-2": {
+        label: "≥1 begründet ≥2",
+        explanation:
+          "Hat die vorige Iteration ≥1 erreicht, beweist diese Anwendung ≥2.",
+      },
+      "at-least-2-to-at-least-3": {
+        label: "≥2 begründet ≥3",
+        explanation:
+          "Hat die vorige Iteration ≥2 erreicht, beweist diese Anwendung ≥3.",
+      },
+      "always-starts-1": {
+        label: "die Ausgabe beginnt mit 1",
+        explanation:
+          "cons 1 stellt eine 1 voran, bevor es überhaupt etwas liest.",
+      },
+      "starts-1-to-starts-11": {
+        label: "1… wird zu 11…",
+        explanation:
+          "Ein bekanntes Eingabeelement liefert zwei bekannte Ausgabeelemente.",
+      },
+      "starts-11-to-starts-111": {
+        label: "11… wird zu 111…",
+        explanation:
+          "Zwei bekannte Eingabeelemente liefern drei bekannte Ausgabeelemente.",
+      },
+    },
+    intro: {
+      heading: "Was kann wiederholtes Anwenden aufbauen?",
+      explanation:
+        "Nimm die beschränkten lazy Naturals: Die Tokens sind die unteren Schranken ≥1, ≥2 und ≥3. Die Endoabbildung F beweist mit jeder Anwendung eine weitere Schranke.",
+      mapExplanation:
+        "Dies sind die endlichen Generatoren von F. F auf einen Zustand anzuwenden aktiviert jeden Generator, dessen Prämissen der Zustand enthält, und schließt das Ergebnis unter Folgerung ab.",
+      startAction: "Bei ⊥ beginnen und iterieren",
+    },
+    naturalsPhase: {
+      heading: "Phase 1 · Beschränkte lazy Naturals",
+      introduction:
+        "Wende F Schritt für Schritt an. Jede Anwendung darf alles nutzen, was die vorige gesichert hat — beobachte, wie die Kette ⊥ ⊑ F(⊥) ⊑ F²(⊥) ⊑ … wächst.",
+      systemName: "Beschränkte lazy Naturals",
+      mapName: "F",
+    },
+    streamsPhase: {
+      heading: "Phase 2 · Ströme: ones = 1 : ones",
+      introduction:
+        "Dieselbe Iteration berechnet ein unendliches Objekt. cons1 stellt einem Strom eine 1 voran; sein kleinster Fixpunkt ist der Strom aus Einsen. Iteriere und beobachte, wie das bekannte Präfix wächst.",
+      systemName: "Strom-Präfixe",
+      mapName: "cons1",
+    },
+    iteration: {
+      chainLabel: "Kleene-Kette",
+      iterateName: (index) => `Iteration ${index}`,
+      bottomIterateName: "Bottom",
+      currentStateLabel: "Aktuelle Iteration",
+      progress: (applied, total) => `Anwendung ${applied} von ${total}`,
+      applyAction: "Abbildung anwenden",
+      stepBackAction: "Schritt zurück",
+      startHeading: "Alles beginnt bei ⊥.",
+      startExplanation: (state) =>
+        `Der kleinste Zustand ${state} enthält noch keine konkrete Information. Wende die Abbildung an, um zu sehen, was eine einzige Anwendung bereits begründet.`,
+      appliedHeading: (newTokens) => `Der Zustand lernt ${newTokens}.`,
+      appliedExplanation: (before, after) =>
+        `Auf ${before} angewendet begründen die aktiven Generatoren neue Beobachtungen; der Abschluss erzeugt ${after}.`,
+      stabilizedHeading: "Nichts Neues: Die Iteration hat sich stabilisiert.",
+      stabilizedExplanation: (state, applications) =>
+        `Die Abbildung auf ${state} angewendet liefert wieder ${state}. Nach ${applications} wachsenden Anwendungen ist dieser erste wiederholte Zustand der kleinste Fixpunkt.`,
+      boundNote: (bound) =>
+        `Dieses System ist eine beschränkte Approximation (Tiefe ${bound}). Das unbeschränkte Objekt würde weiter wachsen; jeder hier gezeigte Zustand ist eine echte endliche Iteration.`,
+      activationsLabel: "Aktive Generatoren",
+      newTokensLabel: "Neu begründet",
+      nothingNew: "nichts — der Zustand wiederholt sich",
+      continueStreamsAction: "Weiter zu Strömen",
+      continueChallengeAction: "Die take-3-Aufgabe versuchen",
+    },
+    challenge: {
+      eyebrow: "Kurze Aufgabe",
+      heading: "Warum funktioniert take 3 auf einer unendlichen Liste?",
+      explanation:
+        "In einer lazy Sprache benennt ones = 1 : ones einen unendlichen Strom, und doch antwortet take 3 ones sofort mit [1, 1, 1]. Welche einzelne Beobachtung muss der Zustand enthalten, damit take 3 vollständig beantwortet ist?",
+      choiceLegend: "Wähle die Beobachtung, die take 3 braucht",
+      chooseToken: (token) => `${token} wählen`,
+      correctHeading: "Richtig — drei Tokens an Information genügen.",
+      correctExplanation:
+        "take 3 braucht nur das Präfix der Länge drei. Die dritte Iteration enthält es bereits, also steht die Antwort nach endlich vielen Schritten fest. Genau dieser endliche Informationshunger ist Scott-Stetigkeit.",
+      incorrectHeading: "Nicht ganz.",
+      incorrectExplanation: (token) =>
+        `${token} legt weniger als die ersten drei Elemente fest; take 3 könnte daraus allein nicht antworten. Wähle die Beobachtung, die alle drei festlegt.`,
+      finishAction: "Lektion abschließen",
+    },
+    counterpoint: {
+      heading: "Nicht jede Abbildung klettert.",
+      explanation:
+        "Iteriere die boolesche Negation ab ⊥, und sie stabilisiert sich sofort: Bei Bottom feuert kein Generator, also ist der kleinste Fixpunkt von not gerade ⊥ selbst. Ein kleinster Fixpunkt kann so klein wie Bottom sein.",
+      formal: "not(⊥) = ⊥",
+    },
+    complete: {
+      heading: "Du hast zwei kleinste Fixpunkte berechnet.",
+      explanation:
+        "Die Kleene-Iteration ab ⊥ erklomm die beschränkten lazy Naturals und baute den beschränkten Strom aus Einsen — und take 3 brauchte davon nur drei Tokens. So bekommen rekursive Definitionen ihre Bedeutung.",
+    },
+    actions: {
+      back: "Zurück zu stetigen Abbildungen",
+      openSandbox: "Boolean-Sandbox erneut ansehen",
+      replay: "Iteration erneut abspielen",
     },
   },
   rejectedToken: (token) => `Abgelehntes ${token}-Token`,

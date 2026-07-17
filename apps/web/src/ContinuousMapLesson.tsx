@@ -148,6 +148,7 @@ export interface ContinuousMapLessonCopy {
     readonly replay: string;
     readonly back: string;
     readonly openSandbox: string;
+    readonly continueFixedPoints: string;
   };
 }
 
@@ -178,6 +179,7 @@ export interface ContinuousMapLessonProps {
   readonly onProgressChange: (progress: ContinuousMapLessonProgress) => void;
   readonly onBack: () => void;
   readonly onOpenSandbox: () => void;
+  readonly onContinueFixedPoints: () => void;
 }
 
 type NarrativeFrameKind = "premise" | "mappingRule" | "output";
@@ -269,6 +271,7 @@ export function ContinuousMapLesson({
   onProgressChange,
   onBack,
   onOpenSandbox,
+  onContinueFixedPoints,
 }: ContinuousMapLessonProps) {
   const nextButtonRef = useRef<HTMLButtonElement>(null);
   const challengeHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -817,13 +820,22 @@ export function ContinuousMapLesson({
           ) : null}
 
           {stage.kind === "complete" ? (
-            <button
-              className="secondary-action continuous-map-replay"
-              type="button"
-              onClick={replay}
-            >
-              {copy.actions.replay}
-            </button>
+            <>
+              <button
+                className="primary-action continuous-map-continue"
+                type="button"
+                onClick={onContinueFixedPoints}
+              >
+                {copy.actions.continueFixedPoints}
+              </button>
+              <button
+                className="secondary-action continuous-map-replay"
+                type="button"
+                onClick={replay}
+              >
+                {copy.actions.replay}
+              </button>
+            </>
           ) : null}
         </section>
 

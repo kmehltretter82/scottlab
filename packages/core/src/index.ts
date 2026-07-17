@@ -129,6 +129,30 @@ export interface MappingStepsComputation extends MappingApplication {
   readonly steps: readonly MappingApplicationStep[];
 }
 
+export interface FixedPointIterationStep {
+  /** One-based number of this application of the endomap. */
+  readonly index: number;
+  readonly before: readonly TokenId[];
+  readonly after: readonly TokenId[];
+  /** Tokens learned by this application; empty exactly at stabilization. */
+  readonly newTokens: readonly TokenId[];
+  readonly activations: readonly MappingRuleActivation[];
+}
+
+export interface FixedPointComputation {
+  /** The ascending Kleene chain ⊥ = x₀ ⊂ x₁ ⊂ … ⊂ xₙ of distinct iterates. */
+  readonly iterates: readonly (readonly TokenId[])[];
+  /**
+   * Every application of the endomap, in order. The final step repeats the
+   * fixed point (`newTokens` is empty) and is the stabilization witness.
+   */
+  readonly steps: readonly FixedPointIterationStep[];
+  /** The least fixed point: the last iterate, which the endomap repeats. */
+  readonly fixedPoint: readonly TokenId[];
+  /** How many applications strictly grew the state before it repeated. */
+  readonly stabilizedAfter: number;
+}
+
 export type BottomSemanticEvent =
   | {
       readonly kind: "bottomComputed";
@@ -1311,6 +1335,61 @@ export function applyMappingSteps(
   return applyCompiledMappingSteps(
     compileMapping(source, target, mapping, options),
     sourceState,
+  );
+}
+
+/**
+ * Iterate an approximable endomapping from ⊥ to its least fixed point.
+ *
+ * Following Scott's token-level presentation (PRG-19, Theorem 4.1), the
+ * least fixed point is reached by applying the mapping's rules repeatedly
+ * starting from the least state. Approximable mappings are monotone, so
+ * the iterates `⊥ ⊑ F(⊥) ⊑ F²(⊥) ⊑ …` form an ascending chain that must
+ * repeat on a finite system; the first repetition is the least fixed
+ * point, and the final recorded step is its stabilization witness.
+ */
+export function iterateFromBottom(
+  system: InformationSystemDefinition,
+  mapping: ApproximableMappingDefinition,
+  options: MappingValidationOptions = {},
+): FixedPointComputation {
+  const compiled = compileMapping(system, system, mapping, options);
+  const iterates: (readonly TokenId[])[] = [];
+  const steps: FixedPointIterationStep[] = [];
+
+  let current = computeBottom(system).state;
+  iterates.push(current);
+
+  const maximumApplications = system.tokens.length + 1;
+  for (let index = 1; index <= maximumApplications; index += 1) {
+    const application = applyCompiledMapping(compiled, current);
+    const after = application.targetState;
+    const currentTokens = new Set(current);
+    const newTokens = after.filter((tokenId) => !currentTokens.has(tokenId));
+
+    steps.push({
+      index,
+      before: current,
+      after,
+      newTokens,
+      activations: application.activations,
+    });
+
+    if (newTokens.length === 0) {
+      return {
+        iterates,
+        steps,
+        fixedPoint: current,
+        stabilizedAfter: iterates.length - 1,
+      };
+    }
+
+    current = after;
+    iterates.push(current);
+  }
+
+  throw new Error(
+    "Fixed-point iteration exceeded the height of the finite system.",
   );
 }
 

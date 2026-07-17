@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1",
+  "kind": "information-system",
+  "convention": "scott-1982-distinguished-token",
+  "id": "stream-prefixes",
+  "title": "Stream prefixes",
+  "description": "Finite prefixes of an infinite Boolean stream, bounded at depth 3 along the ones spine.",
+  "approximation": {
+    "kind": "bounded",
+    "bound": "3"
+  },
+  "tokens": [
+    {
+      "id": "delta",
+      "label": "Always-present token",
+      "symbol": "Δ",
+      "description": "The distinguished token present in every state."
+    },
+    {
+      "id": "starts-0",
+      "label": "starts with 0",
+      "symbol": "0…",
+      "description": "The observation that the stream begins with 0."
+    },
+    {
+      "id": "starts-1",
+      "label": "starts with 1",
+      "symbol": "1…",
+      "description": "The observation that the stream begins with 1."
+    },
+    {
+      "id": "starts-11",
+      "label": "starts with 11",
+      "symbol": "11…",
+      "description": "The observation that the stream begins with 11."
+    },
+    {
+      "id": "starts-111",
+      "label": "starts with 111",
+      "symbol": "111…",
+      "description": "The observation that the stream begins with 111."
+    }
+  ],
+  "delta": "delta",
+  "minimalInconsistentSets": [
+    ["starts-0", "starts-1"],
+    ["starts-0", "starts-11"],
+    ["starts-0", "starts-111"]
+  ],
+  "entailmentRules": [
+    {
+      "id": "starts-11-entails-starts-1",
+      "premises": ["starts-11"],
+      "conclusion": "starts-1"
+    },
+    {
+      "id": "starts-111-entails-starts-11",
+      "premises": ["starts-111"],
+      "conclusion": "starts-11"
+    }
+  ]
+}

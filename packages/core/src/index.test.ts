@@ -16,6 +16,7 @@ import {
   inspectStateCandidate,
   isConsistent,
   isState,
+  iterateFromBottom,
   SemanticError,
   tryAddObservation,
   validateMapping,
@@ -1760,5 +1761,107 @@ describe("tryAddObservation", () => {
       "minimalInconsistentSet",
       ["false", "true"],
     );
+  });
+});
+
+describe("iterateFromBottom", () => {
+  const boundedLazyNaturals: InformationSystemDefinition = {
+    tokens: [
+      {
+        id: "delta",
+        label: "Always-present token",
+        symbol: "Δ",
+        description: "The distinguished token present in every state.",
+      },
+      { id: "ge1", label: "at least 1", description: "The value is ≥ 1." },
+      { id: "ge2", label: "at least 2", description: "The value is ≥ 2." },
+      { id: "ge3", label: "at least 3", description: "The value is ≥ 3." },
+    ],
+    delta: "delta",
+    minimalInconsistentSets: [],
+    entailmentRules: [
+      { id: "ge2-entails-ge1", premises: ["ge2"], conclusion: "ge1" },
+      { id: "ge3-entails-ge2", premises: ["ge3"], conclusion: "ge2" },
+    ],
+  };
+
+  const oneMoreStep: ApproximableMappingDefinition = {
+    id: "one-more-step",
+    title: "One more step",
+    description: "Learn one further lower bound with each application.",
+    rules: [
+      { id: "always-ge1", premises: [], conclusion: "ge1" },
+      { id: "ge1-to-ge2", premises: ["ge1"], conclusion: "ge2" },
+      { id: "ge2-to-ge3", premises: ["ge2"], conclusion: "ge3" },
+    ],
+  };
+
+  it("climbs the bounded lazy-naturals chain one iterate per application", () => {
+    const computation = iterateFromBottom(boundedLazyNaturals, oneMoreStep);
+
+    expect(computation.iterates).toEqual([
+      ["delta"],
+      ["delta", "ge1"],
+      ["delta", "ge1", "ge2"],
+      ["delta", "ge1", "ge2", "ge3"],
+    ]);
+    expect(computation.fixedPoint).toEqual(["delta", "ge1", "ge2", "ge3"]);
+    expect(computation.stabilizedAfter).toBe(3);
+
+    expect(computation.steps).toHaveLength(4);
+    expect(computation.steps[0]).toMatchObject({
+      index: 1,
+      before: ["delta"],
+      after: ["delta", "ge1"],
+      newTokens: ["ge1"],
+    });
+    expect(
+      computation.steps[0]?.activations.map(({ ruleId }) => ruleId),
+    ).toEqual(["always-ge1"]);
+    expect(
+      computation.steps[1]?.activations.map(({ ruleId }) => ruleId),
+    ).toEqual(["always-ge1", "ge1-to-ge2"]);
+
+    const stabilization = computation.steps.at(-1);
+    expect(stabilization).toMatchObject({
+      index: 4,
+      newTokens: [],
+      after: computation.fixedPoint,
+    });
+  });
+
+  it("reports bottom as the least fixed point of Boolean negation", () => {
+    const computation = iterateFromBottom(flatBoolean, booleanNegation);
+
+    expect(computation.iterates).toEqual([["delta"]]);
+    expect(computation.fixedPoint).toEqual(["delta"]);
+    expect(computation.stabilizedAfter).toBe(0);
+    expect(computation.steps).toEqual([
+      {
+        index: 1,
+        before: ["delta"],
+        after: ["delta"],
+        newTokens: [],
+        activations: [],
+      },
+    ]);
+  });
+
+  it("validates persisted endomap identities before iterating", () => {
+    expect.hasAssertions();
+    const foreignNegation: ApproximableMappingDefinition = {
+      ...persistedBooleanNegation,
+      sourceSystemId: "other-system",
+    } as ApproximableMappingDefinition;
+    expectSemanticError(
+      () => iterateFromBottom(flatBoolean, foreignNegation),
+      "mappingSourceSystemUnidentified",
+      ["other-system"],
+    );
+
+    expect(
+      iterateFromBottom(persistedFlatBoolean, persistedBooleanNegation)
+        .fixedPoint,
+    ).toEqual(["delta"]);
   });
 });

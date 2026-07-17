@@ -27,6 +27,11 @@ const directRoutes = [
     title: "ScottLab · Continuous maps in action",
   },
   {
+    hash: "#/lesson/fixed-points",
+    heading: "Recursion is repeated application from ⊥.",
+    title: "ScottLab · Least fixed points",
+  },
+  {
     hash: "#/sandbox/flat-boolean",
     heading: "Explore the same system without the lesson rails.",
     title: "ScottLab · Flat Booleans sandbox preview",

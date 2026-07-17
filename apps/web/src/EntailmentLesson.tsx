@@ -1,9 +1,10 @@
 import {
   closureSteps,
+  enumerateStates,
   type ClosureStep,
   type TokenId,
 } from "@scottlab/core";
-import { accessPermissionsSystem } from "@scottlab/examples";
+import { accessPermissionsSystem, coquandSystem } from "@scottlab/examples";
 import { useEffect, useRef, type Ref } from "react";
 
 import "./entailment-lesson.css";
@@ -90,6 +91,13 @@ export interface EntailmentLessonCopy {
     readonly consistencyHeading: string;
     readonly consistencyValue: string;
     readonly rulesHeading: string;
+  };
+  readonly nonFlat: {
+    readonly heading: string;
+    readonly introduction: string;
+    readonly ruleLabel: string;
+    readonly statesLabel: string;
+    readonly conclusion: string;
   };
   readonly challenge: {
     readonly eyebrow: string;
@@ -186,6 +194,33 @@ const challengeTargetId = finalDeclaredStep.conclusion;
 
 /** The number of manual trace frames, for progress validation. */
 export const entailmentTraceFrameCount = traceFrames.length;
+
+const coquandStates = enumerateStates(coquandSystem).states;
+const declaredCoquandRule = coquandSystem.entailmentRules[0];
+
+if (coquandStates.length !== 7 || declaredCoquandRule === undefined) {
+  throw new Error(
+    "The entailment lesson requires the seven-state Coquand system.",
+  );
+}
+
+const coquandRule = declaredCoquandRule;
+
+function coquandTokenSymbol(tokenId: TokenId): string {
+  const token = coquandSystem.tokens.find(({ id }) => id === tokenId);
+  if (token === undefined) {
+    throw new Error(`The Coquand system does not define token '${tokenId}'.`);
+  }
+  return token.symbol ?? token.label;
+}
+
+function formatCoquandSet(tokenIds: readonly TokenId[]): string {
+  const tokenSet = new Set(tokenIds);
+  return `{${coquandSystem.tokens
+    .filter(({ id }) => tokenSet.has(id))
+    .map(({ id }) => coquandTokenSymbol(id))
+    .join(", ")}}`;
+}
 
 function requireRuleId(step: ClosureStep): string {
   if (step.reason.kind !== "declaredRule") {
@@ -590,6 +625,36 @@ export function EntailmentLesson({
                 </dd>
               </div>
             </dl>
+          </section>
+
+          <section
+            className="entailment-nonflat"
+            aria-labelledby="entailment-nonflat-title"
+          >
+            <h2 id="entailment-nonflat-title">{copy.nonFlat.heading}</h2>
+            <p>{copy.nonFlat.introduction}</p>
+            <dl>
+              <div>
+                <dt>{copy.nonFlat.ruleLabel}</dt>
+                <dd>
+                  <code>
+                    {formatCoquandSet(coquandRule.premises)} ⊢{" "}
+                    {coquandTokenSymbol(coquandRule.conclusion)}
+                  </code>
+                </dd>
+              </div>
+              <div>
+                <dt>{copy.nonFlat.statesLabel}</dt>
+                <dd>
+                  <code>
+                    {coquandStates
+                      .map((state) => formatCoquandSet(state))
+                      .join("  ")}
+                  </code>
+                </dd>
+              </div>
+            </dl>
+            <p>{copy.nonFlat.conclusion}</p>
           </section>
 
           <section className="entailment-structured-trace">

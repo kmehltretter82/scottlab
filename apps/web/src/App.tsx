@@ -28,6 +28,7 @@ import {
 } from "./i18n";
 import {
   entailmentLessonRoute,
+  fixedPointsLessonRoute,
   flatBooleanSandboxRoute,
   formatHashRoute,
   lessonRoute,
@@ -47,6 +48,11 @@ import {
   initialEntailmentLessonProgress,
   type EntailmentLessonProgress,
 } from "./EntailmentLesson";
+import {
+  FixedPointLesson,
+  initialFixedPointLessonProgress,
+  type FixedPointLessonProgress,
+} from "./FixedPointLesson";
 import {
   loadPersistedProgress,
   savePersistedProgress,
@@ -981,6 +987,10 @@ export function App() {
     useState<ContinuousMapLessonProgress>(
       storedProgress?.maps ?? initialContinuousMapLessonProgress,
     );
+  const [fixedPointProgress, setFixedPointProgress] =
+    useState<FixedPointLessonProgress>(
+      storedProgress?.fixedPoints ?? initialFixedPointLessonProgress,
+    );
   const [statesUnlocked, setStatesUnlocked] = useState(
     () =>
       (storedProgress?.statesUnlocked ?? false) ||
@@ -997,12 +1007,14 @@ export function App() {
   const entailmentHeadingRef = useRef<HTMLHeadingElement>(null);
   const statesHeadingRef = useRef<HTMLHeadingElement>(null);
   const continuousMapHeadingRef = useRef<HTMLHeadingElement>(null);
+  const fixedPointHeadingRef = useRef<HTMLHeadingElement>(null);
   const routeBeforeSandboxRef = useRef<AppRoute>(lessonRoute);
   const copy = messages[language];
   const isSandbox = route.kind === "sandbox";
   const isEntailment = route.kind === "entailment";
   const isStates = route.kind === "states";
   const isMaps = route.kind === "maps";
+  const isFixedPoints = route.kind === "fixedPoints";
   const isIntroduction = lessonState.step === "intro";
   const isExampleIntroduction = lessonState.step === "example";
   const isFormalisation = lessonState.step === "formal";
@@ -1143,22 +1155,29 @@ export function App() {
     document.documentElement.lang = language;
     document.title = isSandbox
       ? copy.sandboxPreview.pageTitle
-      : isMaps
-        ? copy.continuousMapLesson.pageTitle
-        : isStates
-          ? copy.stateLesson.pageTitle
-          : isEntailment
-            ? copy.entailment.pageTitle
-            : isIntroduction
-              ? copy.introduction.pageTitle
-              : isExampleIntroduction
-                ? copy.exampleIntroduction.pageTitle
-                : isFormalisation
-                  ? copy.formalisation.pageTitle
-                  : copy.pageTitle;
+      : isFixedPoints
+        ? copy.fixedPointLesson.pageTitle
+        : isMaps
+          ? copy.continuousMapLesson.pageTitle
+          : isStates
+            ? copy.stateLesson.pageTitle
+            : isEntailment
+              ? copy.entailment.pageTitle
+              : isIntroduction
+                ? copy.introduction.pageTitle
+                : isExampleIntroduction
+                  ? copy.exampleIntroduction.pageTitle
+                  : isFormalisation
+                    ? copy.formalisation.pageTitle
+                    : copy.pageTitle;
     document
       .querySelector<HTMLMetaElement>('meta[name="description"]')
-      ?.setAttribute("content", copy.pageDescription);
+      ?.setAttribute(
+        "content",
+        isFixedPoints
+          ? copy.fixedPointLesson.pageDescription
+          : copy.pageDescription,
+      );
 
     try {
       window.localStorage.setItem(languageStorageKey, language);
@@ -1168,6 +1187,7 @@ export function App() {
   }, [
     copy,
     isExampleIntroduction,
+    isFixedPoints,
     isFormalisation,
     isIntroduction,
     isEntailment,
@@ -1180,6 +1200,8 @@ export function App() {
   useEffect(() => {
     if (isSandbox) {
       sandboxHeadingRef.current?.focus();
+    } else if (isFixedPoints) {
+      fixedPointHeadingRef.current?.focus();
     } else if (isMaps) {
       continuousMapHeadingRef.current?.focus();
     } else if (isStates) {
@@ -1189,7 +1211,14 @@ export function App() {
     } else if (lessonState.step === "formal") {
       formalHeadingRef.current?.focus();
     }
-  }, [isEntailment, isMaps, isSandbox, isStates, lessonState.step]);
+  }, [
+    isEntailment,
+    isFixedPoints,
+    isMaps,
+    isSandbox,
+    isStates,
+    lessonState.step,
+  ]);
 
   useEffect(() => {
     if (isStates) {
@@ -1204,11 +1233,13 @@ export function App() {
       entailment: entailmentProgress,
       states: stateLessonProgress,
       maps: continuousMapProgress,
+      fixedPoints: fixedPointProgress,
       statesUnlocked,
     });
   }, [
     continuousMapProgress,
     entailmentProgress,
+    fixedPointProgress,
     lessonState,
     stateLessonProgress,
     statesUnlocked,
@@ -1325,6 +1356,11 @@ export function App() {
       navigateTo(lessonRoute);
       return;
     }
+    if (isFixedPoints) {
+      setFixedPointProgress(initialFixedPointLessonProgress);
+      navigateTo(fixedPointsLessonRoute);
+      return;
+    }
     if (isMaps) {
       setContinuousMapProgress(initialContinuousMapLessonProgress);
       navigateTo(mapsLessonRoute);
@@ -1375,6 +1411,14 @@ export function App() {
 
   function returnFromMapsLesson(): void {
     navigateTo(statesLessonRoute);
+  }
+
+  function openFixedPointsLesson(): void {
+    navigateTo(fixedPointsLessonRoute);
+  }
+
+  function returnFromFixedPointsLesson(): void {
+    navigateTo(mapsLessonRoute);
   }
 
   function selectObservation(tokenId: TokenId): void {
@@ -1610,28 +1654,32 @@ export function App() {
         : copy.footerStage;
   const footerSystem = isSandbox
     ? copy.sandboxPreview.footerSystem
-    : isMaps
-      ? copy.continuousMapLesson.footerSystem
-      : isStates
-        ? copy.stateLesson.footerSystem
-        : isEntailment
-          ? copy.entailment.footerSystem
-          : copy.footerSystem;
+    : isFixedPoints
+      ? copy.fixedPointLesson.footerSystem
+      : isMaps
+        ? copy.continuousMapLesson.footerSystem
+        : isStates
+          ? copy.stateLesson.footerSystem
+          : isEntailment
+            ? copy.entailment.footerSystem
+            : copy.footerSystem;
   const footerStage = isSandbox
     ? copy.sandboxPreview.footerStage
-    : isMaps
-      ? copy.continuousMapLesson.footerStage
-      : isStates
-        ? copy.stateLesson.footerStage
-        : isEntailment
-          ? copy.entailment.footerStage
-          : isIntroduction
-            ? copy.introduction.footerStage
-            : isExampleIntroduction
-              ? copy.exampleIntroduction.footerStage
-              : isFormalisation
-                ? copy.formalisation.footerStage
-                : lessonFooterStage;
+    : isFixedPoints
+      ? copy.fixedPointLesson.footerStage
+      : isMaps
+        ? copy.continuousMapLesson.footerStage
+        : isStates
+          ? copy.stateLesson.footerStage
+          : isEntailment
+            ? copy.entailment.footerStage
+            : isIntroduction
+              ? copy.introduction.footerStage
+              : isExampleIntroduction
+                ? copy.exampleIntroduction.footerStage
+                : isFormalisation
+                  ? copy.formalisation.footerStage
+                  : lessonFooterStage;
 
   const lessonCopy = (
     <div className="lesson-copy" aria-live="polite">
@@ -1751,6 +1799,14 @@ export function App() {
                 onSelect: openMapsLesson,
               },
               {
+                id: "fixed-points",
+                number: "06",
+                name: copy.fixedPointLesson.markerName,
+                label: copy.fixedPointLesson.markerLabel,
+                isCurrent: isFixedPoints,
+                onSelect: openFixedPointsLesson,
+              },
+              {
                 id: "sandbox",
                 number: "S",
                 name: copy.sandboxPreview.markerName,
@@ -1811,6 +1867,15 @@ export function App() {
           onRestart={restartFromSandbox}
           tokenTextById={copy.tokens}
         />
+      ) : isFixedPoints ? (
+        <FixedPointLesson
+          copy={copy.fixedPointLesson}
+          headingRef={fixedPointHeadingRef}
+          progress={fixedPointProgress}
+          onProgressChange={setFixedPointProgress}
+          onBack={returnFromFixedPointsLesson}
+          onOpenSandbox={openSandbox}
+        />
       ) : isMaps ? (
         <ContinuousMapLesson
           copy={copy.continuousMapLesson}
@@ -1819,6 +1884,7 @@ export function App() {
           onProgressChange={setContinuousMapProgress}
           onBack={returnFromMapsLesson}
           onOpenSandbox={openSandbox}
+          onContinueFixedPoints={openFixedPointsLesson}
         />
       ) : isStates ? (
         <StateLesson

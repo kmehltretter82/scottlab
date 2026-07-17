@@ -343,11 +343,13 @@
   border-bottom: 1px solid rgb(23 60 58 / 12%);
 }
 
-.entailment-formal-details .entailment-definition {
+.entailment-formal-details .entailment-definition,
+.entailment-formal-details .entailment-nonflat {
   padding: 17px 18px 0;
 }
 
 .entailment-formal-details .entailment-definition h2,
+.entailment-formal-details .entailment-nonflat h2,
 .entailment-formal-details .entailment-structured-trace h2 {
   margin: 0;
   color: #294f4a;
@@ -355,11 +357,45 @@
   font-size: 1.15rem;
 }
 
-.entailment-formal-details .entailment-definition > p {
+.entailment-formal-details .entailment-definition > p,
+.entailment-formal-details .entailment-nonflat > p {
   margin: 6px 0 0;
   color: #667974;
   font-size: 0.82rem;
   line-height: 1.5;
+}
+
+.entailment-nonflat dl {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+.entailment-nonflat dl > div {
+  min-width: 0;
+  padding: 10px 11px;
+  border: 1px solid rgb(23 60 58 / 10%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 42%);
+}
+
+.entailment-nonflat dt {
+  color: #748681;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.entailment-nonflat dd {
+  margin: 6px 0 0;
+  overflow-x: auto;
+}
+
+.entailment-nonflat dd code {
+  color: #294f4a;
+  font-size: 0.82rem;
+  white-space: nowrap;
 }
 
 .entailment-definition dl > div {

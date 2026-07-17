@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1",
+  "kind": "approximable-mapping",
+  "id": "cons-one",
+  "title": "Prepend one",
+  "description": "Place a 1 in front of the stream: every known input prefix justifies one longer output prefix.",
+  "approximation": {
+    "kind": "bounded",
+    "bound": "3"
+  },
+  "sourceSystemId": "stream-prefixes",
+  "targetSystemId": "stream-prefixes",
+  "rules": [
+    {
+      "id": "always-starts-1",
+      "premises": [],
+      "conclusion": "starts-1"
+    },
+    {
+      "id": "starts-1-to-starts-11",
+      "premises": ["starts-1"],
+      "conclusion": "starts-11"
+    },
+    {
+      "id": "starts-11-to-starts-111",
+      "premises": ["starts-11"],
+      "conclusion": "starts-111"
+    }
+  ]
+}

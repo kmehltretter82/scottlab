@@ -638,6 +638,94 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     ).toBeVisible();
   });
 
+  it("iterates two endomaps to their least fixed points and answers take 3", async () => {
+    window.history.replaceState(null, "", "#/lesson/fixed-points");
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(document.title).toBe("ScottLab · Least fixed points");
+    expect(
+      screen.getByRole("heading", {
+        name: "Recursion is repeated application from ⊥.",
+      }),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Start at ⊥ and iterate" }),
+    );
+    expect(screen.getByText("Application 0 of 4")).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Everything starts at ⊥." }),
+    ).toBeVisible();
+
+    const applyButton = screen.getByRole("button", { name: /Apply the map/ });
+    await user.click(applyButton);
+    expect(
+      screen.getByRole("heading", { name: "The state learns {≥1}." }),
+    ).toBeVisible();
+    await user.click(applyButton);
+    await user.click(applyButton);
+    await user.click(applyButton);
+
+    expect(screen.getByText("Application 4 of 4")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "Nothing new: the iteration has stabilized.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByText("nothing — the state repeats")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Continue to streams" }),
+    );
+    expect(
+      screen.getByText(/Phase 2 · Streams: ones = 1 : ones/),
+    ).toBeVisible();
+
+    const applyStream = screen.getByRole("button", { name: /Apply the map/ });
+    for (let application = 0; application < 4; application += 1) {
+      await user.click(applyStream);
+    }
+    expect(
+      screen.getByRole("heading", {
+        name: "Nothing new: the iteration has stabilized.",
+      }),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Try the take 3 challenge" }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Choose the starts with 11 token" }),
+    );
+    expect(screen.getByText("Not quite.")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Choose the starts with 111 token" }),
+    );
+    expect(
+      screen.getByText("Right — three tokens of information suffice."),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Finish the lesson" }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: "You computed two least fixed points.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Not every map climbs." }),
+    ).toBeVisible();
+    expect(screen.getByText("not(⊥) = ⊥")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Back to continuous maps" }),
+    );
+    expect(window.location.hash).toBe("#/lesson/maps");
+  });
+
   it("restores lesson progress after a reload", async () => {
     const user = userEvent.setup();
     const rendered = render(<App />);
@@ -866,6 +954,17 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       screen.getByText(
         "Step 2: {administrator} enables “Administrators may edit”, which entails may edit.",
       ),
+    ).toBeVisible();
+
+    const nonFlat = screen.getByRole("region", {
+      name: "Entailment reshapes the whole order.",
+    });
+    expect(within(nonFlat).getByText("{l, r} ⊢ ε")).toBeVisible();
+    expect(
+      within(nonFlat).getByText(/\{Δ\}\s+\{Δ, ε\}\s+\{Δ, l\}/),
+    ).toBeVisible();
+    expect(
+      within(nonFlat).getByText(/chains of length greater than one/),
     ).toBeVisible();
 
     await user.click(
@@ -1647,7 +1746,7 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByRole("button", { name: "Lesson 1: Bottom" }),
     ).toHaveFocus();
-    for (let station = 1; station < 6; station += 1) {
+    for (let station = 1; station < 7; station += 1) {
       await user.tab();
     }
     expect(

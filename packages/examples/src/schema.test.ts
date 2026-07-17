@@ -1,7 +1,13 @@
 /// <reference types="vite/client" />
 
 import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
-import { applyMapping, validateMapping, validateSystem } from "@scottlab/core";
+import {
+  applyMapping,
+  enumerateStates,
+  iterateFromBottom,
+  validateMapping,
+  validateSystem,
+} from "@scottlab/core";
 import { describe, expect, it } from "vitest";
 
 import approximableMappingSchema from "../../../schemas/approximable-mapping.v1.schema.json";
@@ -9,8 +15,13 @@ import informationSystemSchema from "../../../schemas/information-system.v1.sche
 import {
   accessPermissionsSystem,
   booleanNegationMapping,
+  boundedLazyNaturalsSystem,
+  consOneMapping,
+  coquandSystem,
   editingPolicySystem,
   flatBooleanSystem,
+  oneMoreStepMapping,
+  streamPrefixesSystem,
 } from "./index";
 
 const informationSystemDocuments = import.meta.glob("../*.system.json", {
@@ -128,6 +139,75 @@ describe("persisted information systems", () => {
     });
     expect(validateSystem(accessPermissionsSystem).ok).toBe(true);
     expect(validateSystem(editingPolicySystem).ok).toBe(true);
+    expect(validateSystem(boundedLazyNaturalsSystem).ok).toBe(true);
+    expect(validateSystem(streamPrefixesSystem).ok).toBe(true);
+    expect(validateSystem(coquandSystem).ok).toBe(true);
+  });
+
+  it("derives the seven non-flat states of the Coquand system", () => {
+    expect(enumerateStates(coquandSystem).states).toEqual([
+      ["delta"],
+      ["delta", "epsilon"],
+      ["delta", "left"],
+      ["delta", "right"],
+      ["delta", "epsilon", "left"],
+      ["delta", "epsilon", "right"],
+      ["delta", "epsilon", "left", "right"],
+    ]);
+  });
+});
+
+describe("persisted fixed-point endomaps", () => {
+  it("climbs the bounded lazy naturals to their bound", () => {
+    expect(
+      validateMapping(
+        boundedLazyNaturalsSystem,
+        boundedLazyNaturalsSystem,
+        oneMoreStepMapping,
+      ).ok,
+    ).toBe(true);
+
+    const computation = iterateFromBottom(
+      boundedLazyNaturalsSystem,
+      oneMoreStepMapping,
+    );
+    expect(computation.iterates).toEqual([
+      ["delta"],
+      ["at-least-1", "delta"],
+      ["at-least-1", "at-least-2", "delta"],
+      ["at-least-1", "at-least-2", "at-least-3", "delta"],
+    ]);
+    expect(computation.stabilizedAfter).toBe(3);
+  });
+
+  it("iterates cons-one from bottom to the bounded ones stream", () => {
+    expect(
+      validateMapping(streamPrefixesSystem, streamPrefixesSystem, consOneMapping)
+        .ok,
+    ).toBe(true);
+
+    const computation = iterateFromBottom(streamPrefixesSystem, consOneMapping);
+    expect(computation.iterates).toEqual([
+      ["delta"],
+      ["delta", "starts-1"],
+      ["delta", "starts-1", "starts-11"],
+      ["delta", "starts-1", "starts-11", "starts-111"],
+    ]);
+    expect(computation.fixedPoint).toEqual([
+      "delta",
+      "starts-1",
+      "starts-11",
+      "starts-111",
+    ]);
+    expect(computation.stabilizedAfter).toBe(3);
+
+    const zeroInput = applyMapping(
+      streamPrefixesSystem,
+      streamPrefixesSystem,
+      consOneMapping,
+      ["delta", "starts-0"],
+    );
+    expect(zeroInput.targetState).toEqual(["delta", "starts-1"]);
   });
 });
 

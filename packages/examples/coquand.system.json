@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1",
+  "kind": "information-system",
+  "convention": "scott-1982-distinguished-token",
+  "id": "coquand",
+  "title": "Coquand system",
+  "description": "A small non-flat system from the Munich school: two independent observations jointly entail a third.",
+  "approximation": {
+    "kind": "exact"
+  },
+  "tokens": [
+    {
+      "id": "delta",
+      "label": "Always-present token",
+      "symbol": "Δ",
+      "description": "The distinguished token present in every state."
+    },
+    {
+      "id": "epsilon",
+      "label": "epsilon",
+      "symbol": "ε",
+      "description": "The observation entailed by the two branches together."
+    },
+    {
+      "id": "left",
+      "label": "left",
+      "symbol": "l",
+      "description": "The left independent observation."
+    },
+    {
+      "id": "right",
+      "label": "right",
+      "symbol": "r",
+      "description": "The right independent observation."
+    }
+  ],
+  "delta": "delta",
+  "minimalInconsistentSets": [],
+  "entailmentRules": [
+    {
+      "id": "left-right-entail-epsilon",
+      "premises": ["left", "right"],
+      "conclusion": "epsilon"
+    }
+  ]
+}

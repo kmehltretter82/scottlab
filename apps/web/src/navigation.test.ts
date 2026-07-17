@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   entailmentLessonRoute,
+  fixedPointsLessonRoute,
   flatBooleanSandboxRoute,
   formatHashRoute,
   lessonRoute,
@@ -24,6 +25,9 @@ describe("parseHashRoute", () => {
     );
     expect(parseHashRoute("#/lesson/states")).toEqual(statesLessonRoute);
     expect(parseHashRoute("#/lesson/maps")).toEqual(mapsLessonRoute);
+    expect(parseHashRoute("#/lesson/fixed-points")).toEqual(
+      fixedPointsLessonRoute,
+    );
     expect(parseHashRoute("#/sandbox/flat-boolean")).toEqual(
       flatBooleanSandboxRoute,
     );
@@ -39,6 +43,8 @@ describe("parseHashRoute", () => {
     "#/lesson/entailment/",
     "#/lesson/states/",
     "#/lesson/maps/",
+    "#/lesson/fixed-points/",
+    "#/lesson/Fixed-Points",
     "#/sandbox",
     "#/sandbox/flat-boolean/",
     "#/sandbox/flat-boolean?editing=true",
@@ -58,6 +64,9 @@ describe("formatHashRoute", () => {
     );
     expect(formatHashRoute(statesLessonRoute)).toBe("#/lesson/states");
     expect(formatHashRoute(mapsLessonRoute)).toBe("#/lesson/maps");
+    expect(formatHashRoute(fixedPointsLessonRoute)).toBe(
+      "#/lesson/fixed-points",
+    );
     expect(formatHashRoute(flatBooleanSandboxRoute)).toBe(
       "#/sandbox/flat-boolean",
     );
@@ -71,6 +80,7 @@ describe("formatHashRoute", () => {
     entailmentLessonRoute,
     statesLessonRoute,
     mapsLessonRoute,
+    fixedPointsLessonRoute,
     flatBooleanSandboxRoute,
   ])(
     "round-trips $kind",

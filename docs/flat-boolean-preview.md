@@ -468,7 +468,7 @@ coverRelationComputed(
 - State changes are announced through a polite live region after the visible
   update; transient animation frames are not announced.
 - Conflict uses text, shape, pattern, and an icon rather than color alone.
-- Full motion provides step, pause, replay, and restart controls.
+- Full motion provides step, replay, and restart controls.
 - Reduced motion replaces travel and scaling with discrete highlights and
   immediate layout changes.
 - The preview is tested in current Safari, Chromium, and Firefox-based

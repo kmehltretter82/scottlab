@@ -6,6 +6,7 @@ import {
   applyMappingSteps,
   closureSteps,
   compileMapping,
+  DEFAULT_MAPPING_VALIDATION_MAX_SUBSET_CHECKS,
   computeBottom,
   computeClosure,
   computeCoverRelation,
@@ -20,6 +21,7 @@ import {
   validateMapping,
   validateSystem,
   type ApproximableMappingDefinition,
+  type CompiledApproximableMapping,
   type InformationSystemDefinition,
   type PersistedApproximableMappingDefinition,
   type PersistedInformationSystemDefinition,
@@ -444,6 +446,38 @@ describe("validateSystem", () => {
   });
 });
 
+describe("validateSystem caching", () => {
+  it("returns the cached validation for an unmodified definition", () => {
+    const system: InformationSystemDefinition = {
+      ...flatBoolean,
+      tokens: flatBoolean.tokens.map((token) => ({ ...token })),
+    };
+
+    expect(validateSystem(system)).toBe(validateSystem(system));
+  });
+
+  it("revalidates after the definition object is mutated", () => {
+    expect.hasAssertions();
+    const mutableConflicts = [["false", "true"]];
+    const system: InformationSystemDefinition = {
+      ...flatBoolean,
+      minimalInconsistentSets: mutableConflicts,
+    };
+
+    expect(validateSystem(system)).toEqual({
+      ok: true,
+      checkedConsistentSets: 6,
+    });
+
+    mutableConflicts.push(["delta", "false", "true"]);
+    expectSemanticError(
+      () => validateSystem(system),
+      "deltaInInconsistentSet",
+      ["delta", "false", "true"],
+    );
+  });
+});
+
 describe("approximable mappings", () => {
   it("validates and applies Boolean negation without a redundant delta rule", () => {
     expect(validateMapping(flatBoolean, flatBoolean, booleanNegation)).toEqual({
@@ -575,6 +609,73 @@ describe("approximable mappings", () => {
         maxSubsetChecks: 23,
       },
     });
+  });
+
+  it("rejects malformed budgets and accepts deliberate ones above the default", () => {
+    for (const maxSubsetChecks of [0, -1, 1.5, Number.NaN]) {
+      expect(() =>
+        validateMapping(flatBoolean, flatBoolean, booleanNegation, {
+          maxSubsetChecks,
+        }),
+      ).toThrowError(RangeError);
+    }
+
+    expect(
+      validateMapping(flatBoolean, flatBoolean, booleanNegation, {
+        maxSubsetChecks: DEFAULT_MAPPING_VALIDATION_MAX_SUBSET_CHECKS + 1,
+      }),
+    ).toEqual({ ok: true, checkedConsistentSourceSets: 6 });
+  });
+
+  it("validates a partially identified persisted mapping against each named system", () => {
+    const sourceOnlyMismatch: ApproximableMappingDefinition = {
+      ...booleanNegation,
+      sourceSystemId: "other-source",
+    } as ApproximableMappingDefinition;
+
+    expect(
+      captureSemanticError(() =>
+        validateMapping(persistedFlatBoolean, flatBoolean, sourceOnlyMismatch),
+      ),
+    ).toMatchObject({
+      category: "mappingSourceSystemMismatch",
+      witness: ["other-source", "flat-boolean"],
+    });
+
+    expect(
+      captureSemanticError(() =>
+        validateMapping(flatBoolean, flatBoolean, sourceOnlyMismatch),
+      ),
+    ).toMatchObject({
+      category: "mappingSourceSystemUnidentified",
+      witness: ["other-source"],
+    });
+
+    const targetOnlyMismatch: ApproximableMappingDefinition = {
+      ...booleanNegation,
+      targetSystemId: "other-target",
+    } as ApproximableMappingDefinition;
+
+    expect(
+      captureSemanticError(() =>
+        validateMapping(flatBoolean, persistedFlatBoolean, targetOnlyMismatch),
+      ),
+    ).toMatchObject({
+      category: "mappingTargetSystemMismatch",
+      witness: ["other-target", "flat-boolean"],
+    });
+  });
+
+  it("rejects a mapping handle that was not produced by compileMapping", () => {
+    const foreignHandle = {
+      kind: "compiledApproximableMapping",
+      validation: { ok: true, checkedConsistentSourceSets: 0 },
+      estimate: estimateMappingValidation(flatBoolean, flatBoolean),
+    } as unknown as CompiledApproximableMapping;
+
+    expect(() =>
+      applyCompiledMapping(foreignHandle, ["delta"]),
+    ).toThrowError(TypeError);
   });
 
   it("reuses an immutable compiled snapshot without revalidating definitions", () => {
@@ -1381,6 +1482,52 @@ describe("explainEntailment", () => {
   });
 });
 
+describe("explainEntailment derivations with shared premises", () => {
+  const entailmentDiamond: InformationSystemDefinition = {
+    tokens: [
+      {
+        id: "delta",
+        label: "Always-present token",
+        symbol: "Δ",
+        description: "The distinguished token present in every state.",
+      },
+      { id: "a", label: "a", description: "The shared premise." },
+      { id: "b", label: "b", description: "The left consequence of a." },
+      { id: "c", label: "c", description: "The right consequence of a." },
+      { id: "d", label: "d", description: "The joint consequence of b and c." },
+    ],
+    delta: "delta",
+    minimalInconsistentSets: [],
+    entailmentRules: [
+      { id: "a-entails-b", premises: ["a"], conclusion: "b" },
+      { id: "a-entails-c", premises: ["a"], conclusion: "c" },
+      { id: "b-c-entail-d", premises: ["b", "c"], conclusion: "d" },
+    ],
+  };
+
+  it("includes each step of a diamond-shaped derivation exactly once", () => {
+    const explanation = explainEntailment(entailmentDiamond, ["a"], "d");
+
+    if (!explanation.entailed) {
+      throw new Error("Expected d to be entailed.");
+    }
+    expect(
+      explanation.derivation.map(({ conclusion }) => conclusion),
+    ).toEqual(["a", "b", "c", "d"]);
+    const indices = explanation.derivation.map(({ index }) => index);
+    expect(new Set(indices).size).toBe(indices.length);
+  });
+
+  it("reports an unknown query token before inspecting the input", () => {
+    expect.hasAssertions();
+    expectSemanticError(
+      () => explainEntailment(flatBoolean, ["true", "false"], "missing"),
+      "unknownTokenReference",
+      ["missing"],
+    );
+  });
+});
+
 describe("computeBottom", () => {
   it("computes and explains the flat-Boolean bottom state", () => {
     const result = computeBottom(flatBoolean);
@@ -1495,6 +1642,15 @@ describe("enumerateStates", () => {
       ["delta", "false", "true"],
     ]);
   });
+
+  it("deduplicates the selections that close to one entailment-chain state", () => {
+    expect(enumerateStates(entailmentChain).states).toEqual([
+      ["delta"],
+      ["c", "delta"],
+      ["b", "c", "delta"],
+      ["a", "b", "c", "delta"],
+    ]);
+  });
 });
 
 describe("computeCoverRelation", () => {
@@ -1530,6 +1686,14 @@ describe("computeCoverRelation", () => {
         lower: ["delta", "true"],
         upper: ["delta", "false", "true"],
       },
+    ]);
+  });
+
+  it("derives the chain of cover edges induced by entailment rules", () => {
+    expect(computeCoverRelation(entailmentChain).edges).toEqual([
+      { lower: ["delta"], upper: ["c", "delta"] },
+      { lower: ["c", "delta"], upper: ["b", "c", "delta"] },
+      { lower: ["b", "c", "delta"], upper: ["a", "b", "c", "delta"] },
     ]);
   });
 });
@@ -1578,5 +1742,23 @@ describe("tryAddObservation", () => {
         witness: ["false", "true"],
       },
     });
+  });
+
+  it("closes an unclosed consistent selection before refining it", () => {
+    const result = tryAddObservation(entailmentChain, ["b"], "a");
+
+    expect(result).toMatchObject({
+      ok: true,
+      closure: { state: ["a", "b", "c", "delta"] },
+    });
+  });
+
+  it("throws on an inconsistent current selection instead of refusing it", () => {
+    expect.hasAssertions();
+    expectSemanticError(
+      () => tryAddObservation(flatBoolean, ["true", "false"], "true"),
+      "minimalInconsistentSet",
+      ["false", "true"],
+    );
   });
 });

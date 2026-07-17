@@ -1,8 +1,11 @@
 name: CI
 
+# Pull requests run this workflow directly. Pushes to main run it through
+# the Pages deployment workflow (workflow_call), which gates the deploy on
+# every job here, including the browser acceptance matrix.
 on:
-  push:
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
@@ -13,9 +16,14 @@ concurrency:
 
 jobs:
   checks:
-    name: Lint, test, and build
+    name: Lint, test, and build (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    strategy:
+      # Cover the documented minimum (Node 20.19+) and the current release.
+      matrix:
+        node-version: [20, 24]
 
     steps:
       - name: Check out repository
@@ -26,7 +34,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: ${{ matrix.node-version }}
           cache: npm
 
       - name: Install dependencies
@@ -61,8 +69,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Resolve Playwright version
+        id: playwright-version
+        run: >
+          echo "version=$(node -p
+          "require('@playwright/test/package.json').version")"
+          >> "$GITHUB_OUTPUT"
+
+      - name: Cache browser engines
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: >-
+            playwright-${{ runner.os }}-${{
+            steps.playwright-version.outputs.version }}
+
       - name: Install browser engines
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Install browser system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium firefox webkit
 
       - name: Run browser acceptance tests
         run: npm run test:e2e

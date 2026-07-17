@@ -297,18 +297,28 @@ export function ContinuousMapLesson({
     frame === "output" &&
     !challengeIsCorrect;
 
+  // Refocus only when the interaction context changes, never on plain
+  // frame navigation: stepping with "Previous"/"Next" must keep the focus
+  // on the button the learner is operating.
+  const focusTarget =
+    stage.kind === "challenge" && stage.input === undefined
+      ? "challenge"
+      : stage.kind === "complete" || challengeShowsIncorrectResult
+        ? "narration"
+        : stage.kind === "guide" ||
+            (stage.kind === "challenge" && stage.input !== undefined)
+          ? "next"
+          : "none";
+
   useEffect(() => {
-    if (stage.kind === "challenge" && stage.input === undefined) {
+    if (focusTarget === "challenge") {
       challengeHeadingRef.current?.focus();
-    } else if (stage.kind === "complete" || challengeShowsIncorrectResult) {
+    } else if (focusTarget === "narration") {
       narrationHeadingRef.current?.focus();
-    } else if (
-      stage.kind === "guide" ||
-      (stage.kind === "challenge" && stage.input !== undefined)
-    ) {
+    } else if (focusTarget === "next") {
       nextButtonRef.current?.focus();
     }
-  }, [challengeShowsIncorrectResult, stage]);
+  }, [focusTarget]);
 
   function requireTokenCopy(tokenId: TokenId): ContinuousMapLessonTokenCopy {
     const tokenCopy = copy.tokens[tokenId];
@@ -362,7 +372,10 @@ export function ContinuousMapLesson({
           ? copy.canvas.appliedRule
           : copy.canvas.pendingRule;
   const inputIsBottom = stageInput === undefined;
-  const outputIsBottom = displayedTargetState.length === 1;
+  const outputIsBottom = hasExactly(
+    displayedTargetState,
+    bottomComputation.targetState,
+  );
 
   let narrativeHeading = copy.explanation.bottomHeading;
   let narrativeExplanation = copy.explanation.bottomExplanation(
@@ -480,6 +493,9 @@ export function ContinuousMapLesson({
     if (stage.kind !== "challenge" || stage.input === undefined) {
       return;
     }
+    // This control unmounts on the final frame, so hand the focus to the
+    // persistent "Next frame" button instead of letting it fall to the body.
+    nextButtonRef.current?.focus();
     onProgressChange({
       stage: {
         ...stage,

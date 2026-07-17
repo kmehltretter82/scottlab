@@ -66,6 +66,7 @@ export interface EntailmentLessonCopy {
     ) => string;
     readonly completeHeading: string;
     readonly completeExplanation: (state: string) => string;
+    readonly closureFunctionName: string;
     readonly structuredHeading: string;
     readonly structuredInitialState: (state: string) => string;
     readonly structuredInputStep: (
@@ -286,7 +287,7 @@ export function EntailmentLesson({
   }
 
   function beginTrace(): void {
-    onProgressChange({ stage: { kind: "trace", frameIndex: 0 } });
+    onProgressChange({ ...progress, stage: { kind: "trace", frameIndex: 0 } });
   }
 
   function showPreviousFrame(): void {
@@ -314,7 +315,7 @@ export function EntailmentLesson({
   }
 
   function showCompleteClosure(): void {
-    onProgressChange({ stage: { kind: "complete" } });
+    onProgressChange({ ...progress, stage: { kind: "complete" } });
   }
 
   function chooseChallengeToken(tokenId: TokenId): void {
@@ -323,13 +324,17 @@ export function EntailmentLesson({
 
   let explanationHeading = copy.bottom.heading;
   let explanationText = copy.bottom.explanation;
-  let formalStep = `closure(∅) = ${formatSet(bottomComputation.state)} = ⊥`;
+  let formalStep = `${copy.trace.closureFunctionName}(∅) = ${formatSet(
+    bottomComputation.state,
+  )} = ⊥`;
 
   if (stage.kind === "complete") {
     const state = formatSet(administratorComputation.state);
     explanationHeading = copy.trace.completeHeading;
     explanationText = copy.trace.completeExplanation(state);
-    formalStep = `closure({${tokenLabel(administratorTokenId)}}) = ${state}`;
+    formalStep = `${copy.trace.closureFunctionName}({${tokenLabel(
+      administratorTokenId,
+    )}}) = ${state}`;
   } else if (currentFrame !== undefined) {
     const premises = premiseLabel(currentFrame.step);
     const conclusion = tokenLabel(currentFrame.step.conclusion);

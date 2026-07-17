@@ -160,8 +160,10 @@ export interface LessonMessages {
     readonly consistencyDefinition: (inconsistentSet: string) => string;
     readonly entailmentLabel: string;
     readonly entailmentDefinition: string;
+    readonly entailmentRule: string;
     readonly closureHeading: string;
     readonly closureExplanation: string;
+    readonly closureFormula: (bottomState: string) => string;
     readonly statesHeading: string;
     readonly beginnerColumn: string;
     readonly formalColumn: string;
@@ -390,9 +392,11 @@ const english: LessonMessages = {
     entailmentLabel: "Entailment",
     entailmentDefinition:
       "A set entails its own tokens and always entails Δ.",
+    entailmentRule: "X ⊢ a ⇔ a = Δ or a ∈ X",
     closureHeading: "Why Δ appears at bottom",
     closureExplanation:
       "The empty set is consistent—not contradictory. But in the explicit convention it is not yet closed under entailment. Closure adds Δ, producing the least state.",
+    closureFormula: (bottomState) => `closure(∅) = ${bottomState} = ⊥`,
     statesHeading: "The same three states, written explicitly",
     beginnerColumn: "Introductory view",
     formalColumn: "Formal state",
@@ -551,6 +555,7 @@ const english: LessonMessages = {
       completeHeading: "Closure has stabilized.",
       completeExplanation: (state) =>
         `No declared rule can add another token. The closed state is ${state}.`,
+      closureFunctionName: "closure",
       structuredHeading: "Ordered semantic derivation",
       structuredInitialState: (state) => `Start at bottom ${state}.`,
       structuredInputStep: (step, input, state) =>
@@ -1078,9 +1083,11 @@ const german: LessonMessages = {
     entailmentLabel: "Folgerung",
     entailmentDefinition:
       "Eine Menge impliziert ihre eigenen Token und immer auch Δ.",
+    entailmentRule: "X ⊢ a ⇔ a = Δ oder a ∈ X",
     closureHeading: "Warum Δ im Bottom erscheint",
     closureExplanation:
       "Die leere Menge ist verträglich – nicht widersprüchlich. In der expliziten Konvention ist sie jedoch noch nicht unter Folgerung abgeschlossen. Der Abschluss fügt Δ hinzu und erzeugt den kleinsten Zustand.",
+    closureFormula: (bottomState) => `Abschluss(∅) = ${bottomState} = ⊥`,
     statesHeading: "Dieselben drei Zustände, nun explizit geschrieben",
     beginnerColumn: "Einführende Darstellung",
     formalColumn: "Formaler Zustand",
@@ -1242,6 +1249,7 @@ const german: LessonMessages = {
       completeHeading: "Der Abschluss hat sich stabilisiert.",
       completeExplanation: (state) =>
         `Keine festgelegte Regel kann ein weiteres Token hinzufügen. Der abgeschlossene Zustand ist ${state}.`,
+      closureFunctionName: "Abschluss",
       structuredHeading: "Geordnete semantische Herleitung",
       structuredInitialState: (state) => `Bei Bottom ${state} beginnen.`,
       structuredInputStep: (step, input, state) =>

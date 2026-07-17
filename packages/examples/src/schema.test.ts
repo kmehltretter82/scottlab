@@ -1,12 +1,17 @@
 /// <reference types="vite/client" />
 
 import Ajv2020, { type ErrorObject, type ValidateFunction } from "ajv/dist/2020.js";
-import { applyMapping, validateMapping } from "@scottlab/core";
+import { applyMapping, validateMapping, validateSystem } from "@scottlab/core";
 import { describe, expect, it } from "vitest";
 
 import approximableMappingSchema from "../../../schemas/approximable-mapping.v1.schema.json";
 import informationSystemSchema from "../../../schemas/information-system.v1.schema.json";
-import { booleanNegationMapping, flatBooleanSystem } from "./index";
+import {
+  accessPermissionsSystem,
+  booleanNegationMapping,
+  editingPolicySystem,
+  flatBooleanSystem,
+} from "./index";
 
 const informationSystemDocuments = import.meta.glob("../*.system.json", {
   eager: true,
@@ -112,6 +117,17 @@ describe("persisted JSON fixtures", () => {
     expect(formatErrors(validateApproximableMapping.errors)).toContain(
       "/sourceSystemId must match pattern",
     );
+  });
+});
+
+describe("persisted information systems", () => {
+  it("semantically validates every exported system fixture", () => {
+    expect(validateSystem(flatBooleanSystem)).toEqual({
+      ok: true,
+      checkedConsistentSets: 6,
+    });
+    expect(validateSystem(accessPermissionsSystem).ok).toBe(true);
+    expect(validateSystem(editingPolicySystem).ok).toBe(true);
   });
 });
 

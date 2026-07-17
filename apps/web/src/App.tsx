@@ -187,7 +187,7 @@ function hasInformation(
 }
 
 function stateKey(tokenIds: readonly TokenId[]): string {
-  return tokenIds.join("\0");
+  return [...new Set(tokenIds)].sort().join("\0");
 }
 
 function tokenText(copy: LessonMessages, token: TokenDefinition): TokenText {
@@ -654,7 +654,7 @@ function FormalisationView({
               <div>
                 <dt>{copy.formalisation.entailmentLabel}</dt>
                 <dd>
-                  <code>X ⊢ a ⇔ a = Δ or a ∈ X</code>
+                  <code>{copy.formalisation.entailmentRule}</code>
                   <span>{copy.formalisation.entailmentDefinition}</span>
                 </dd>
               </div>
@@ -672,7 +672,7 @@ function FormalisationView({
               <span aria-hidden="true">⇒</span>
               <code>∅ ⊢ Δ</code>
               <span aria-hidden="true">⇒</span>
-              <code>closure(∅) = {bottomState} = ⊥</code>
+              <code>{copy.formalisation.closureFormula(bottomState)}</code>
             </div>
           </div>
         ) : null}
@@ -1060,8 +1060,16 @@ export function App() {
     }
   }
 
+  // Track the last non-sandbox route so leaving the sandbox returns to the
+  // right lesson even when the sandbox was entered through a direct hash
+  // change or history navigation instead of openSandbox.
+  useEffect(() => {
+    if (!isSandbox) {
+      routeBeforeSandboxRef.current = route;
+    }
+  }, [isSandbox, route]);
+
   function openSandbox(): void {
-    routeBeforeSandboxRef.current = route;
     navigateTo(flatBooleanSandboxRoute);
   }
 
@@ -1077,7 +1085,6 @@ export function App() {
     setStateLessonProgress(initialStateLessonProgress);
     setContinuousMapProgress(initialContinuousMapLessonProgress);
     setStatesUnlocked(false);
-    routeBeforeSandboxRef.current = lessonRoute;
     navigateTo(lessonRoute);
   }
 
@@ -1086,6 +1093,13 @@ export function App() {
   }
 
   function restartCurrentSystem(): void {
+    if (isSandbox) {
+      // The sandbox previews the flat-Boolean system: restart that lesson
+      // without discarding the progress of the other focused lessons.
+      setLessonState({ step: "example" });
+      navigateTo(lessonRoute);
+      return;
+    }
     if (isMaps) {
       setContinuousMapProgress(initialContinuousMapLessonProgress);
       navigateTo(mapsLessonRoute);
@@ -1107,7 +1121,6 @@ export function App() {
     setStateLessonProgress(initialStateLessonProgress);
     setContinuousMapProgress(initialContinuousMapLessonProgress);
     setStatesUnlocked(false);
-    routeBeforeSandboxRef.current = lessonRoute;
     navigateTo(lessonRoute);
   }
 

@@ -962,6 +962,11 @@ describe("ScottLab introduction and bottom-first lesson", () => {
       screen.getByRole("heading", {
         name: "You built a consistent, closed state.",
       }),
+    ).toBeVisible();
+    // Completing the challenge from the token picker must not steal the
+    // keyboard focus from the button the learner just operated.
+    expect(
+      screen.getByRole("button", { name: "Remove may edit token" }),
     ).toHaveFocus();
     expect(screen.getByRole("status")).toHaveTextContent(
       "This selection is a state.",

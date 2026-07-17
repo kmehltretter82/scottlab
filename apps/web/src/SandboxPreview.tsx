@@ -1,4 +1,5 @@
 import {
+  computeBottom,
   computeClosure,
   computeCoverRelation,
   type TokenId,
@@ -130,13 +131,7 @@ function positionStates(): readonly PositionedState[] {
 }
 
 const positionedStates = positionStates();
-const bottomState: readonly TokenId[] = (() => {
-  const state = informationOrder.states[0];
-  if (state === undefined) {
-    throw new Error("Flat Booleans must have a least state.");
-  }
-  return state;
-})();
+const bottomState: readonly TokenId[] = computeBottom(flatBooleanSystem).state;
 
 export function SandboxPreview({
   copy,

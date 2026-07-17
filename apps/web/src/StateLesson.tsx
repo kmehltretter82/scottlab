@@ -113,9 +113,14 @@ export interface StateLessonProgress {
   readonly selection: readonly TokenId[];
 }
 
-const guideRule = editingPolicySystem.entailmentRules[0];
+const guideRuleId = "administrator-entails-may-edit";
+const guideRule = editingPolicySystem.entailmentRules.find(
+  ({ id }) => id === guideRuleId,
+);
 if (guideRule === undefined) {
-  throw new Error("The states lesson requires one declared entailment rule.");
+  throw new Error(
+    `The states lesson requires the '${guideRuleId}' entailment rule.`,
+  );
 }
 
 const guideSelection = [
@@ -170,11 +175,17 @@ export function StateLesson({
   );
   const selection = inspection.candidate;
 
+  // The challenge and complete stages flip on every qualifying token toggle;
+  // treat them as one focus context so experimenting with the picker never
+  // yanks the keyboard focus to the explanation heading mid-interaction.
+  const stageFocusGroup =
+    progress.stage === "complete" ? "challenge" : progress.stage;
+
   useEffect(() => {
-    if (progress.stage !== "guide") {
+    if (stageFocusGroup !== "guide") {
       stageHeadingRef.current?.focus();
     }
-  }, [progress.stage]);
+  }, [stageFocusGroup]);
 
   function requireTokenCopy(tokenId: TokenId): StateLessonTokenCopy {
     const tokenCopy = copy.tokens[tokenId];

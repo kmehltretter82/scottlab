@@ -143,8 +143,7 @@ export type BottomSemanticEvent =
 export type EntailmentReason =
   | { readonly kind: "distinguishedToken" }
   | { readonly kind: "reflexivity" }
-  | { readonly kind: "declaredRule"; readonly ruleId: string }
-  | { readonly kind: "cut"; readonly through: readonly TokenId[] };
+  | { readonly kind: "declaredRule"; readonly ruleId: string };
 
 export type ClosureSemanticEvent =
   | {
@@ -454,17 +453,34 @@ function validateReferences(
   }
 }
 
+function canonicalConflicts(
+  system: InformationSystemDefinition,
+): readonly (readonly TokenId[])[] {
+  return system.minimalInconsistentSets
+    .map((conflict) => sortIds(conflict))
+    .sort((left, right) => compareIds(left.join("\0"), right.join("\0")));
+}
+
+function findConflictAmong(
+  conflicts: readonly (readonly TokenId[])[],
+  candidate: ReadonlySet<TokenId>,
+): readonly TokenId[] | undefined {
+  return conflicts.find((conflict) =>
+    conflict.every((tokenId) => candidate.has(tokenId)),
+  );
+}
+
 function findConflict(
   system: InformationSystemDefinition,
   candidate: ReadonlySet<TokenId>,
 ): readonly TokenId[] | undefined {
-  const conflicts = system.minimalInconsistentSets
-    .map((conflict) => sortIds(conflict))
-    .sort((left, right) => compareIds(left.join("\0"), right.join("\0")));
+  return findConflictAmong(canonicalConflicts(system), candidate);
+}
 
-  return conflicts.find((conflict) =>
-    conflict.every((tokenId) => candidate.has(tokenId)),
-  );
+function sortRulesById<Rule extends { readonly id: string }>(
+  rules: readonly Rule[],
+): readonly Rule[] {
+  return [...rules].sort((left, right) => compareIds(left.id, right.id));
 }
 
 interface CanonicalConflictDeclaration {
@@ -582,19 +598,17 @@ function validateRulePremises(system: InformationSystemDefinition): void {
   }
 }
 
-function deriveClosureTokens(
-  system: InformationSystemDefinition,
+function closeUnderSortedRules(
+  delta: TokenId,
+  sortedRules: readonly EntailmentRuleDefinition[],
   input: Iterable<TokenId>,
 ): Set<TokenId> {
-  const result = new Set<TokenId>([system.delta, ...input]);
-  const rules = [...system.entailmentRules].sort((left, right) =>
-    compareIds(left.id, right.id),
-  );
+  const result = new Set<TokenId>([delta, ...input]);
 
   let changed = true;
   while (changed) {
     changed = false;
-    for (const rule of rules) {
+    for (const rule of sortedRules) {
       const applies = rule.premises.every((premise) => result.has(premise));
       if (applies && !result.has(rule.conclusion)) {
         result.add(rule.conclusion);
@@ -604,6 +618,17 @@ function deriveClosureTokens(
   }
 
   return result;
+}
+
+function deriveClosureTokens(
+  system: InformationSystemDefinition,
+  input: Iterable<TokenId>,
+): Set<TokenId> {
+  return closeUnderSortedRules(
+    system.delta,
+    sortRulesById(system.entailmentRules),
+    input,
+  );
 }
 
 function* enumerateTokenSubsets(
@@ -637,25 +662,64 @@ function* enumerateTokenSubsets(
   }
 }
 
-/** Validate the complete finite information-system presentation. */
+interface CachedSystemValidation {
+  readonly fingerprint: string;
+  readonly validation: SystemValidation;
+}
+
+const validatedSystems = new WeakMap<
+  InformationSystemDefinition,
+  CachedSystemValidation
+>();
+
+function systemSemanticFingerprint(
+  system: InformationSystemDefinition,
+): string {
+  return JSON.stringify([
+    system.tokens.map(({ id }) => id),
+    system.delta,
+    system.minimalInconsistentSets,
+    system.entailmentRules.map((rule) => [
+      rule.id,
+      rule.premises,
+      rule.conclusion,
+    ]),
+  ]);
+}
+
+/**
+ * Validate the complete finite information-system presentation.
+ *
+ * The exhaustive consistent-subset sweep runs once per semantically distinct
+ * system object; repeated calls with an unmodified definition return the
+ * cached result so every public operation can revalidate cheaply.
+ */
 export function validateSystem(
   system: InformationSystemDefinition,
 ): SystemValidation {
+  const fingerprint = systemSemanticFingerprint(system);
+  const cached = validatedSystems.get(system);
+  if (cached !== undefined && cached.fingerprint === fingerprint) {
+    return cached.validation;
+  }
+
   validateReferences(system);
   validateConflictDeclarations(system);
   validateRulePremises(system);
 
   const tokenIds = sortIds(system.tokens.map(({ id }) => id));
+  const conflicts = canonicalConflicts(system);
+  const rules = sortRulesById(system.entailmentRules);
   let checkedConsistentSets = 0;
 
   for (const input of enumerateTokenSubsets(tokenIds)) {
-    if (findConflict(system, new Set(input)) !== undefined) {
+    if (findConflictAmong(conflicts, new Set(input)) !== undefined) {
       continue;
     }
 
     checkedConsistentSets += 1;
-    const closure = deriveClosureTokens(system, input);
-    const witness = findConflict(system, closure);
+    const closure = closeUnderSortedRules(system.delta, rules, input);
+    const witness = findConflictAmong(conflicts, closure);
     if (witness !== undefined) {
       const isBottomInput = input.length === 0;
       throw new SemanticError(
@@ -668,7 +732,9 @@ export function validateSystem(
     }
   }
 
-  return { ok: true, checkedConsistentSets };
+  const validation: SystemValidation = { ok: true, checkedConsistentSets };
+  validatedSystems.set(system, { fingerprint, validation });
+  return validation;
 }
 
 function powersetCandidateCount(tokenCount: number): number {
@@ -720,13 +786,9 @@ function mappingValidationBudget(
   const maxSubsetChecks =
     options.maxSubsetChecks ??
     DEFAULT_MAPPING_VALIDATION_MAX_SUBSET_CHECKS;
-  if (
-    !Number.isSafeInteger(maxSubsetChecks) ||
-    maxSubsetChecks < 1 ||
-    maxSubsetChecks > DEFAULT_MAPPING_VALIDATION_MAX_SUBSET_CHECKS
-  ) {
+  if (!Number.isSafeInteger(maxSubsetChecks) || maxSubsetChecks < 1) {
     throw new RangeError(
-      `maxSubsetChecks must be a positive safe integer no greater than ${DEFAULT_MAPPING_VALIDATION_MAX_SUBSET_CHECKS}.`,
+      "maxSubsetChecks must be a positive safe integer.",
     );
   }
   return maxSubsetChecks;
@@ -754,23 +816,26 @@ function requireMappingValidationWithinBudget(
   return estimate;
 }
 
+interface PartialPersistedMappingIdentity {
+  readonly sourceSystemId?: string;
+  readonly targetSystemId?: string;
+}
+
 function persistedMappingIdentity(
   mapping: ApproximableMappingDefinition,
-): Pick<
-  PersistedApproximableMappingDefinition,
-  "sourceSystemId" | "targetSystemId"
-> | undefined {
+): PartialPersistedMappingIdentity {
   const candidate = mapping as ApproximableMappingDefinition & {
     readonly sourceSystemId?: unknown;
     readonly targetSystemId?: unknown;
   };
-  return typeof candidate.sourceSystemId === "string" &&
-    typeof candidate.targetSystemId === "string"
-    ? {
-        sourceSystemId: candidate.sourceSystemId,
-        targetSystemId: candidate.targetSystemId,
-      }
-    : undefined;
+  return {
+    ...(typeof candidate.sourceSystemId === "string"
+      ? { sourceSystemId: candidate.sourceSystemId }
+      : {}),
+    ...(typeof candidate.targetSystemId === "string"
+      ? { targetSystemId: candidate.targetSystemId }
+      : {}),
+  };
 }
 
 function informationSystemId(
@@ -788,64 +853,65 @@ function validateMappingSystemIdentity(
   mapping: ApproximableMappingDefinition,
 ): void {
   const identity = persistedMappingIdentity(mapping);
-  if (identity === undefined) {
-    return;
+
+  if (identity.sourceSystemId !== undefined) {
+    const sourceSystemId = informationSystemId(source);
+    if (sourceSystemId === undefined) {
+      throw new SemanticError(
+        "mappingSourceSystemUnidentified",
+        [identity.sourceSystemId],
+        `Persisted mapping '${mapping.id}' expects source system '${identity.sourceSystemId}', but the supplied source system has no persisted ID.`,
+        {
+          kind: "mappingSystemIdentity",
+          role: "source",
+          expectedSystemId: identity.sourceSystemId,
+          actualSystemId: null,
+        },
+      );
+    }
+    if (sourceSystemId !== identity.sourceSystemId) {
+      throw new SemanticError(
+        "mappingSourceSystemMismatch",
+        [identity.sourceSystemId, sourceSystemId],
+        `Persisted mapping '${mapping.id}' expects source system '${identity.sourceSystemId}', not '${sourceSystemId}'.`,
+        {
+          kind: "mappingSystemIdentity",
+          role: "source",
+          expectedSystemId: identity.sourceSystemId,
+          actualSystemId: sourceSystemId,
+        },
+      );
+    }
   }
 
-  const sourceSystemId = informationSystemId(source);
-  if (sourceSystemId === undefined) {
-    throw new SemanticError(
-      "mappingSourceSystemUnidentified",
-      [identity.sourceSystemId],
-      `Persisted mapping '${mapping.id}' expects source system '${identity.sourceSystemId}', but the supplied source system has no persisted ID.`,
-      {
-        kind: "mappingSystemIdentity",
-        role: "source",
-        expectedSystemId: identity.sourceSystemId,
-        actualSystemId: null,
-      },
-    );
-  }
-  if (sourceSystemId !== identity.sourceSystemId) {
-    throw new SemanticError(
-      "mappingSourceSystemMismatch",
-      [identity.sourceSystemId, sourceSystemId],
-      `Persisted mapping '${mapping.id}' expects source system '${identity.sourceSystemId}', not '${sourceSystemId}'.`,
-      {
-        kind: "mappingSystemIdentity",
-        role: "source",
-        expectedSystemId: identity.sourceSystemId,
-        actualSystemId: sourceSystemId,
-      },
-    );
-  }
-
-  const targetSystemId = informationSystemId(target);
-  if (targetSystemId === undefined) {
-    throw new SemanticError(
-      "mappingTargetSystemUnidentified",
-      [identity.targetSystemId],
-      `Persisted mapping '${mapping.id}' expects target system '${identity.targetSystemId}', but the supplied target system has no persisted ID.`,
-      {
-        kind: "mappingSystemIdentity",
-        role: "target",
-        expectedSystemId: identity.targetSystemId,
-        actualSystemId: null,
-      },
-    );
-  }
-  if (targetSystemId !== identity.targetSystemId) {
-    throw new SemanticError(
-      "mappingTargetSystemMismatch",
-      [identity.targetSystemId, targetSystemId],
-      `Persisted mapping '${mapping.id}' expects target system '${identity.targetSystemId}', not '${targetSystemId}'.`,
-      {
-        kind: "mappingSystemIdentity",
-        role: "target",
-        expectedSystemId: identity.targetSystemId,
-        actualSystemId: targetSystemId,
-      },
-    );
+  if (identity.targetSystemId !== undefined) {
+    const targetSystemId = informationSystemId(target);
+    if (targetSystemId === undefined) {
+      throw new SemanticError(
+        "mappingTargetSystemUnidentified",
+        [identity.targetSystemId],
+        `Persisted mapping '${mapping.id}' expects target system '${identity.targetSystemId}', but the supplied target system has no persisted ID.`,
+        {
+          kind: "mappingSystemIdentity",
+          role: "target",
+          expectedSystemId: identity.targetSystemId,
+          actualSystemId: null,
+        },
+      );
+    }
+    if (targetSystemId !== identity.targetSystemId) {
+      throw new SemanticError(
+        "mappingTargetSystemMismatch",
+        [identity.targetSystemId, targetSystemId],
+        `Persisted mapping '${mapping.id}' expects target system '${identity.targetSystemId}', not '${targetSystemId}'.`,
+        {
+          kind: "mappingSystemIdentity",
+          role: "target",
+          expectedSystemId: identity.targetSystemId,
+          actualSystemId: targetSystemId,
+        },
+      );
+    }
   }
 }
 
@@ -926,24 +992,36 @@ export function validateMapping(
   validateSystem(target);
   const rules = validateMappingRuleDeclarations(source, target, mapping);
   const sourceTokenIds = sortIds(source.tokens.map(({ id }) => id));
+  const sourceConflicts = canonicalConflicts(source);
+  const sourceRules = sortRulesById(source.entailmentRules);
+  const targetConflicts = canonicalConflicts(target);
+  const targetRules = sortRulesById(target.entailmentRules);
   let checkedConsistentSourceSets = 0;
 
   for (const sourceSet of enumerateTokenSubsets(sourceTokenIds)) {
     const sourceTokens = new Set(sourceSet);
-    if (findConflict(source, sourceTokens) !== undefined) {
+    if (findConflictAmong(sourceConflicts, sourceTokens) !== undefined) {
       continue;
     }
 
     checkedConsistentSourceSets += 1;
-    const sourceClosure = deriveClosureTokens(source, sourceSet);
+    const sourceClosure = closeUnderSortedRules(
+      source.delta,
+      sourceRules,
+      sourceSet,
+    );
     const activeRules = rules.filter((rule) =>
       rule.premises.every((premise) => sourceClosure.has(premise)),
     );
     const conclusions = new Set(
       activeRules.map(({ conclusion }) => conclusion),
     );
-    const targetClosure = deriveClosureTokens(target, conclusions);
-    const witness = findConflict(target, targetClosure);
+    const targetClosure = closeUnderSortedRules(
+      target.delta,
+      targetRules,
+      conclusions,
+    );
+    const witness = findConflictAmong(targetConflicts, targetClosure);
     if (witness !== undefined) {
       const ruleIds = activeRules.map(({ id }) => id);
       throw new SemanticError(
@@ -1474,6 +1552,10 @@ function entailmentDerivation(
   const includedIndices = new Set<number>();
 
   function include(step: ClosureStep): void {
+    if (includedIndices.has(step.index)) {
+      return;
+    }
+    includedIndices.add(step.index);
     for (const premise of step.premises) {
       const premiseStep = steps.findLast(
         (candidate) =>
@@ -1483,7 +1565,6 @@ function entailmentDerivation(
         include(premiseStep);
       }
     }
-    includedIndices.add(step.index);
   }
 
   include(target);
@@ -1497,8 +1578,8 @@ export function explainEntailment(
   token: TokenId,
 ): EntailmentExplanation {
   validateSystem(system);
-  const computation = computeClosureDetailsValidated(system, input);
   requireKnownCandidateTokens(system, [token], "The entailment query");
+  const computation = computeClosureDetailsValidated(system, input);
 
   const step = computation.steps.find(
     (candidate) => candidate.conclusion === token,
@@ -1614,7 +1695,14 @@ export function computeCoverRelation(
   };
 }
 
-/** Attempt to refine a validated state without mutating it on rejection. */
+/**
+ * Attempt to refine a validated state without mutating it on rejection.
+ *
+ * `currentState` must be consistent: an unclosed consistent selection is
+ * closed before the refinement, while an inconsistent one is caller misuse
+ * and throws a `SemanticError` with category `minimalInconsistentSet`. Only
+ * the refused refinement itself is reported as `ok: false`.
+ */
 export function tryAddObservation(
   system: InformationSystemDefinition,
   currentState: readonly TokenId[],

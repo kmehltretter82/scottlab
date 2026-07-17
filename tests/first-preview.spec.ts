@@ -37,6 +37,11 @@ const directRoutes = [
     title: "ScottLab · Winning is entailment",
   },
   {
+    hash: "#/gallery",
+    heading: "Every example system, side by side.",
+    title: "ScottLab · Example gallery",
+  },
+  {
     hash: "#/sandbox/flat-boolean",
     heading: "Explore the same system without the lesson rails.",
     title: "ScottLab · Flat Booleans sandbox preview",
@@ -125,6 +130,20 @@ test.describe("shareable hash routes", () => {
       }),
     ).toBeVisible();
   });
+});
+
+test("opens a shared sandbox selection and updates the share URL", async ({
+  page,
+}) => {
+  await page.goto("#/sandbox/flat-boolean/delta.false");
+
+  const tray = page.getByRole("region", { name: "Experiment tray" });
+  await expect(
+    tray.getByRole("button", { name: "Select state {Δ, false}" }),
+  ).toHaveAttribute("aria-pressed", "true");
+
+  await tray.getByRole("button", { name: "Select state {Δ, true}" }).click();
+  await expect(page).toHaveURL(/#\/sandbox\/flat-boolean\/delta\.true$/);
 });
 
 test("restores lesson progress after a reload", async ({ page }) => {

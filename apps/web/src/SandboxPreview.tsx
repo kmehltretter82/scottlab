@@ -6,6 +6,7 @@ import {
 } from "@scottlab/core";
 import { flatBooleanSystem } from "@scottlab/examples";
 import {
+  useEffect,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -83,6 +84,8 @@ export interface SandboxPreviewProps {
   readonly initialState?: readonly TokenId[] | undefined;
   readonly onBack: () => void;
   readonly onRestart: () => void;
+  /** Reports every selection so the shell can keep the share URL current. */
+  readonly onSelectionChange?: (state: readonly TokenId[]) => void;
   readonly tokenTextById: Readonly<Record<string, SandboxTokenText>>;
 }
 
@@ -139,6 +142,7 @@ export function SandboxPreview({
   initialState,
   onBack,
   onRestart,
+  onSelectionChange,
   tokenTextById,
 }: SandboxPreviewProps) {
   const initialKey = stateKey(initialState ?? bottomState);
@@ -147,6 +151,16 @@ export function SandboxPreview({
       ? initialKey
       : stateKey(bottomState),
   );
+
+  // Browser history can change the shared selection while the sandbox stays
+  // mounted; follow it whenever the requested state is real.
+  useEffect(() => {
+    if (
+      informationOrder.states.some((state) => stateKey(state) === initialKey)
+    ) {
+      setSelectedKey(initialKey);
+    }
+  }, [initialKey]);
   const nodeRefs = useRef(new Map<string, HTMLButtonElement>());
   const selectedState =
     informationOrder.states.find((state) => stateKey(state) === selectedKey) ??
@@ -201,6 +215,7 @@ export function SandboxPreview({
 
   function selectState(state: readonly TokenId[]): void {
     setSelectedKey(stateKey(state));
+    onSelectionChange?.(state);
   }
 
   function focusState(state: readonly TokenId[] | undefined): void {

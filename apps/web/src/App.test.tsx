@@ -804,6 +804,217 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(window.location.hash).toBe("#/lesson/fixed-points");
   });
 
+  it("opens a shared sandbox selection and keeps the share URL current", async () => {
+    window.history.replaceState(null, "", "#/sandbox/flat-boolean/delta.true");
+    const user = userEvent.setup();
+    render(<App />);
+
+    const tray = screen.getByRole("region", { name: "Experiment tray" });
+    expect(
+      within(tray).getByRole("button", { name: "Select state {Δ, true}" }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(
+      within(tray).getByRole("button", { name: "Select state {Δ, false}" }),
+    );
+    expect(window.location.hash).toBe("#/sandbox/flat-boolean/delta.false");
+
+    await user.click(
+      within(tray).getByRole("button", { name: "Select state ⊥ = {Δ}" }),
+    );
+    expect(window.location.hash).toBe("#/sandbox/flat-boolean");
+  });
+
+  it("canonicalizes a shared selection that is not a real state", () => {
+    window.history.replaceState(
+      null,
+      "",
+      "#/sandbox/flat-boolean/true.false",
+    );
+    render(<App />);
+
+    expect(window.location.hash).toBe("#/sandbox/flat-boolean");
+    const tray = screen.getByRole("region", { name: "Experiment tray" });
+    expect(
+      within(tray).getByRole("button", { name: "Select state ⊥ = {Δ}" }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("browses the gallery, quizzes a verdict, and imports a system", async () => {
+    window.history.replaceState(null, "", "#/gallery");
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(document.title).toBe("ScottLab · Example gallery");
+    expect(
+      screen.getByRole("heading", {
+        name: "Every example system, side by side.",
+      }),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Open Coquand system" }),
+    );
+    expect(window.location.hash).toBe("#/gallery/coquand");
+    expect(
+      screen.getByText("7 states, ordered by inclusion."),
+    ).toBeVisible();
+    expect(screen.getByText("{l, r} ⊢ ε")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Select state {Δ, l}" }),
+    );
+    expect(screen.getByText("{Δ, l} ⊑ {Δ, ε, l}")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Draw a selection" }),
+    );
+    expect(screen.getByText("Selection")).toBeVisible();
+
+    await user.click(
+      screen.getByRole("button", { name: "Back to the gallery" }),
+    );
+    expect(window.location.hash).toBe("#/gallery");
+
+    const importField = screen.getByLabelText("System JSON");
+    await user.click(importField);
+    await user.paste(
+      JSON.stringify({
+        schemaVersion: "1",
+        kind: "information-system",
+        convention: "scott-1982-distinguished-token",
+        id: "tiny-import",
+        title: "Tiny import",
+        description: "A one-observation import.",
+        approximation: { kind: "exact" },
+        tokens: [
+          {
+            id: "delta",
+            label: "Always-present token",
+            symbol: "Δ",
+            description: "The distinguished token present in every state.",
+          },
+          {
+            id: "ping",
+            label: "ping",
+            description: "The single observation.",
+          },
+        ],
+        delta: "delta",
+        minimalInconsistentSets: [],
+        entailmentRules: [],
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Validate and import" }),
+    );
+
+    expect(window.location.hash).toBe("#/gallery/tiny-import");
+    expect(
+      screen.getByRole("heading", { name: "Tiny import" }),
+    ).toBeVisible();
+    expect(
+      screen.getByText("2 states, ordered by inclusion."),
+    ).toBeVisible();
+    expect(
+      window.localStorage.getItem("scottlab.gallery.imported.v1"),
+    ).toContain("tiny-import");
+  });
+
+  it("reaches the current lesson's system in the gallery from the footer", async () => {
+    window.history.replaceState(null, "", "#/lesson/states");
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Explore this system in the gallery",
+      }),
+    );
+    expect(window.location.hash).toBe("#/gallery/editing-policy");
+    expect(
+      screen.getByRole("heading", { name: "Editing policy" }),
+    ).toBeVisible();
+    expect(screen.getByText("{administrator} ⊢ may edit")).toBeVisible();
+  });
+
+  it("rejects a semantically invalid gallery import with a witness", async () => {
+    window.history.replaceState(null, "", "#/gallery");
+    const user = userEvent.setup();
+    render(<App />);
+
+    const importField = screen.getByLabelText("System JSON");
+    await user.click(importField);
+    await user.paste(
+      JSON.stringify({
+        schemaVersion: "1",
+        kind: "information-system",
+        convention: "scott-1982-distinguished-token",
+        id: "broken-import",
+        title: "Broken import",
+        description: "Entailment breaks consistency.",
+        approximation: { kind: "exact" },
+        tokens: [
+          {
+            id: "a",
+            label: "a",
+            description: "First observation.",
+          },
+          {
+            id: "b",
+            label: "b",
+            description: "Second observation.",
+          },
+          {
+            id: "delta",
+            label: "Always-present token",
+            symbol: "Δ",
+            description: "The distinguished token present in every state.",
+          },
+        ],
+        delta: "delta",
+        minimalInconsistentSets: [["a", "b"]],
+        entailmentRules: [
+          { id: "a-entails-b", premises: ["a"], conclusion: "b" },
+        ],
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Validate and import" }),
+    );
+
+    expect(window.location.hash).toBe("#/gallery");
+    expect(
+      screen.getByText(/violates the information-system laws/),
+    ).toBeVisible();
+    expect(
+      window.localStorage.getItem("scottlab.gallery.imported.v1") ?? "",
+    ).not.toContain("broken-import");
+  });
+
+  it("derives a concept-table import whose states are the intents", async () => {
+    window.history.replaceState(null, "", "#/gallery");
+    const user = userEvent.setup();
+    render(<App />);
+
+    const fcaField = screen.getByLabelText("Cross-table CSV");
+    await user.click(fcaField);
+    await user.paste(
+      ["object,wings,flies", "sparrow,x,x", "penguin,x,", "cat,,"].join("\n"),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Derive and import" }),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Imported concept table" }),
+    ).toBeVisible();
+    // Intents of the table: {}, {wings}, {wings, flies} — plus Δ everywhere.
+    expect(
+      screen.getByText("3 states, ordered by inclusion."),
+    ).toBeVisible();
+  });
+
   it("restores lesson progress after a reload", async () => {
     const user = userEvent.setup();
     const rendered = render(<App />);
@@ -1848,6 +2059,12 @@ describe("ScottLab introduction and bottom-first lesson", () => {
     expect(
       screen.getByRole("button", {
         name: "Sandbox preview: Flat Booleans",
+      }),
+    ).toHaveFocus();
+    await user.tab();
+    expect(
+      screen.getByRole("button", {
+        name: "Gallery: All example systems",
       }),
     ).toHaveFocus();
 

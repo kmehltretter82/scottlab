@@ -1,6 +1,7 @@
 import type { ContinuousMapLessonCopy } from "./ContinuousMapLesson";
 import type { EntailmentLessonCopy } from "./EntailmentLesson";
 import type { FixedPointLessonCopy } from "./FixedPointLesson";
+import type { GalleryCopy } from "./GalleryView";
 import type { GameLessonCopy } from "./GameLesson";
 import type { SandboxPreviewCopy } from "./SandboxPreview";
 import type { StateLessonCopy } from "./StateLesson";
@@ -27,6 +28,7 @@ export interface LessonMessages {
   readonly selectLanguage: (name: string) => string;
   readonly homeAction: string;
   readonly footerNavigationLabel: string;
+  readonly exploreInGallery: string;
   readonly openSystem: (system: string) => string;
   readonly currentStageLabel: string;
   readonly introduction: {
@@ -186,6 +188,7 @@ export interface LessonMessages {
   readonly continuousMapLesson: ContinuousMapLessonCopy;
   readonly fixedPointLesson: FixedPointLessonCopy;
   readonly gameLesson: GameLessonCopy;
+  readonly gallery: GalleryCopy;
   readonly rejectedToken: (token: string) => string;
   readonly rejectedRole: string;
   readonly rejectedDetail: string;
@@ -223,6 +226,7 @@ const english: LessonMessages = {
   selectLanguage: (name) => `Choose ${name}`,
   homeAction: "Return to the ScottLab start",
   footerNavigationLabel: "Lesson location",
+  exploreInGallery: "Explore this system in the gallery",
   openSystem: (system) => `Restart ${system}`,
   currentStageLabel: "Current step",
   trailMapLabel: "Lesson trail",
@@ -1287,6 +1291,122 @@ const english: LessonMessages = {
       replay: "Replay the analysis",
     },
   },
+  gallery: {
+    pageTitle: "ScottLab · Example gallery",
+    pageDescription:
+      "Browse, share, import, and quiz yourself on finite Scott information systems.",
+    markerLabel: "Gallery: All example systems",
+    markerName: "Gallery",
+    footerSystem: "Example gallery",
+    footerStage: "Free exploration",
+    eyebrow: "Gallery",
+    title: "Every example system, side by side.",
+    lead:
+      "Open any system the lessons use, inspect its definition and state order, quiz yourself on arbitrary selections, export it as JSON, or import your own.",
+    systemNotes: {
+      "flat-boolean": {
+        name: "Flat Booleans",
+        note: "The smallest useful example: true and false above bottom.",
+      },
+      coquand: {
+        name: "Coquand system",
+        note: "Two independent observations jointly entail a third — the classroom non-flat system.",
+      },
+      "access-permissions": {
+        name: "Access permissions",
+        note: "A two-rule knowledge system whose closure runs like Datalog.",
+      },
+      "editing-policy": {
+        name: "Editing policy",
+        note: "A policy system with a visible rule and a read-only conflict.",
+      },
+      "bounded-lazy-naturals": {
+        name: "Bounded lazy naturals",
+        note: "Lower bounds of a lazy natural number — the fixed-point chain.",
+      },
+      "stream-prefixes": {
+        name: "Stream prefixes",
+        note: "Finite windows onto an infinite Boolean stream.",
+      },
+      "take-away-game": {
+        name: "Take-away game",
+        note: "Win and loss claims solved by retrograde analysis.",
+      },
+    },
+    index: {
+      builtInHeading: "Built-in systems",
+      importedHeading: "Your imported systems",
+      noImports:
+        "Nothing imported yet. Imports are validated first and stored only in this browser.",
+      openSystem: (name) => `Open ${name}`,
+      removeImport: (name) => `Remove ${name}`,
+      tokensSummary: (count) => `${count} tokens`,
+    },
+    importPanel: {
+      heading: "Import a system",
+      introduction:
+        "Paste a persisted information-system JSON document. It is checked structurally and against the semantic laws before anything is activated.",
+      jsonLabel: "System JSON",
+      importAction: "Validate and import",
+      fcaHeading: "Or derive one from a concept table",
+      fcaIntroduction:
+        "Paste a small object-attribute cross-table as CSV (first row: attribute names; mark cells with x). The states of the derived system are exactly the concept intents.",
+      fcaLabel: "Cross-table CSV",
+      fcaPlaceholder: "object,wings,legs,flies\nsparrow,x,x,x\ncat,,x,",
+      fcaAction: "Derive and import",
+      errorInvalidJson: "That is not valid JSON.",
+      errorInvalidShape:
+        "The document does not match the version 1 information-system format.",
+      errorClashingId: (id) =>
+        `The id '${id}' belongs to a built-in system; give yours a different id.`,
+      errorSemantic: (message) =>
+        `The document violates the information-system laws: ${message}`,
+      errorFcaShape:
+        "The table could not be read. Use at most 6 attributes and 12 objects, with a header row of attribute names.",
+      imported: (name) => `Imported and validated “${name}”.`,
+    },
+    viewer: {
+      backToIndex: "Back to the gallery",
+      definitionHeading: "Definition",
+      tokensLabel: "Tokens",
+      conflictsLabel: "Minimal inconsistent sets",
+      noConflicts: "None — every finite selection is consistent.",
+      rulesLabel: "Entailment rules",
+      noRules: "None — entailment is reflexivity and Δ only.",
+      boundLabel: (bound) =>
+        `A bounded approximation (depth ${bound}); the unbounded object continues beyond it.`,
+      exactLabel: "An exact finite system.",
+      statesHeading: "The states",
+      enumerationGuard: (candidates) =>
+        `Enumerating states inspects up to ${candidates} candidate subsets, which can take a moment for a system this size.`,
+      enumerateAnyway: "Enumerate anyway",
+      statesCount: (count) => `${count} states, ordered by inclusion.`,
+      selectState: (state) => `Select state ${state}`,
+      selectedStateLabel: "Selected state",
+      coverEdgesLabel: "One step up",
+      noEdges: "This state is maximal: nothing sits directly above it.",
+      exportAction: "Export as JSON",
+    },
+    quiz: {
+      heading: "Quiz yourself",
+      introduction:
+        "ScottLab draws a random selection of tokens. Decide whether it is inconsistent, consistent but not closed, or a state — the core then shows its verdict and witness.",
+      startAction: "Draw a selection",
+      nextAction: "Draw another",
+      candidateLabel: "Selection",
+      choiceLegend: "Your verdict",
+      answerInconsistent: "Inconsistent",
+      answerUnclosed: "Consistent, not closed",
+      answerState: "A state",
+      correct: "Correct.",
+      incorrect: "Not quite.",
+      verdictInconsistent: (witness) =>
+        `The selection contains the declared conflict ${witness}.`,
+      verdictUnclosed: (missing) =>
+        `The selection is consistent but entailment adds ${missing}.`,
+      verdictState: "The selection is consistent and entailment-closed.",
+    },
+  },
   rejectedToken: (token) => `Rejected ${token} token`,
   rejectedRole: "not added",
   rejectedDetail: "outside the state",
@@ -1325,6 +1445,7 @@ const german: LessonMessages = {
   selectLanguage: (name) => `${name} wählen`,
   homeAction: "Zur ScottLab-Startseite zurückkehren",
   footerNavigationLabel: "Position im Lernpfad",
+  exploreInGallery: "Dieses System in der Galerie erkunden",
   openSystem: (system) => `${system} neu starten`,
   currentStageLabel: "Aktueller Schritt",
   trailMapLabel: "Lektionspfad",
@@ -2403,6 +2524,123 @@ const german: LessonMessages = {
       back: "Zurück zu Fixpunkten",
       openSandbox: "Boolean-Sandbox erneut ansehen",
       replay: "Analyse erneut abspielen",
+    },
+  },
+  gallery: {
+    pageTitle: "ScottLab · Beispielgalerie",
+    pageDescription:
+      "Endliche Scott-Informationssysteme durchstöbern, teilen, importieren und sich selbst abfragen.",
+    markerLabel: "Galerie: Alle Beispielsysteme",
+    markerName: "Galerie",
+    footerSystem: "Beispielgalerie",
+    footerStage: "Freies Erkunden",
+    eyebrow: "Galerie",
+    title: "Alle Beispielsysteme nebeneinander.",
+    lead:
+      "Öffne jedes System der Lektionen, betrachte Definition und Zustandsordnung, teste dich an beliebigen Auswahlen, exportiere es als JSON oder importiere dein eigenes.",
+    systemNotes: {
+      "flat-boolean": {
+        name: "Flache Booleans",
+        note: "Das kleinste nützliche Beispiel: true und false über Bottom.",
+      },
+      coquand: {
+        name: "Coquand-System",
+        note: "Zwei unabhängige Beobachtungen folgern gemeinsam eine dritte — das nicht-flache Lehrbeispiel.",
+      },
+      "access-permissions": {
+        name: "Zugriffsrechte",
+        note: "Ein Wissenssystem mit zwei Regeln, dessen Abschluss wie Datalog läuft.",
+      },
+      "editing-policy": {
+        name: "Bearbeitungsrichtlinie",
+        note: "Ein Richtliniensystem mit sichtbarer Regel und einem Nur-Lesen-Konflikt.",
+      },
+      "bounded-lazy-naturals": {
+        name: "Beschränkte lazy Naturals",
+        note: "Untere Schranken einer lazy natürlichen Zahl — die Fixpunktkette.",
+      },
+      "stream-prefixes": {
+        name: "Strom-Präfixe",
+        note: "Endliche Fenster auf einen unendlichen booleschen Strom.",
+      },
+      "take-away-game": {
+        name: "Wegnahmespiel",
+        note: "Gewinn- und Verlustbehauptungen, gelöst durch Rückwärtsanalyse.",
+      },
+    },
+    index: {
+      builtInHeading: "Mitgelieferte Systeme",
+      importedHeading: "Deine importierten Systeme",
+      noImports:
+        "Noch nichts importiert. Importe werden zuerst geprüft und nur in diesem Browser gespeichert.",
+      openSystem: (name) => `${name} öffnen`,
+      removeImport: (name) => `${name} entfernen`,
+      tokensSummary: (count) => `${count} Tokens`,
+    },
+    importPanel: {
+      heading: "Ein System importieren",
+      introduction:
+        "Füge ein persistiertes Informationssystem-JSON ein. Es wird strukturell und gegen die semantischen Gesetze geprüft, bevor irgendetwas aktiviert wird.",
+      jsonLabel: "System-JSON",
+      importAction: "Prüfen und importieren",
+      fcaHeading: "Oder eines aus einer Begriffstabelle ableiten",
+      fcaIntroduction:
+        "Füge eine kleine Objekt-Merkmal-Kreuztabelle als CSV ein (erste Zeile: Merkmalsnamen; Zellen mit x markieren). Die Zustände des abgeleiteten Systems sind genau die Begriffsinhalte.",
+      fcaLabel: "Kreuztabellen-CSV",
+      fcaPlaceholder: "objekt,fluegel,beine,fliegt\nspatz,x,x,x\nkatze,,x,",
+      fcaAction: "Ableiten und importieren",
+      errorInvalidJson: "Das ist kein gültiges JSON.",
+      errorInvalidShape:
+        "Das Dokument entspricht nicht dem Informationssystem-Format der Version 1.",
+      errorClashingId: (id) =>
+        `Die Kennung '${id}' gehört zu einem mitgelieferten System; wähle eine andere.`,
+      errorSemantic: (message) =>
+        `Das Dokument verletzt die Gesetze der Informationssysteme: ${message}`,
+      errorFcaShape:
+        "Die Tabelle konnte nicht gelesen werden. Höchstens 6 Merkmale und 12 Objekte, mit einer Kopfzeile aus Merkmalsnamen.",
+      imported: (name) => `„${name}“ importiert und geprüft.`,
+    },
+    viewer: {
+      backToIndex: "Zurück zur Galerie",
+      definitionHeading: "Definition",
+      tokensLabel: "Tokens",
+      conflictsLabel: "Minimale unverträgliche Mengen",
+      noConflicts: "Keine — jede endliche Auswahl ist verträglich.",
+      rulesLabel: "Folgerungsregeln",
+      noRules: "Keine — Folgerung ist nur Reflexivität und Δ.",
+      boundLabel: (bound) =>
+        `Eine beschränkte Approximation (Tiefe ${bound}); das unbeschränkte Objekt geht darüber hinaus.`,
+      exactLabel: "Ein exaktes endliches System.",
+      statesHeading: "Die Zustände",
+      enumerationGuard: (candidates) =>
+        `Die Zustandsaufzählung untersucht bis zu ${candidates} Kandidatenmengen; das kann bei dieser Systemgröße einen Moment dauern.`,
+      enumerateAnyway: "Trotzdem aufzählen",
+      statesCount: (count) => `${count} Zustände, geordnet durch Inklusion.`,
+      selectState: (state) => `Zustand ${state} wählen`,
+      selectedStateLabel: "Gewählter Zustand",
+      coverEdgesLabel: "Ein Schritt nach oben",
+      noEdges: "Dieser Zustand ist maximal: direkt darüber liegt nichts.",
+      exportAction: "Als JSON exportieren",
+    },
+    quiz: {
+      heading: "Teste dich selbst",
+      introduction:
+        "ScottLab zieht eine zufällige Tokenauswahl. Entscheide, ob sie unverträglich, verträglich aber nicht abgeschlossen oder ein Zustand ist — der Kern zeigt danach Urteil und Beleg.",
+      startAction: "Eine Auswahl ziehen",
+      nextAction: "Noch eine ziehen",
+      candidateLabel: "Auswahl",
+      choiceLegend: "Dein Urteil",
+      answerInconsistent: "Unverträglich",
+      answerUnclosed: "Verträglich, nicht abgeschlossen",
+      answerState: "Ein Zustand",
+      correct: "Richtig.",
+      incorrect: "Nicht ganz.",
+      verdictInconsistent: (witness) =>
+        `Die Auswahl enthält den festgelegten Konflikt ${witness}.`,
+      verdictUnclosed: (missing) =>
+        `Die Auswahl ist verträglich, aber die Folgerung fügt ${missing} hinzu.`,
+      verdictState:
+        "Die Auswahl ist verträglich und unter Folgerung abgeschlossen.",
     },
   },
   rejectedToken: (token) => `Abgelehntes ${token}-Token`,

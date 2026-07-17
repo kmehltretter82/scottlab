@@ -4,6 +4,7 @@ import {
   entailmentLessonRoute,
   fixedPointsLessonRoute,
   flatBooleanSandboxRoute,
+  galleryRoute,
   gamesLessonRoute,
   formatHashRoute,
   lessonRoute,
@@ -33,6 +34,16 @@ describe("parseHashRoute", () => {
     expect(parseHashRoute("#/sandbox/flat-boolean")).toEqual(
       flatBooleanSandboxRoute,
     );
+    expect(parseHashRoute("#/sandbox/flat-boolean/delta.true")).toEqual({
+      kind: "sandbox",
+      systemId: "flat-boolean",
+      selection: ["delta", "true"],
+    });
+    expect(parseHashRoute("#/gallery")).toEqual(galleryRoute);
+    expect(parseHashRoute("#/gallery/take-away-game")).toEqual({
+      kind: "gallery",
+      systemId: "take-away-game",
+    });
   });
 
   it.each([
@@ -50,6 +61,7 @@ describe("parseHashRoute", () => {
     "#/lesson/games/",
     "#/sandbox",
     "#/sandbox/flat-boolean/",
+    "#/sandbox/flat-boolean/Delta.True",
     "#/sandbox/flat-boolean?editing=true",
     "#/sandbox/%66lat-boolean",
     "#/sandbox/another-system",
@@ -77,6 +89,17 @@ describe("formatHashRoute", () => {
     expect(formatHashRoute(flatBooleanSandboxRoute)).toBe(
       "#/sandbox/flat-boolean",
     );
+    expect(
+      formatHashRoute({
+        kind: "sandbox",
+        systemId: "flat-boolean",
+        selection: ["true", "delta"],
+      }),
+    ).toBe("#/sandbox/flat-boolean/delta.true");
+    expect(formatHashRoute(galleryRoute)).toBe("#/gallery");
+    expect(
+      formatHashRoute({ kind: "gallery", systemId: "coquand" }),
+    ).toBe("#/gallery/coquand");
   });
 
   it.each<AppRoute>([
@@ -87,6 +110,9 @@ describe("formatHashRoute", () => {
     fixedPointsLessonRoute,
     gamesLessonRoute,
     flatBooleanSandboxRoute,
+    galleryRoute,
+    { kind: "sandbox", systemId: "flat-boolean", selection: ["delta", "true"] },
+    { kind: "gallery", systemId: "stream-prefixes" },
   ])(
     "round-trips $kind",
     (route) => {

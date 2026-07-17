@@ -1,4 +1,7 @@
-import type { TokenId } from "@scottlab/core";
+import type {
+  PersistedInformationSystemDefinition,
+  TokenId,
+} from "@scottlab/core";
 import {
   accessPermissionsSystem,
   editingPolicySystem,
@@ -403,5 +406,117 @@ export function savePersistedProgress(progress: PersistedProgress): void {
     );
   } catch {
     // Local storage may be unavailable; the lesson continues unpersisted.
+  }
+}
+
+export const importedSystemsStorageKey = "scottlab.gallery.imported.v1";
+
+const identifierPattern = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+
+function isTokenDefinitionShape(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    identifierPattern.test(value.id) &&
+    typeof value.label === "string" &&
+    typeof value.description === "string" &&
+    (value.symbol === undefined || typeof value.symbol === "string")
+  );
+}
+
+function isRuleShape(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.id === "string" &&
+    identifierPattern.test(value.id) &&
+    Array.isArray(value.premises) &&
+    value.premises.every((premise) => typeof premise === "string") &&
+    typeof value.conclusion === "string"
+  );
+}
+
+/**
+ * Structurally validate a persisted information-system document.
+ *
+ * This mirrors the JSON Schema's shape checks so imports can be narrowed in
+ * the browser; the semantic laws must still be checked with the core's
+ * `validateSystem` before the document is activated.
+ */
+export function validatePersistedSystemShape(
+  value: unknown,
+): PersistedInformationSystemDefinition | undefined {
+  if (
+    !isRecord(value) ||
+    value.schemaVersion !== "1" ||
+    value.kind !== "information-system" ||
+    value.convention !== "scott-1982-distinguished-token" ||
+    typeof value.id !== "string" ||
+    !identifierPattern.test(value.id) ||
+    typeof value.title !== "string" ||
+    typeof value.description !== "string" ||
+    typeof value.delta !== "string" ||
+    !isRecord(value.approximation) ||
+    !Array.isArray(value.tokens) ||
+    value.tokens.length === 0 ||
+    !value.tokens.every(isTokenDefinitionShape) ||
+    !Array.isArray(value.minimalInconsistentSets) ||
+    !value.minimalInconsistentSets.every(
+      (conflict) =>
+        Array.isArray(conflict) &&
+        conflict.every((tokenId) => typeof tokenId === "string"),
+    ) ||
+    !Array.isArray(value.entailmentRules) ||
+    !value.entailmentRules.every(isRuleShape)
+  ) {
+    return undefined;
+  }
+
+  const approximation = value.approximation;
+  if (
+    !(
+      approximation.kind === "exact" ||
+      (approximation.kind === "bounded" &&
+        typeof approximation.bound === "string")
+    )
+  ) {
+    return undefined;
+  }
+
+  return value as unknown as PersistedInformationSystemDefinition;
+}
+
+/** Load locally saved imported systems, discarding anything malformed. */
+export function loadImportedSystems(): readonly PersistedInformationSystemDefinition[] {
+  try {
+    const raw = window.localStorage.getItem(importedSystemsStorageKey);
+    if (raw === null) {
+      return [];
+    }
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed
+      .map((entry) => validatePersistedSystemShape(entry))
+      .filter(
+        (entry): entry is PersistedInformationSystemDefinition =>
+          entry !== undefined,
+      );
+  } catch {
+    return [];
+  }
+}
+
+/** Persist imported systems as local drafts. */
+export function saveImportedSystems(
+  systems: readonly PersistedInformationSystemDefinition[],
+): void {
+  try {
+    window.localStorage.setItem(
+      importedSystemsStorageKey,
+      JSON.stringify(systems),
+    );
+  } catch {
+    // Local storage may be unavailable; imports stay session-only.
   }
 }

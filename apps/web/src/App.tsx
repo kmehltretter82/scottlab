@@ -30,6 +30,8 @@ import {
   entailmentLessonRoute,
   fixedPointsLessonRoute,
   flatBooleanSandboxRoute,
+  galleryRoute,
+  gallerySystemRoute,
   gamesLessonRoute,
   formatHashRoute,
   lessonRoute,
@@ -54,6 +56,7 @@ import {
   initialFixedPointLessonProgress,
   type FixedPointLessonProgress,
 } from "./FixedPointLesson";
+import { GalleryView, type GalleryTokenText } from "./GalleryView";
 import {
   GameLesson,
   initialGameLessonProgress,
@@ -1018,6 +1021,7 @@ export function App() {
   const continuousMapHeadingRef = useRef<HTMLHeadingElement>(null);
   const fixedPointHeadingRef = useRef<HTMLHeadingElement>(null);
   const gameHeadingRef = useRef<HTMLHeadingElement>(null);
+  const galleryHeadingRef = useRef<HTMLHeadingElement>(null);
   const routeBeforeSandboxRef = useRef<AppRoute>(lessonRoute);
   const copy = messages[language];
   const isSandbox = route.kind === "sandbox";
@@ -1026,6 +1030,7 @@ export function App() {
   const isMaps = route.kind === "maps";
   const isFixedPoints = route.kind === "fixedPoints";
   const isGames = route.kind === "games";
+  const isGallery = route.kind === "gallery";
   const isIntroduction = lessonState.step === "intro";
   const isExampleIntroduction = lessonState.step === "example";
   const isFormalisation = lessonState.step === "formal";
@@ -1151,8 +1156,16 @@ export function App() {
 
   useEffect(() => {
     function synchronizeRoute(nextRoute: AppRoute): void {
-      setRoute(nextRoute);
-      const canonicalHash = formatHashRoute(nextRoute);
+      // A shared sandbox selection must name a real state; anything else
+      // canonicalizes back to the plain sandbox.
+      const canonicalRoute =
+        nextRoute.kind === "sandbox" &&
+        nextRoute.selection !== undefined &&
+        !isEnumeratedState(nextRoute.selection)
+          ? flatBooleanSandboxRoute
+          : nextRoute;
+      setRoute(canonicalRoute);
+      const canonicalHash = formatHashRoute(canonicalRoute);
       if (window.location.hash !== canonicalHash) {
         window.history.replaceState(null, "", canonicalHash);
       }
@@ -1166,7 +1179,9 @@ export function App() {
     document.documentElement.lang = language;
     document.title = isSandbox
       ? copy.sandboxPreview.pageTitle
-      : isGames
+      : isGallery
+        ? copy.gallery.pageTitle
+        : isGames
         ? copy.gameLesson.pageTitle
         : isFixedPoints
         ? copy.fixedPointLesson.pageTitle
@@ -1187,11 +1202,13 @@ export function App() {
       .querySelector<HTMLMetaElement>('meta[name="description"]')
       ?.setAttribute(
         "content",
-        isGames
-          ? copy.gameLesson.pageDescription
-          : isFixedPoints
-            ? copy.fixedPointLesson.pageDescription
-            : copy.pageDescription,
+        isGallery
+          ? copy.gallery.pageDescription
+          : isGames
+            ? copy.gameLesson.pageDescription
+            : isFixedPoints
+              ? copy.fixedPointLesson.pageDescription
+              : copy.pageDescription,
       );
 
     try {
@@ -1204,6 +1221,7 @@ export function App() {
     isExampleIntroduction,
     isFixedPoints,
     isFormalisation,
+    isGallery,
     isGames,
     isIntroduction,
     isEntailment,
@@ -1216,6 +1234,8 @@ export function App() {
   useEffect(() => {
     if (isSandbox) {
       sandboxHeadingRef.current?.focus();
+    } else if (isGallery) {
+      galleryHeadingRef.current?.focus();
     } else if (isGames) {
       gameHeadingRef.current?.focus();
     } else if (isFixedPoints) {
@@ -1232,6 +1252,7 @@ export function App() {
   }, [
     isEntailment,
     isFixedPoints,
+    isGallery,
     isGames,
     isMaps,
     isSandbox,
@@ -1335,6 +1356,16 @@ export function App() {
     navigateTo(flatBooleanSandboxRoute);
   }
 
+  function shareSandboxSelection(state: readonly TokenId[]): void {
+    const nextRoute: AppRoute =
+      stateKey(state) === stateKey(bottom.state)
+        ? flatBooleanSandboxRoute
+        : { kind: "sandbox", systemId: "flat-boolean", selection: state };
+    setRoute(nextRoute);
+    // Keep the share URL current without polluting the browser history.
+    window.history.replaceState(null, "", formatHashRoute(nextRoute));
+  }
+
   function openIntroductoryLesson(): void {
     if (formalState !== undefined) {
       // Formalisation is its own station: step back to the completed order.
@@ -1375,6 +1406,10 @@ export function App() {
       // without discarding the progress of the other focused lessons.
       setLessonState({ step: "bottom" });
       navigateTo(lessonRoute);
+      return;
+    }
+    if (isGallery) {
+      navigateTo(galleryRoute);
       return;
     }
     if (isGames) {
@@ -1453,6 +1488,50 @@ export function App() {
 
   function returnFromGamesLesson(): void {
     navigateTo(fixedPointsLessonRoute);
+  }
+
+  function openGallery(): void {
+    navigateTo(galleryRoute);
+  }
+
+  function openGallerySystem(systemId: string): void {
+    navigateTo(gallerySystemRoute(systemId));
+  }
+
+  function currentGallerySystemId(): string {
+    if (isEntailment) {
+      return "access-permissions";
+    }
+    if (isStates) {
+      return "editing-policy";
+    }
+    if (isFixedPoints) {
+      return "bounded-lazy-naturals";
+    }
+    if (isGames) {
+      return "take-away-game";
+    }
+    return "flat-boolean";
+  }
+
+  function localizedGalleryTokens(
+    systemId: string,
+  ): Readonly<Record<string, GalleryTokenText>> | undefined {
+    switch (systemId) {
+      case "flat-boolean":
+        return copy.tokens;
+      case "access-permissions":
+        return copy.entailment.tokens;
+      case "editing-policy":
+        return copy.stateLesson.tokens;
+      case "bounded-lazy-naturals":
+      case "stream-prefixes":
+        return copy.fixedPointLesson.tokens;
+      case "take-away-game":
+        return copy.gameLesson.tokens;
+      default:
+        return undefined;
+    }
   }
 
   function selectObservation(tokenId: TokenId): void {
@@ -1688,7 +1767,9 @@ export function App() {
         : copy.footerStage;
   const footerSystem = isSandbox
     ? copy.sandboxPreview.footerSystem
-    : isGames
+    : isGallery
+      ? copy.gallery.footerSystem
+      : isGames
       ? copy.gameLesson.footerSystem
       : isFixedPoints
       ? copy.fixedPointLesson.footerSystem
@@ -1701,7 +1782,9 @@ export function App() {
             : copy.footerSystem;
   const footerStage = isSandbox
     ? copy.sandboxPreview.footerStage
-    : isGames
+    : isGallery
+      ? copy.gallery.footerStage
+      : isGames
       ? copy.gameLesson.footerStage
       : isFixedPoints
       ? copy.fixedPointLesson.footerStage
@@ -1860,6 +1943,14 @@ export function App() {
                 isCurrent: isSandbox,
                 onSelect: openSandbox,
               },
+              {
+                id: "gallery",
+                number: "G",
+                name: copy.gallery.markerName,
+                label: copy.gallery.markerLabel,
+                isCurrent: isGallery,
+                onSelect: openGallery,
+              },
             ].map((station) => (
               <li key={station.id}>
                 <button
@@ -1908,10 +1999,24 @@ export function App() {
         <SandboxPreview
           copy={copy.sandboxPreview}
           headingRef={sandboxHeadingRef}
-          initialState={formalState?.inspectedState}
+          initialState={
+            route.kind === "sandbox" && route.selection !== undefined
+              ? route.selection
+              : formalState?.inspectedState
+          }
           onBack={returnFromSandbox}
           onRestart={restartFromSandbox}
+          onSelectionChange={shareSandboxSelection}
           tokenTextById={copy.tokens}
+        />
+      ) : isGallery ? (
+        <GalleryView
+          copy={copy.gallery}
+          headingRef={galleryHeadingRef}
+          systemId={route.kind === "gallery" ? route.systemId : undefined}
+          onOpenSystem={openGallerySystem}
+          onBackToIndex={openGallery}
+          localizedTokens={localizedGalleryTokens}
         />
       ) : isGames ? (
         <GameLesson
@@ -2509,6 +2614,18 @@ export function App() {
             <span>{copy.currentStageLabel}: </span>
             {footerStage}
           </span>
+          {isGallery ? null : (
+            <>
+              <span className="footer-rule" aria-hidden="true" />
+              <button
+                className="footer-system-link"
+                type="button"
+                onClick={() => openGallerySystem(currentGallerySystemId())}
+              >
+                {copy.exploreInGallery}
+              </button>
+            </>
+          )}
         </nav>
         <a
           className="repository-link"

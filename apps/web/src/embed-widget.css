@@ -1,0 +1,117 @@
+.embed-widget {
+  display: grid;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  gap: 12px;
+}
+
+.embed-widget header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.embed-brand {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9px;
+  color: #f6c783;
+  background: #173c3a;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+}
+
+.embed-widget h1 {
+  margin: 0;
+  color: #173c3a;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.embed-widget header p {
+  margin: 2px 0 0;
+  color: #627873;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.embed-state-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  gap: 6px;
+  list-style: none;
+}
+
+.embed-state-list button {
+  padding: 5px 10px;
+  border: 1px solid rgb(23 60 58 / 18%);
+  border-radius: 999px;
+  background: #fffdf6;
+  cursor: pointer;
+}
+
+.embed-state-list button:hover {
+  border-color: #173c3a;
+}
+
+.embed-state-list button[aria-pressed="true"] {
+  border-color: #173c3a;
+  background: #173c3a;
+}
+
+.embed-state-list button code {
+  color: #173c3a;
+  font-size: 0.78rem;
+}
+
+.embed-state-list button[aria-pressed="true"] code {
+  color: #fdf8ec;
+}
+
+.embed-detail {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: 8px 11px;
+  border: 1px solid rgb(23 60 58 / 12%);
+  border-radius: 10px;
+  background: rgb(255 253 246 / 80%);
+  gap: 8px;
+}
+
+.embed-detail > span:first-child {
+  color: #748681;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.embed-detail code {
+  color: #173c3a;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.embed-detail > span:last-child {
+  color: #627873;
+  font-size: 0.76rem;
+}
+
+.embed-widget footer a {
+  color: #48635f;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-decoration-color: rgb(72 99 95 / 40%);
+  text-underline-offset: 3px;
+}
+
+.embed-widget footer a:hover {
+  color: #173c3a;
+}

@@ -132,6 +132,33 @@ test.describe("shareable hash routes", () => {
   });
 });
 
+test("serves the static companion pages and the embed widget", async ({
+  page,
+}) => {
+  const reference = await page.goto("./reference.html");
+  expect(reference?.ok()).toBe(true);
+  await expect(
+    page.getByRole("heading", {
+      name: "Finite Scott information systems: a concise reference",
+    }),
+  ).toBeVisible();
+
+  const instructors = await page.goto("./instructors.html");
+  expect(instructors?.ok()).toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "ScottLab for instructors" }),
+  ).toBeVisible();
+
+  const embed = await page.goto("./embed.html?system=coquand");
+  expect(embed?.ok()).toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Coquand system" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Select state/ }),
+  ).toHaveCount(7);
+});
+
 test("opens a shared sandbox selection and updates the share URL", async ({
   page,
 }) => {

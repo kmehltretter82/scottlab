@@ -305,6 +305,31 @@ entailment. When multiple generators support the same target token, the
 activation list retains all supports even if a canonical derivation step has
 already added the token.
 
+## Computational limits
+
+Validation is exhaustive by design: `validateSystem` sweeps every
+consistent subset, which is `Θ(2ⁿ)` in the token count `n`. The sweep runs
+once per semantically distinct definition object and is cached with a
+mutation-detecting fingerprint, so repeated public operations revalidate
+cheaply. Mapping validation additionally carries an explicit subset-check
+budget (default `262144` checks; deliberate larger budgets are accepted,
+malformed ones rejected). The gallery asks for confirmation, showing the
+`2ⁿ` candidate estimate, before enumerating the states of a system with
+more than 12 tokens. Every fixture shipped with ScottLab stays well inside
+these limits.
+
+## Fixed points
+
+`iterateFromBottom` implements the token-level Kleene iteration of Scott's
+PRG-19, Theorem 4.1: compile an approximable endomapping, apply it
+repeatedly starting from `⊥`, and record every application with its active
+generators and newly justified tokens. Approximable mappings are monotone,
+so the iterates ascend and must repeat on a finite system; the first
+repeated state is the least fixed point and the final recorded step is its
+stabilization witness. Bounded systems truncate honestly: the fixed point
+of the bounded system is a genuine finite iterate of the unbounded object
+and is labeled with its bound.
+
 ## Deferred conventions
 
 The first preview does not yet persist fixed-point traces, infinite-system

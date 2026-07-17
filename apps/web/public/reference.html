@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A concise reference for finite Scott information systems as used by ScottLab: tokens, consistency, entailment, closure, states, the information order, approximable mappings, and least fixed points."
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>ScottLab reference · Finite Scott information systems</title>
+    <style>
+      body {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 2rem 1.2rem 3rem;
+        color: #24413d;
+        background: #f6f2e7;
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.55;
+      }
+      h1, h2 { color: #173c3a; letter-spacing: -0.015em; }
+      code, pre {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+        color: #173c3a;
+        background: #fffdf6;
+      }
+      pre {
+        overflow-x: auto;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid rgb(23 60 58 / 15%);
+        border-radius: 10px;
+      }
+      a { color: #9a6036; }
+      nav a { margin-right: 1rem; }
+      .note {
+        padding: 0.7rem 0.9rem;
+        border-left: 3px solid #df8c45;
+        background: #fdf3e3;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="./">Interactive lessons</a>
+      <a href="./#/gallery">Example gallery</a>
+      <a href="./instructors.html">For instructors</a>
+    </nav>
+
+    <h1>Finite Scott information systems: a concise reference</h1>
+    <p>
+      This page states the definitions ScottLab teaches interactively. It
+      follows Dana S. Scott,
+      <a href="https://doi.org/10.1007/BFb0012801"
+        >“Domains for Denotational Semantics” (1982)</a
+      >, with the explicit distinguished token <code>Δ</code>.
+    </p>
+
+    <h2>Information systems</h2>
+    <p>An information system is a tuple <code>A = (T, Δ, Con, ⊢)</code>:</p>
+    <ul>
+      <li><code>T</code> — a finite set of <strong>tokens</strong> (observations);</li>
+      <li><code>Δ ∈ T</code> — the distinguished, always-present token;</li>
+      <li><code>Con</code> — the finite <strong>consistent</strong> subsets of <code>T</code>;</li>
+      <li><code>⊢</code> — <strong>entailment</strong>, relating a consistent finite set to a token.</li>
+    </ul>
+    <p>The laws (whenever the displayed entailments are defined):</p>
+    <pre>1. X ⊆ Y ∈ Con            ⇒ X ∈ Con        (downward consistency)
+2. {a} ∈ Con                                (singleton consistency)
+3. X ∈ Con and X ⊢ a       ⇒ X ∪ {a} ∈ Con  (entailment preserves Con)
+4. X ∈ Con                 ⇒ X ⊢ Δ          (distinguished token)
+5. a ∈ X ∈ Con             ⇒ X ⊢ a          (reflexivity)
+6. Y ⊢ X and X ⊢ a         ⇒ Y ⊢ a          (cut)</pre>
+    <p class="note">
+      Most later literature (Larsen–Winskel 1984; Winskel 1993, ch. 12) drops
+      <code>Δ</code> and uses the triple <code>(T, Con, ⊢)</code>. The two
+      presentations generate isomorphic domains; in the Δ-free form the least
+      state is <code>{a | ∅ ⊢ a}</code>.
+    </p>
+
+    <h2>Closure, states, bottom</h2>
+    <p>
+      For consistent <code>S</code>:
+      <code>closure(S) = { a ∈ T | S ⊢ a }</code>. A
+      <strong>state</strong> is a consistent, entailment-closed token set.
+      States ordered by inclusion form the <strong>information order</strong>;
+      its least element is <code>⊥ = closure(∅) = closure({Δ})</code>.
+      <code>Δ</code> is a token inside <code>⊥</code>; it is not another name
+      for <code>⊥</code>.
+    </p>
+
+    <h2>Approximable mappings</h2>
+    <p>
+      A finite-generator mapping from <code>A</code> to <code>B</code> is a
+      set of rules <code>P ⇒ b</code> (finite consistent
+      <code>P ⊆ T_A</code>, token <code>b ∈ T_B</code>). Applied to a state
+      <code>x</code>:
+    </p>
+    <pre>F(x) = closure_B({ b | some P ⇒ b has P ⊆ x })</pre>
+    <p>
+      Such maps are monotone, and — because every conclusion needs only a
+      finite premise — Scott continuous. The states of the function-space
+      system <code>A → B</code> are exactly these mappings
+      (Larsen–Winskel, Prop. 4.20); for the flat Booleans,
+      <code>[Bool → Bool]</code> has eleven states whose four maximal points
+      are the four total Boolean functions.
+    </p>
+
+    <h2>Least fixed points</h2>
+    <p>
+      For an endomapping <code>F</code> on a finite system, iterate from
+      bottom: <code>⊥ ⊑ F(⊥) ⊑ F²(⊥) ⊑ …</code> The chain ascends by
+      monotonicity and must repeat; the first repeated state is the least
+      fixed point (token-level version: Scott, PRG-19, Theorem 4.1). On a
+      finite domain, iteration stabilizes within the domain's height.
+      Bounded systems truncate honestly: every displayed iterate is a genuine
+      finite iterate of the unbounded object.
+    </p>
+
+    <h2>Computational limits</h2>
+    <p>
+      ScottLab's validator checks the laws exhaustively over all consistent
+      subsets — <code>Θ(2ⁿ)</code> in the token count <code>n</code>, run
+      once per system and cached. Mapping validation carries an explicit
+      subset-check budget (default 262,144), and the gallery asks before
+      enumerating states of systems with more than 12 tokens. Teaching-scale
+      systems stay well inside these limits.
+    </p>
+
+    <h2>Sources</h2>
+    <ul>
+      <li>D. S. Scott, <a href="https://doi.org/10.1007/BFb0012801">Domains for Denotational Semantics</a>, ICALP 1982.</li>
+      <li>K. G. Larsen, G. Winskel, <a href="https://www.cl.cam.ac.uk/techreports/UCAM-CL-TR-51.pdf">Using Information Systems to Solve Recursive Domain Equations Effectively</a>, UCAM-CL-TR-51, 1984.</li>
+      <li>G. Winskel, <em>The Formal Semantics of Programming Languages</em>, MIT Press 1993, ch. 12.</li>
+      <li>D. S. Scott, <em>Lectures on a Mathematical Theory of Computation</em>, Oxford PRG-19, 1981.</li>
+    </ul>
+
+    <p>
+      <a href="./">Start the interactive lessons →</a>
+    </p>
+  </body>
+</html>

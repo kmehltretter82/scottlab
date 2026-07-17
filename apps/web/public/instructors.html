@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="How to use ScottLab in a denotational semantics or domain theory course: lesson-to-topic mapping, shareable links, embeddable widgets, and licensing."
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>ScottLab for instructors</title>
+    <style>
+      body {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 2rem 1.2rem 3rem;
+        color: #24413d;
+        background: #f6f2e7;
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.55;
+      }
+      h1, h2 { color: #173c3a; letter-spacing: -0.015em; }
+      code, pre {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+        color: #173c3a;
+        background: #fffdf6;
+      }
+      pre {
+        overflow-x: auto;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid rgb(23 60 58 / 15%);
+        border-radius: 10px;
+      }
+      a { color: #9a6036; }
+      nav a { margin-right: 1rem; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td {
+        padding: 0.45rem 0.5rem;
+        border-bottom: 1px solid rgb(23 60 58 / 15%);
+        text-align: left;
+        vertical-align: top;
+      }
+      th { color: #48635f; font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="./">Interactive lessons</a>
+      <a href="./#/gallery">Example gallery</a>
+      <a href="./reference.html">Concise reference</a>
+    </nav>
+
+    <h1>ScottLab for instructors</h1>
+    <p>
+      ScottLab is a free, open-source (Apache-2.0), browser-based companion
+      for teaching Scott information systems. Every lesson runs on a
+      deterministic, tested semantic core; every visual action has a precise
+      mathematical meaning; everything works with keyboard, mouse, or touch,
+      respects reduced motion, and is available in English and German.
+    </p>
+
+    <h2>Lesson-to-topic mapping</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ScottLab lesson</th>
+          <th>Course topic (e.g. Winskel ch. 12, Pitts notes)</th>
+          <th>Direct link</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bottom, tokens, consistency, the information order</td>
+          <td>Partial information; flat domains; Con axioms</td>
+          <td><code>#/lesson</code></td>
+        </tr>
+        <tr>
+          <td>Formalisation (explicit Δ)</td>
+          <td>The tuple (T, Δ, Con, ⊢); Δ-free bridge</td>
+          <td><code>#/lesson</code> (after the challenge)</td>
+        </tr>
+        <tr>
+          <td>Entailment in action</td>
+          <td>Entailment closure; least models; Datalog analogy</td>
+          <td><code>#/lesson/entailment</code></td>
+        </tr>
+        <tr>
+          <td>What makes a state?</td>
+          <td>States as consistent, closed sets; witnesses</td>
+          <td><code>#/lesson/states</code></td>
+        </tr>
+        <tr>
+          <td>Continuous maps + function-space capstone</td>
+          <td>Approximable mappings; monotonicity; [Bool→Bool]</td>
+          <td><code>#/lesson/maps</code></td>
+        </tr>
+        <tr>
+          <td>Least fixed points (lazy naturals, streams)</td>
+          <td>Kleene iteration; recursive definitions; continuity</td>
+          <td><code>#/lesson/fixed-points</code></td>
+        </tr>
+        <tr>
+          <td>Winning is entailment (retrograde analysis)</td>
+          <td>Fixed points beyond semantics; backward induction</td>
+          <td><code>#/lesson/games</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Shareable links</h2>
+    <p>
+      Every lesson and gallery system has a stable hash URL, and sandbox
+      selections are encoded in the link — for example
+      <code>#/sandbox/flat-boolean/delta.true</code> opens the sandbox with
+      the state <code>{Δ, true}</code> selected. Lesson progress persists in
+      the student's browser, so lessons are resumable across sessions.
+    </p>
+
+    <h2>Embedding a widget in lecture notes</h2>
+    <p>
+      A self-contained state-order explorer can be embedded in any page via
+      an iframe. Choose the system with <code>?system=</code> and the
+      language with <code>&amp;lang=de</code>:
+    </p>
+    <pre>&lt;iframe
+  src="https://kmehltretter82.github.io/scottlab/embed.html?system=coquand"
+  width="640" height="320" loading="lazy"
+  title="ScottLab: the Coquand system"&gt;&lt;/iframe&gt;</pre>
+    <p>
+      Available system ids: <code>flat-boolean</code>, <code>coquand</code>,
+      <code>access-permissions</code>, <code>editing-policy</code>,
+      <code>bounded-lazy-naturals</code>, <code>stream-prefixes</code>,
+      <code>take-away-game</code>.
+    </p>
+
+    <h2>Bring your own systems</h2>
+    <p>
+      The <a href="./#/gallery">gallery</a> imports versioned JSON documents
+      (validated structurally and against the information-system laws before
+      activation) and can derive a system from a small formal-concept
+      cross-table. Exports are deterministic, so example files diff cleanly
+      in version control — convenient for problem sets.
+    </p>
+
+    <h2>License and source</h2>
+    <p>
+      Apache-2.0. Source, issues, and the versioned JSON schemas live at
+      <a href="https://github.com/kmehltretter82/scottlab"
+        >github.com/kmehltretter82/scottlab</a
+      >. Feedback from course use is very welcome.
+    </p>
+  </body>
+</html>

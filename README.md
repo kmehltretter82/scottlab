@@ -1,106 +1,85 @@
 # ScottLab
 
-> [!IMPORTANT]
-> **ScottLab is under construction.** The guided Boolean preview now reaches
-> its explicit-`Δ` formalisation, synchronized read-only sandbox, and first
-> rule-driven entailment, state-validation, and continuous-maps lessons.
-> General editing and fixed points are not implemented yet.
+**[Open ScottLab](https://kmehltretter82.github.io/scottlab/)** ·
+[Concise reference](https://kmehltretter82.github.io/scottlab/reference.html) ·
+[For instructors](https://kmehltretter82.github.io/scottlab/instructors.html)
 
-**[Open the current interactive preview](https://kmehltretter82.github.io/scottlab/)**
+ScottLab is an interactive browser playground for learning, constructing,
+and experimenting with
+[Scott information systems](https://doi.org/10.1007/BFb0012801), the
+constructive presentation of domain theory introduced by
+[Dana S. Scott](https://www.cs.cmu.edu/~scott/). It makes partial
+information, consistency, entailment, states, the information order,
+continuous maps, and least fixed points visible and executable — and it
+answers questions such as: what does a program mean before it finishes?
+Why does `take 3` work on an infinite list?
 
-ScottLab is a planned browser-based playground for learning, constructing, and
-experimenting with [Scott information systems](https://doi.org/10.1007/BFb0012801),
-introduced by [Dana S. Scott](https://www.cs.cmu.edu/~scott/). It aims to make
-partial information, consistency, entailment, domains, continuous maps, and
-least fixed points visible and executable.
-
-The project is intended to feel like an interactive mathematical exhibit.
-Learners will begin with small pictures, direct manipulation, and guided
-experiments, then discover the definitions represented by them. Every visual
-action will have a precise mathematical meaning, and every computed result will
-come with an explanation.
+ScottLab is an interactive mathematical exhibit, not a form editor.
+Learners begin with small pictures and direct manipulation, then discover
+the definitions those pictures realize. Every visual action has a precise
+mathematical meaning, and every computed result comes with an explanation
+and, on failure, a concrete witness.
 
 ## The basic idea
 
 ScottLab begins at bottom (`⊥`): a state with no specific information yet.
 Learners then discover **tokens**, small pieces of information such as
-`true`. A token is one observation; a state is the whole picture formed from
-the observations known so far. Bottom is a state, not a token.
+`true`. A token is one observation; a state is the whole picture formed
+from the observations known so far. Bottom is a state, not a token.
 
-## Goals
+## Version 1 — complete
 
-- Teach Scott information systems without requiring prior knowledge of domain
-  theory.
-- Turn tokens, consistency, entailment closure, states, and the information
-  order into interactive visual models.
-- Demonstrate continuous maps and least-fixed-point construction step by step.
-- Provide a sandbox for creating, validating, and sharing finite information
-  systems and bounded approximations of infinite domains.
-- Explain validation failures and computed results with concrete witnesses and
-  derivation traces.
-- Keep the mathematical core deterministic, framework-independent, and well
-  tested.
-- Make every essential interaction accessible by mouse, touch, and keyboard,
-  without relying on color or animation alone.
+The guided trail has seven stations plus two free-exploration surfaces:
 
-## Planned experience
+1. **Bottom, tokens, consistency, order** — the hands-on flat-Boolean arc,
+   from `⊥` through the conflict witness to the three-state information
+   order and its branch challenge.
+2. **Formalisation** — the explicit distinguished token `Δ`, the tuple
+   `A = (T, Δ, Con, ⊢)`, the derivation `closure(∅) = {Δ} = ⊥`, and a
+   documented bridge to the Δ-free presentations of the literature.
+3. **Entailment** — a rule-driven closure trace with manual stepping,
+   framed honestly as bottom-up Datalog, plus the non-flat Coquand system
+   where one multi-premise rule bends the whole order.
+4. **States** — classify arbitrary selections as inconsistent, unclosed,
+   or states, with witnesses, and repair one by hand.
+5. **Continuous maps** — apply the Boolean-negation mapping step by step,
+   then meet the capstone: the eleven-state function space
+   `[Bool → Bool]`, drawn as a Hasse diagram in which your own negation
+   map is one of the four maximal points.
+6. **Fixed points** — Kleene iteration from `⊥` on bounded lazy naturals
+   and on stream prefixes (`ones = 1 : ones`), with every bounded
+   truncation labeled, and Boolean negation as the
+   least-fixed-point-is-bottom counterpoint.
+7. **Games** — retrograde analysis of a take-away game as a fixed-point
+   iteration, ending with a "same mathematics, elsewhere" panel (Minlog's
+   coherent systems, coherence spaces and linear logic, formal topology,
+   event structures, formal concept analysis).
 
-ScottLab will combine two closely connected modes:
+The **read-only sandbox** synchronizes a state diagram, token tray,
+definition, and closure explanation, with the selection encoded in a
+shareable URL. The **gallery** opens every example system, quizzes the
+learner on random selections against the core's verdict, exports
+deterministic JSON, imports systems (validated structurally and against
+the semantic laws before activation), and derives systems from small
+formal-concept cross-tables.
 
-- **Guided lessons** will introduce observations, consistency, entailment,
-  states, information order, continuous maps, and fixed points through short
-  interactive tasks.
-- **The sandbox** will let users define tokens and rules, compute closure,
-  inspect state diagrams, apply mappings, iterate endomaps, and import or export
-  shareable examples.
+Lesson progress persists in the browser; every route is hash-addressable
+and crawlable; a widget for lecture notes can be embedded via
+`embed.html?system=<id>`. The interface is fully bilingual (English and
+German), keyboard-operable, reduced-motion aware, and never relies on
+color alone.
 
-Planned examples include flat Booleans, bounded lazy natural numbers, stream
-prefixes, partial trees, and small rule-driven knowledge systems. Infinite
-objects will always be presented as explicitly bounded finite approximations.
-
-The first implementation slice is a polished flat-Boolean lesson. It starts at
-the least-defined state, lets a learner reveal `true` or `false`, shows why
-those observations are incompatible, and visualizes the resulting three-state
-information order. Afterward, the learner can inspect the explicit `Δ`
-convention and open the same example in a read-only sandbox preview.
-
-## Current status
-
-The mathematical convention, versioned data format, and first lesson flow are
-documented. The Vite and React application gives a short historical
-introduction, explains why its first model is a Boolean, then begins at `⊥`
-and opens it as an empty collection before introducing the `true` and `false`
-tokens. It rejects their incompatible combination with a concrete witness and
-turns the result into an interactive three-state information order. A final
-challenge asks the learner to build the Boolean branch not chosen first. The
-advanced phase then distinguishes `Δ` from `⊥` across four focused pages and
-opens a hash-addressable, four-area read-only sandbox whose diagram, token
-tray, definition, and closure explanation share one selected state.
-
-The framework-independent core validates finite system definitions with
-deterministic counterexamples, computes closure traces, recognizes states, and
-enumerates the information order. The rule-driven access-permissions lesson
-uses that core trace to reveal one active premise-rule-conclusion triple at a
-time, provides manual step and replay controls, and ends with a short
-transitive-consequence challenge. The following Editing Policy lesson
-classifies arbitrary selections as inconsistent, consistent-but-unclosed, or
-states using one structured core inspection result. Learners can inspect
-concrete witnesses and repair an unclosed selection manually.
-
-The next guided lesson applies an exact finite-generator mapping between two
-separately labelled Boolean copies. It reveals the input premise, active
-negation generator, and target closure step by step, then asks the learner to
-produce a `true` output. The accompanying definition explains why swapping the
-incomparable `true` and `false` branches is monotone and Scott continuous, not
-order-reversing. The core validates mapping generators, preserves alternate
-supports, and returns deterministic application traces. All persisted example
-documents are checked against their Draft 2020-12 schemas and semantic
-validation covers the Boolean-negation fixture.
+The framework-independent core validates finite systems exhaustively with
+deterministic counterexamples (cached per definition), computes closure
+and mapping traces, recognizes and enumerates states, iterates endomaps to
+least fixed points with stabilization witnesses, and enumerates finite
+function spaces. All persisted documents are checked against Draft
+2020-12 schemas and the semantic laws.
 
 ## Run locally
 
-ScottLab requires Node.js 20.19+ or 22.12+. Install dependencies and start the
-development server:
+ScottLab requires Node.js 20.19+ or 22.12+. Install dependencies and start
+the development server:
 
 ```sh
 npm install
@@ -117,11 +96,13 @@ Firefox, and WebKit acceptance matrix with `npm run test:e2e`. Use
 ## References
 
 Mathematical sources are collected in the
-[reference notes](docs/references.md).
+[reference notes](docs/references.md); the conventions the implementation
+follows are specified in
+[the mathematical conventions](docs/mathematical-conventions.md).
 
 ## Acknowledgment
 
-Development of ScottLab is assisted by OpenAI Codex.
+Development of ScottLab is assisted by OpenAI Codex and Claude Code.
 
 ## License
 
